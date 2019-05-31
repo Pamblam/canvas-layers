@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>test</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	</head>
+	<body style="background: lightblue; text-align:center;">
+		<h3>Canvas Test</h3>
+		<canvas id=canvas width="1200" height="800" style="border:1px solid black; width:600px; height:400px; margin:0 auto; background: white;"></canvas>
+		<script src="Canvas.js"></script>
+		<script src="CanvasLayer.js"></script>
+		<script>
+			var canvas = new Canvas(document.getElementById("canvas"));
+			
+			Promise.all([
+				loadImage("./img/red_square.png"),
+				loadImage("./img/blue_circle.png")
+			]).then(imgs=>{
+				var third = canvas.width / 3;
+				canvas.layers.push(new CanvasLayer(imgs[0], canvas, third, null, 0));
+				canvas.layers.push(new CanvasLayer(imgs[1], canvas, third*2, null, 0));
+				canvas.draw();
+			});
+			
+			function loadImage(src){
+				return new Promise(done=>{
+					var img = new Image();
+					img.onload = ()=>done(img);
+					img.src = src;
+				});
+			}
+		</script>
+	</body>
+</html>
