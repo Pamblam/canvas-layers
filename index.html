@@ -8,28 +8,57 @@
 	<body style="background: lightblue; text-align:center;">
 		<h3>Canvas Test</h3>
 		<canvas id=canvas width="1200" height="800" style="border:1px solid black; width:600px; height:400px; margin:0 auto; background: white;"></canvas>
+		
+		<div id=canvas2></div>
+		
 		<script src="Canvas.js"></script>
 		<script src="CanvasLayer.js"></script>
 		<script>
-			var canvas = new Canvas(document.getElementById("canvas"));
+			var canvasEle = document.getElementById("canvas");
+			var canvas = new Canvas(canvasEle);
 			
-			Promise.all([
-				loadImage("./img/red_square.png"),
-				loadImage("./img/blue_circle.png")
-			]).then(imgs=>{
-				var third = canvas.width / 3;
-				canvas.layers.push(new CanvasLayer(imgs[0], canvas, third, null, 0));
-				canvas.layers.push(new CanvasLayer(imgs[1], canvas, third*2, null, 0));
-				canvas.draw();
+			const blankImg = './img/squareboard.png'; //'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNiYAAAAAkAAxkR2eQAAAAASUVORK5CYII=';
+			const redSqImg = './img/red_square.png';
+			const bluCircl = './img/blue_circle.png';
+			
+			var third = canvas.width / 3;
+			var half = canvas.width / 2;
+			
+			canvas.addLayer(redSqImg, {
+				name: 'Red Square', 
+				x: third
 			});
 			
-			function loadImage(src){
-				return new Promise(done=>{
-					var img = new Image();
-					img.onload = ()=>done(img);
-					img.src = src;
-				});
+			canvas.addLayer(bluCircl, {
+				name: 'Blue Circle', 
+				x: third*2,
+				rotateable: false,
+				selectable: false,
+				draggable: false,
+				resizable: false
+			});
+			
+			var invisible_box = canvas.addLayer(blankImg, {
+				name: 'Select Area', 
+				x: half,
+				width: 300,
+				height: 300
+			});
+			
+			canvas.selectLayer(invisible_box);
+			
+			canvasEle.addEventListener('layer-deselect', function(e){
+				e.preventDefault();
+			});
+			
+			function cropit(){
+				var buffer = document.getElementById('canvas2');
+				var cnvs = canvas.extractPortion(invisible_box.x, invisible_box.y, invisible_box.width, invisible_box.height, invisible_box.rotation);
+				cnvs.setAttribute('style', 'border:1px solid black; width:600px; height:400px; margin:0 auto; background: white;');
+				buffer.innerHTML = '';
+				buffer.appendChild(cnvs);
 			}
+			
 		</script>
 	</body>
 </html>

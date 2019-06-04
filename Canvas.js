@@ -20,31 +20,97 @@ class Canvas{
 		canvas.addEventListener('mouseup', this.onmousereset.bind(this));
 	}	
 	
-	draw(){
-		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		for(let i=this.layers.length; i--;){
-			let layer = this.layers[i];
-			var radians = layer.rotation * (Math.PI/180);
-			this.ctx.translate(layer.x, layer.y);
-			this.ctx.rotate(radians);
-			this.ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
-			if(layer === this.activeLayer){
-				this.ctx.strokeStyle = Canvas.strokeStyle;
-				this.ctx.fillStyle = Canvas.fillStyle;
-				this.ctx.lineWidth = Canvas.lineWidth;
-				this.ctx.strokeRect(-(layer.width/2), -(layer.height/2), layer.width, layer.height);
-				layer.getCorners(true).forEach(corner=>{
-					this.drawCircle(corner.x, corner.y, Canvas.anchorRadius);
-				});
-				this.ctx.beginPath();
-				this.ctx.moveTo(0, 0);
-				this.ctx.lineTo((layer.width/2)+25, 0);
-				this.ctx.stroke();
-				this.drawCircle((layer.width/2)+25, 0, Canvas.anchorRadius);
-			}
-			this.ctx.rotate(-radians);
-			this.ctx.translate(-layer.x, -layer.y);
+	getLayerByName(name){
+		for(var i=this.layers.length; i--;){
+			if(this.layers[i].name === name) return this.layers[i];
 		}
+		return null;
+	}
+	
+	addLayer(url, opts={}){
+		const name = opts.name || `Layer ${this.layers.length}`;
+		const x = parseFloat(opts.x || this.width/2);
+		const y = parseFloat(opts.y || this.height/2);
+		const rotation = parseFloat(opts.rotation || 0);
+		const draggable = opts.draggable === undefined ? true : opts.draggable;
+		const rotateable = !!opts.rotateable === undefined ? true : opts.rotateable;
+		const resizable = !!opts.resizable === undefined ? true : opts.resizable;
+		const selectable = !!opts.selectable === undefined ? true : opts.selectable;
+		const width = opts.width || null;
+		const height = opts.height || null;
+		var layer = new CanvasLayer(url, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable);
+		this.layers.unshift(layer);
+		layer.load();
+		return layer;
+	}
+	
+	loadAll(){
+		return Promise.all(this.layers.map(layer=>layer.load()));
+	}
+	
+	extractPortion(centerx, centery, width, height, rotation=0){
+		var buffer = document.createElement('canvas');
+		buffer.width = this.canvas.width;
+		buffer.height = this.canvas.height;
+		var ctx = buffer.getContext('2d');
+		this.loadAll().then(()=>{
+			ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+			for(let i=this.layers.length; i--;){
+				let layer = this.layers[i];
+				var radians = layer.rotation * (Math.PI/180);
+				ctx.translate(layer.x, layer.y);
+				ctx.rotate(radians);
+				ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
+				ctx.rotate(-radians);
+				ctx.translate(-layer.x, -layer.y);
+			}
+		});
+		
+		ctx.translate(centerx, centery);
+		ctx.rotate(-rotation * (Math.PI/180));
+		ctx.translate(-centerx, -centery);
+		
+		var ofx = -centerx-width/2;
+		//var ofy = centery+(height/2);
+		
+		ctx.translate(ofx, 0);
+		
+		//ctx.translate(centerx, centery);
+		
+		return buffer;
+	}
+	
+	draw(){
+		this.loadAll().then(()=>{
+			this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+			for(let i=this.layers.length; i--;){
+				let layer = this.layers[i];
+				var radians = layer.rotation * (Math.PI/180);
+				this.ctx.translate(layer.x, layer.y);
+				this.ctx.rotate(radians);
+				this.ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
+				if(layer === this.activeLayer){
+					this.ctx.strokeStyle = Canvas.strokeStyle;
+					this.ctx.fillStyle = Canvas.fillStyle;
+					this.ctx.lineWidth = Canvas.lineWidth;
+					this.ctx.strokeRect(-(layer.width/2), -(layer.height/2), layer.width, layer.height);
+					if(layer.resizable){
+						layer.getCorners(true).forEach(corner=>{
+							this.drawCircle(corner.x, corner.y, Canvas.anchorRadius);
+						});
+					}
+					if(layer.rotateable){
+						this.ctx.beginPath();
+						this.ctx.moveTo(0, 0);
+						this.ctx.lineTo((layer.width/2)+25, 0);
+						this.ctx.stroke();
+						this.drawCircle((layer.width/2)+25, 0, Canvas.anchorRadius);
+					}
+				}
+				this.ctx.rotate(-radians);
+				this.ctx.translate(-layer.x, -layer.y);
+			}
+		});
 	}
 	
 	drawCircle(x, y, radius){
@@ -60,19 +126,25 @@ class Canvas{
 		if(this.activeLayer === null) return;
 		
 		if(this.rotatingActiveLayer){
-			var dx = x - this.activeLayer.x;
-			var dy = y - this.activeLayer.y;
-			var angle = Math.atan2(dy, dx);
-			var degrees = angle * 180 / Math.PI;
-			this.activeLayer.rotation = degrees;
-			this.draw();
+			if(this.fireEvent('layer-rotate')){
+				var dx = x - this.activeLayer.x;
+				var dy = y - this.activeLayer.y;
+				var angle = Math.atan2(dy, dx);
+				var degrees = angle * 180 / Math.PI;
+				this.activeLayer.rotation = degrees;
+				this.draw();
+			}
 		}else if(this.draggingActiveLayer){
-			this.activeLayer.x = this.activeLayerMouseOffset.x + x;
-			this.activeLayer.y = this.activeLayerMouseOffset.y + y;
-			this.draw();
+			if(this.fireEvent('layer-drag')){
+				this.activeLayer.x = this.activeLayerMouseOffset.x + x;
+				this.activeLayer.y = this.activeLayerMouseOffset.y + y;
+				this.draw();
+			}
 		}else if(this.resizingActiveLayer){
-			this.doUserLayerResize(x, y);
-			this.draw();
+			if(this.fireEvent('layer-resize')){
+				this.doUserLayerResize(x, y);
+				this.draw();
+			}
 		}
 	}
 	
@@ -87,7 +159,7 @@ class Canvas{
 			document.body.style.cursor = Canvas.cursors.move;
 		}else if(this.isNearActiveRotatePoint(x, y)){
 			document.body.style.cursor = Canvas.cursors.rotate;
-		}else if(this.isOverAnyLayer(x, y)){
+		}else if(this.isOverSelectableLayer(x, y)){
 			document.body.style.cursor = Canvas.cursors.grab;
 		}else{
 			document.body.style.cursor = Canvas.cursors.default;
@@ -109,6 +181,11 @@ class Canvas{
 		}
 	}
 	
+	fireEvent(type){
+		var event = new CustomEvent(type, {detail: this, cancelable: true, bubbles: true});
+		return this.canvas.dispatchEvent(event);
+	}
+	
 	onmousedown(e){
 		var {x, y} = this.canvasMousePos(e);
 		this.setCursor(x, y);
@@ -118,9 +195,20 @@ class Canvas{
 		}else if(this.isNearActiveCorner(x, y)){
 			this.resizingActiveLayer = true;
 		}else{
-			this.activeLayer = this.getLayerAt(x, y);
-			this.draggingActiveLayer = true;
-			this.draw();
+			var cancelled = false;
+			var layer = this.getLayerAt(x, y);
+			if(layer !== null && layer.selectable === false) layer = null;
+			if(layer !== null && this.activeLayer !== null && layer !== this.activeLayer){
+				cancelled = !this.deSelectLayer();
+			}
+			if(!cancelled && layer !== null){
+				this.activeLayerMouseOffset.x = layer.x - x;
+				this.activeLayerMouseOffset.y = layer.y - y;
+				if(layer.draggable) this.draggingActiveLayer = true;
+				if(layer !== this.activeLayer){
+					this.selectLayer(layer);
+				}
+			}
 		}
 		if(this.activeLayer){
 			this.activeLayerOriginalDimensions = {
@@ -131,8 +219,28 @@ class Canvas{
 		}
 	}
 	
+	selectLayer(layer){
+		var notcancelled = this.fireEvent('layer-select');
+		if(notcancelled){
+			this.layers.unshift(this.layers.splice(this.layers.indexOf(layer), 1)[0]);
+			this.activeLayer = layer;
+			this.draw();
+		}
+		return notcancelled;
+	}
+	
+	deSelectLayer(){
+		var notcancelled = this.fireEvent('layer-deselect');
+		if(notcancelled){
+			this.activeLayer = null;
+			this.draggingActiveLayer = false;
+			this.draw();
+		}
+		return notcancelled;
+	}
+	
 	isNearActiveRotatePoint(x, y){
-		if(!this.activeLayer) return false;
+		if(!this.activeLayer || !this.activeLayer.rotateable) return false;
 		var {x, y} = this.layerRelativePoint(x, y, this.activeLayer);
 		var mx = (this.activeLayer.width/2)+25;
 		var my = 0;
@@ -142,7 +250,7 @@ class Canvas{
 	}
 	
 	isNearActiveCorner(x, y){
-		if(!this.activeLayer) return false;
+		if(!this.activeLayer || !this.activeLayer.resizable) return false;
 		var {x, y} = this.layerRelativePoint(x, y, this.activeLayer);
 		var isNear = false;
 		this.activeLayer.getCorners(true).forEach(corner=>{			
@@ -191,18 +299,16 @@ class Canvas{
 	getLayerAt(x, y){
 		for(let i=0; i<this.layers.length; i++){
 			let layer = this.layers[i];
-			if(!this.isOverLayer(x, y, layer)) continue;
-			this.activeLayerMouseOffset.x = layer.x - x;
-			this.activeLayerMouseOffset.y = layer.y - y;
-			this.layers.unshift(this.layers.splice(i, 1)[0]);
-			return layer;
+			if(this.isOverLayer(x, y, layer)) return layer;
 		}
 		return null;
 	}
 	
-	isOverAnyLayer(x, y){
+	isOverSelectableLayer(x, y){
 		for(let i=this.layers.length; i--;){
-			if(this.isOverLayer(x, y, this.layers[i])) return true;
+			if(this.isOverLayer(x, y, this.layers[i])){
+				if(this.layers[i].selectable && this.activeLayer !== this.layers[i]) return true;
+			}
 		}
 		return false;
 	}
