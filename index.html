@@ -51,6 +51,10 @@
 				e.preventDefault();
 			});
 			
+			// adapt this implementation
+			// http://jsfiddle.net/6zp7bf21/1/
+			// from here: https://stackoverflow.com/questions/21126536/how-to-get-a-rotated-crop-of-an-image-with-html5-canvas
+			
 			function cropit(){
 				var buffer = document.getElementById('canvas2');
 				var cnvs = canvas.extractPortion(invisible_box.x, invisible_box.y, invisible_box.width, invisible_box.height, invisible_box.rotation);
