@@ -48,36 +48,69 @@ class Canvas{
 		return Promise.all(this.layers.map(layer=>layer.load()));
 	}
 	
+	cropToLayer(layer){
+		return this.extractPortion(layer.x, layer.y, layer.width, layer.height, layer.rotation);
+	}
+	
 	extractPortion(centerx, centery, width, height, rotation=0){
-		var buffer = document.createElement('canvas');
-		buffer.width = this.canvas.width;
-		buffer.height = this.canvas.height;
-		var ctx = buffer.getContext('2d');
-		this.loadAll().then(()=>{
-			ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-			for(let i=this.layers.length; i--;){
-				let layer = this.layers[i];
-				var radians = layer.rotation * (Math.PI/180);
-				ctx.translate(layer.x, layer.y);
-				ctx.rotate(radians);
-				ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
-				ctx.rotate(-radians);
-				ctx.translate(-layer.x, -layer.y);
-			}
+		var radians = rotation * Math.PI / 180;
+		var {x, y} = this.absolutePoint(-(width/2), -(height/2), centerx, centery, rotation);
+		
+		var rectBB = this.getRotatedRectBB(x, y, width, height, radians);
+		
+		var canvas0 = document.createElement("canvas");
+		var ctx0 = canvas0.getContext("2d");
+		var canvas1 = document.createElement("canvas");
+		var ctx1 = canvas1.getContext("2d");
+		var canvas2 = document.createElement("canvas");
+		var ctx2 = canvas2.getContext("2d");
+		
+		canvas1.width = canvas2.width = rectBB.width;
+		canvas1.height = canvas2.height = rectBB.height;
+		canvas0.width = this.width;
+		canvas0.height = this.height;
+		
+		return new Promise(done=>{
+			this.loadAll().then(()=>{
+				for(let i=this.layers.length; i--;){
+					let layer = this.layers[i];
+					var radians = layer.rotation * (Math.PI/180);
+					ctx0.translate(layer.x, layer.y);
+					ctx0.rotate(radians);
+					ctx0.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
+					ctx0.rotate(-radians);
+					ctx0.translate(-layer.x, -layer.y);
+				}
+
+				ctx1.drawImage(canvas0, rectBB.cx - rectBB.width / 2, rectBB.cy - rectBB.height / 2, rectBB.width, rectBB.height, 0, 0, rectBB.width, rectBB.height);
+				ctx2.translate(canvas1.width / 2, canvas1.height / 2);
+				ctx2.rotate(-radians);
+				ctx2.drawImage(canvas1, -canvas1.width / 2, -canvas1.height / 2);
+				var ofstx = (canvas2.width - width) / 2;
+				var ofsty = (canvas2.height - height) / 2;
+				ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
+				canvas1.width = width;
+				canvas1.height = height;
+				ctx1.drawImage(canvas2, -ofstx, -ofsty);
+				done(canvas1.toDataURL());
+
+			});
 		});
-		
-		ctx.translate(centerx, centery);
-		ctx.rotate(-rotation * (Math.PI/180));
-		ctx.translate(-centerx, -centery);
-		
-		var ofx = -centerx-width/2;
-		//var ofy = centery+(height/2);
-		
-		ctx.translate(ofx, 0);
-		
-		//ctx.translate(centerx, centery);
-		
-		return buffer;
+	}
+	
+	getRotatedRectBB(x, y, width, height, rAngle) {
+		var absCos = Math.abs(Math.cos(rAngle));
+		var absSin = Math.abs(Math.sin(rAngle));
+		var cx = x + width / 2 * Math.cos(rAngle) - height / 2 * Math.sin(rAngle);
+		var cy = y + width / 2 * Math.sin(rAngle) + height / 2 * Math.cos(rAngle);
+		var w = width * absCos + height * absSin;
+		var h = width * absSin + height * absCos;
+		return ({
+			cx: cx,
+			cy: cy,
+			width: w,
+			height: h
+		});
 	}
 	
 	draw(){
@@ -261,15 +294,28 @@ class Canvas{
 	}
 	
 	layerRelativePoint(absPointX, absPointY, layer){
-		absPointX -= layer.x;
-		absPointY -= layer.y;
-		var radians = layer.rotation * (Math.PI / 180);
+		return this.relativePoint(absPointX, absPointY, layer.x, layer.y, layer.rotation);
+	}
+	
+	relativePoint(absPointX, absPointY, centerX, centerY, rotation){
+		absPointX -= centerX;
+		absPointY -= centerY;
+		var radians = rotation * (Math.PI / 180);
 		var cos = Math.cos(radians);
 		var sin = Math.sin(radians);
 		var x = (absPointX * cos) + (absPointY * sin);
 		var y = (-absPointX * sin) + (absPointY * cos);
 		x = Math.floor(x * 100) / 100;
 		y = Math.floor(y * 100) / 100;
+		return {x, y};
+	}
+	
+	absolutePoint(relPointX, relPointY, centerX, centerY, rotationDegrees) {
+		var radians = rotationDegrees * (Math.PI / 180);
+		var cos = Math.cos(radians);
+		var sin = Math.sin(radians);
+		var x = centerX + (relPointX * cos) - (relPointY * sin);
+		var y = centerY + (relPointX * sin) + (relPointY * cos);
 		return {x, y};
 	}
 	
@@ -323,6 +369,7 @@ class Canvas{
 	}
 }
 
+Canvas.version = '{{ VERSION }}';
 Canvas.anchorRadius = 8;
 Canvas.strokeStyle = '#ba0000';
 Canvas.fillStyle = 'black';

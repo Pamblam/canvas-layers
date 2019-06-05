@@ -4,20 +4,22 @@
 		<title>test</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<style>canvas, img{border:1px solid black}</style>
 	</head>
 	<body style="background: lightblue; text-align:center;">
 		<h3>Canvas Test</h3>
-		<canvas id=canvas width="1200" height="800" style="border:1px solid black; width:600px; height:400px; margin:0 auto; background: white;"></canvas>
+		<canvas id=canvas width="1200" height="800" style="border:1px solid black; width:600px; height:400px; margin:0 auto; background: white;"></canvas> 
+		<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNiYAAAAAkAAxkR2eQAAAAASUVORK5CYII=" id="preview">
 		
-		<div id=canvas2></div>
-		
-		<script src="Canvas.js"></script>
-		<script src="CanvasLayer.js"></script>
+		<script src="../canvas-layers.min.js"></script>
 		<script>
+			
+			var preview = document.getElementById('preview');
 			var canvasEle = document.getElementById("canvas");
 			var canvas = new Canvas(canvasEle);
 			
-			const blankImg = './img/squareboard.png'; //'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNiYAAAAAkAAxkR2eQAAAAASUVORK5CYII=';
+			const blankImg = './img/squareboard.png';
 			const redSqImg = './img/red_square.png';
 			const bluCircl = './img/blue_circle.png';
 			
@@ -26,7 +28,11 @@
 			
 			canvas.addLayer(redSqImg, {
 				name: 'Red Square', 
-				x: third
+				x: third,
+				rotateable: false,
+				selectable: false,
+				draggable: false,
+				resizable: false
 			});
 			
 			canvas.addLayer(bluCircl, {
@@ -47,20 +53,20 @@
 			
 			canvas.selectLayer(invisible_box);
 			
+			cropit();
+			
 			canvasEle.addEventListener('layer-deselect', function(e){
 				e.preventDefault();
 			});
 			
-			// adapt this implementation
-			// http://jsfiddle.net/6zp7bf21/1/
-			// from here: https://stackoverflow.com/questions/21126536/how-to-get-a-rotated-crop-of-an-image-with-html5-canvas
+			canvasEle.addEventListener('layer-drag', cropit);
+			canvasEle.addEventListener('layer-rotate', cropit);
+			canvasEle.addEventListener('layer-resize', cropit);
 			
 			function cropit(){
-				var buffer = document.getElementById('canvas2');
-				var cnvs = canvas.extractPortion(invisible_box.x, invisible_box.y, invisible_box.width, invisible_box.height, invisible_box.rotation);
-				cnvs.setAttribute('style', 'border:1px solid black; width:600px; height:400px; margin:0 auto; background: white;');
-				buffer.innerHTML = '';
-				buffer.appendChild(cnvs);
+				canvas.cropToLayer(invisible_box).then(datauri=>{
+					preview.src = datauri;
+				});
 			}
 			
 		</script>
