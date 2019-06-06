@@ -25,17 +25,12 @@ class CanvasLayer{
 		}
 	}
 	
-	getCorners(relativeToCenter=false){
-		return relativeToCenter ? [
+	getCorners(){
+		return [
 			{x:-(this.width/2), y:-(this.height/2)},
 			{x:-(this.width/2)+this.width, y:-(this.height/2)},
 			{x:-(this.width/2)+this.width, y:-(this.height/2)+this.height},
 			{x:-(this.width/2), y:-(this.height/2)+this.height}
-		] : [
-			{x:this.x-(this.width/2), y:this.y-(this.height/2)},
-			{x:this.x-(this.width/2)+this.width, y:this.y-(this.height/2)},
-			{x:this.x-(this.width/2)+this.width, y:this.y-(this.height/2)+this.height},
-			{x:this.x-(this.width/2), y:this.y-(this.height/2)+this.height}
 		];
 	}
 	
@@ -45,11 +40,11 @@ class CanvasLayer{
 			const img = new Image();
 			img.onload = ()=>{
 				this.image = img;
-				this.ready = true;
 				if(this.width===null) this.width = img.width;
 				if(this.height===null) this.height = img.height;
 				this.load_cb_stack.forEach(fn=>fn());
 				this.load_cb_stack = [];
+				this.ready = true;
 				done();
 			};
 			img.src = this.url;
