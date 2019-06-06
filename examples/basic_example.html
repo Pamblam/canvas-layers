@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Canvas Layers - Basic Example</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		
+		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+		<style>
+			body{
+				background-color: #f6f4ed;
+			}
+			h1, h2, h3, h4, h5{
+				color: #7bb01f;
+			}
+			#canvas, #preview{
+				border:1px solid black; background: white;
+			}
+		</style>
+		
+		<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+		<div class='container'>
+			<center>
+				<img src='../logo.png' class='image-responsive'>
+				<br><br>
+				<div class="btn-group" role="group" aria-label="...">
+					<a class="btn btn-default" href="https://github.com/Pamblam/canvas-layers"><span class="glyphicon glyphicon-flash"></span> Github</a>
+					<a class="btn btn-default" href="index.html"><span class="glyphicon glyphicon-send"></span> Examples</a>
+				</div>
+				
+				<h1>Basic Example</h1>
+			</center>
+			
+			<div class='row'>
+				<div class='col-sm-12'>
+					<canvas id="canvas" width="1200" height="800" class="img-responsive"></canvas> 
+				</div>
+			</div>
+		</div>
+		
+		<script src="../canvas-layers.js"></script>
+		<script>
+			
+			var canvasEle = document.getElementById("canvas");
+			
+			var canvas = new Canvas(canvasEle, {
+				anchorRadius: 4,
+				strokeStyle: '#ce2500',
+				fillStyle: '#ce2500',
+				lineWidth: 2
+			});
+			
+			canvas.addLayer('./img/red_square.png', {
+				name: 'Red Square', 
+				x: canvas.width * 1/3
+			});
+			
+			canvas.addLayer('./img/blue_circle.png', {
+				name: 'Blue Circle', 
+				x: canvas.width * 2/3
+			});
+			
+			// deselct layer if click is outside of canvas
+			document.addEventListener('click', function(e){
+				if(e.target !== canvasEle){
+					canvas.deSelectLayer();
+				}
+			});
+			
+			function cropit(){
+				canvas.cropToLayer(invisible_box).then(datauri=>{
+					preview.src = datauri;
+				});
+			}
+			
+		</script>
+	</body>
+</html>
