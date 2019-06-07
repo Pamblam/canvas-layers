@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v1.0.21
+ * canvas-layers - v1.1.1
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.0.21
+ * @version 1.1.1
  */
 class Canvas{
 	
@@ -88,6 +88,7 @@ class Canvas{
 	 * @param {Boolean} [opts.selectable=true] - Can the user select this layer?
 	 * @param {Number} [opts.width=null] - The width of the layer to be drawn. If not specified, defaults to the images natural width.
 	 * @param {Number} [opts.height=null] - The height of the layer to be drawn. If not specified, defaults to the images natural height.
+	 * @param {Boolean} [opts.forceBoundary=false] - Force the item to stay in bounds.
 	 * @returns {CanvasLayer} - The layer that was added.
 	 */
 	addLayer(url, opts={}){
@@ -101,7 +102,8 @@ class Canvas{
 		const selectable = !!opts.selectable === undefined ? true : opts.selectable;
 		const width = opts.width || null;
 		const height = opts.height || null;
-		var layer = new CanvasLayer(url, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable);
+		const forceBoundary = opts.forceBoundary || false;
+		var layer = new CanvasLayer(url, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary);
 		this.layers.unshift(layer);
 		this.draw();
 		return layer;
@@ -180,6 +182,7 @@ class Canvas{
 		this.last_draw_time = current_draw_time;
 		
 		this.loadAll().then(()=>{
+		
 			if(this.last_draw_time !== current_draw_time){
 				return;
 			}
@@ -328,7 +331,7 @@ class Canvas{
 	 * @ignore
 	 */
 	loadAll(){
-		var promises = this.layers.map(layer=>layer.load());
+		var promises = this.layers.map(layer=>new Promise(done=>layer.onload(done)));
 		return Promise.all(promises);
 	}
 	
@@ -381,9 +384,18 @@ class Canvas{
 				this.draw();
 			}
 		}else if(this.draggingActiveLayer){
+			const newx = this.activeLayerMouseOffset.x + x;
+			const newy = this.activeLayerMouseOffset.y + y;
+			
+			if(this.activeLayer.forceBoundary && !this.isNewPosInBounds(this.activeLayer, newx, newy)){
+				this.draggingActiveLayer = false;
+				this.draw();
+				return;
+			}
+			
 			if(this.fireEvent('layer-drag')){
-				this.activeLayer.x = this.activeLayerMouseOffset.x + x;
-				this.activeLayer.y = this.activeLayerMouseOffset.y + y;
+				this.activeLayer.x = newx;
+				this.activeLayer.y = newy;
 				this.draw();
 			}
 		}else if(this.resizingActiveLayer){
@@ -513,6 +525,23 @@ class Canvas{
 		return isNear;
 	}
 	
+	isNewPosInBounds(layer, x, y){
+		var _x = layer.x;
+		var _y = layer.y;
+		layer.x = x;
+		layer.y = y;
+		var inbounds = true;
+		layer.getCorners().forEach(corner=>{
+			var pos = this.absolutePoint(corner.x, corner.y, layer.x, layer.y, layer.rotation);
+			if(pos.x < 0 || pos.x > this.width || pos.y < 0 || pos.y > this.width){
+				inbounds = false;
+			}
+		});
+		layer.x = _x;
+		layer.y = _y;
+		return inbounds;
+	}
+	
 	/**
 	 * Get the point relative to the center of a given layer.
 	 * @ignore
@@ -539,7 +568,7 @@ class Canvas{
 	}
 	
 	/**
-	 * Convert a relative point ot an absolute point.
+	 * Convert a relative point to an absolute point.
 	 * @ignore
 	 */
 	absolutePoint(relPointX, relPointY, centerX, centerY, rotationDegrees) {
@@ -582,7 +611,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '1.0.21';
+Canvas.version = '1.1.1';
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -643,12 +672,13 @@ class CanvasLayer{
 	 * @param {Number} [height=null] - The height of the layer on the canvas.
 	 * @param {Number} [rotation=0] - The rotation of the layer on the canvas.
 	 * @param {Boolean} [draggable=true] - Is the layer draggable?
-	 * @param {type} [rotateable=true] - Is the layer rotateable?
-	 * @param {type} [resizable=true] - Is the layer resizable?
-	 * @param {type} [selectable=true] - Is the layer selectable?
+	 * @param {Boolean} [rotateable=true] - Is the layer rotateable?
+	 * @param {Boolean} [resizable=true] - Is the layer resizable?
+	 * @param {Boolean} [selectable=true] - Is the layer selectable?
+	 * @param {Boolean} [forceBoundary=false] - Force the layer to stay in bounds?
 	 * @returns {CanvasLayer}
 	 */
-	constructor(url, name, x, y, width=null, height=null, rotation=0, draggable=true, rotateable=true, resizable=true, selectable=true){
+	constructor(url, name, x, y, width=null, height=null, rotation=0, draggable=true, rotateable=true, resizable=true, selectable=true, forceBoundary=false){
 		this.name = name;
 		this.url = url;
 		this.ready = false;
@@ -662,7 +692,9 @@ class CanvasLayer{
 		this.rotateable = rotateable;
 		this.resizable = resizable;
 		this.selectable = selectable;
+		this.forceBoundary = forceBoundary;
 		this.load_cb_stack = [];
+		this.load();
 	}
 	
 	/**
@@ -685,18 +717,20 @@ class CanvasLayer{
 	 */
 	load(){
 		return new Promise(done=>{
-			if(this.ready) return done();
-			const img = new Image();
-			img.onload = ()=>{
-				this.image = img;
-				if(this.width===null) this.width = img.width;
-				if(this.height===null) this.height = img.height;
-				this.load_cb_stack.forEach(fn=>fn());
-				this.load_cb_stack = [];
-				this.ready = true;
+			if(this.ready){
 				done();
-			};
-			img.src = this.url;
+			}else{
+				const img = new Image();
+				img.onload = ()=>{
+					this.image = img;
+					if(this.width===null) this.width = img.width;
+					if(this.height===null) this.height = img.height;
+					this.ready = true;
+					this.load_cb_stack.forEach(fn=>fn());
+					this.load_cb_stack = [];
+				};
+				img.src = this.url;
+			}
 		});
 	}
 	

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Canvas Layers - Basic Example</title>
+		<title>Canvas Layers - Bounds Example</title>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -35,7 +35,7 @@
 					<a class="btn btn-default" href="../docs/"><span class="glyphicon glyphicon-book"></span> Docs</a>
 				</div>
 				
-				<h1>Basic Example</h1>
+				<h1>Bounds Example</h1>
 			</center>
 			
 			<div class='row'>
@@ -57,21 +57,16 @@
 				lineWidth: 2
 			});
 			
-			canvas.addLayer('./img/red_square.png?_='+(new Date().getTime()), {
+			canvas.addLayer('./img/red_square.png', {
 				name: 'Red Square', 
-				x: canvas.width * 1/3
+				x: canvas.width * 1/3,
+				forceBoundary: true
 			});
 			
-			canvas.addLayer('./img/blue_circle.png?_='+(new Date().getTime()), {
+			canvas.addLayer('./img/blue_circle.png', {
 				name: 'Blue Circle', 
-				x: canvas.width * 2/3
-			});
-			
-			// deselct layer if click is outside of canvas
-			document.addEventListener('click', function(e){
-				if(e.target !== canvasEle){
-					canvas.deSelectLayer();
-				}
+				x: canvas.width * 2/3,
+				forceBoundary: true
 			});
 			
 		</script>

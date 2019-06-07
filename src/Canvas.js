@@ -80,6 +80,7 @@ class Canvas{
 	 * @param {Boolean} [opts.selectable=true] - Can the user select this layer?
 	 * @param {Number} [opts.width=null] - The width of the layer to be drawn. If not specified, defaults to the images natural width.
 	 * @param {Number} [opts.height=null] - The height of the layer to be drawn. If not specified, defaults to the images natural height.
+	 * @param {Boolean} [opts.forceBoundary=false] - Force the item to stay in bounds.
 	 * @returns {CanvasLayer} - The layer that was added.
 	 */
 	addLayer(url, opts={}){
@@ -93,7 +94,8 @@ class Canvas{
 		const selectable = !!opts.selectable === undefined ? true : opts.selectable;
 		const width = opts.width || null;
 		const height = opts.height || null;
-		var layer = new CanvasLayer(url, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable);
+		const forceBoundary = opts.forceBoundary || false;
+		var layer = new CanvasLayer(url, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary);
 		this.layers.unshift(layer);
 		this.draw();
 		return layer;
@@ -172,6 +174,7 @@ class Canvas{
 		this.last_draw_time = current_draw_time;
 		
 		this.loadAll().then(()=>{
+		
 			if(this.last_draw_time !== current_draw_time){
 				return;
 			}
@@ -320,7 +323,7 @@ class Canvas{
 	 * @ignore
 	 */
 	loadAll(){
-		var promises = this.layers.map(layer=>layer.load());
+		var promises = this.layers.map(layer=>new Promise(done=>layer.onload(done)));
 		return Promise.all(promises);
 	}
 	
@@ -373,9 +376,18 @@ class Canvas{
 				this.draw();
 			}
 		}else if(this.draggingActiveLayer){
+			const newx = this.activeLayerMouseOffset.x + x;
+			const newy = this.activeLayerMouseOffset.y + y;
+			
+			if(this.activeLayer.forceBoundary && !this.isNewPosInBounds(this.activeLayer, newx, newy)){
+				this.draggingActiveLayer = false;
+				this.draw();
+				return;
+			}
+			
 			if(this.fireEvent('layer-drag')){
-				this.activeLayer.x = this.activeLayerMouseOffset.x + x;
-				this.activeLayer.y = this.activeLayerMouseOffset.y + y;
+				this.activeLayer.x = newx;
+				this.activeLayer.y = newy;
 				this.draw();
 			}
 		}else if(this.resizingActiveLayer){
@@ -505,6 +517,23 @@ class Canvas{
 		return isNear;
 	}
 	
+	isNewPosInBounds(layer, x, y){
+		var _x = layer.x;
+		var _y = layer.y;
+		layer.x = x;
+		layer.y = y;
+		var inbounds = true;
+		layer.getCorners().forEach(corner=>{
+			var pos = this.absolutePoint(corner.x, corner.y, layer.x, layer.y, layer.rotation);
+			if(pos.x < 0 || pos.x > this.width || pos.y < 0 || pos.y > this.width){
+				inbounds = false;
+			}
+		});
+		layer.x = _x;
+		layer.y = _y;
+		return inbounds;
+	}
+	
 	/**
 	 * Get the point relative to the center of a given layer.
 	 * @ignore
@@ -531,7 +560,7 @@ class Canvas{
 	}
 	
 	/**
-	 * Convert a relative point ot an absolute point.
+	 * Convert a relative point to an absolute point.
 	 * @ignore
 	 */
 	absolutePoint(relPointX, relPointY, centerX, centerY, rotationDegrees) {

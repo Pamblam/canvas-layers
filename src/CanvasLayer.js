@@ -14,12 +14,13 @@ class CanvasLayer{
 	 * @param {Number} [height=null] - The height of the layer on the canvas.
 	 * @param {Number} [rotation=0] - The rotation of the layer on the canvas.
 	 * @param {Boolean} [draggable=true] - Is the layer draggable?
-	 * @param {type} [rotateable=true] - Is the layer rotateable?
-	 * @param {type} [resizable=true] - Is the layer resizable?
-	 * @param {type} [selectable=true] - Is the layer selectable?
+	 * @param {Boolean} [rotateable=true] - Is the layer rotateable?
+	 * @param {Boolean} [resizable=true] - Is the layer resizable?
+	 * @param {Boolean} [selectable=true] - Is the layer selectable?
+	 * @param {Boolean} [forceBoundary=false] - Force the layer to stay in bounds?
 	 * @returns {CanvasLayer}
 	 */
-	constructor(url, name, x, y, width=null, height=null, rotation=0, draggable=true, rotateable=true, resizable=true, selectable=true){
+	constructor(url, name, x, y, width=null, height=null, rotation=0, draggable=true, rotateable=true, resizable=true, selectable=true, forceBoundary=false){
 		this.name = name;
 		this.url = url;
 		this.ready = false;
@@ -33,7 +34,9 @@ class CanvasLayer{
 		this.rotateable = rotateable;
 		this.resizable = resizable;
 		this.selectable = selectable;
+		this.forceBoundary = forceBoundary;
 		this.load_cb_stack = [];
+		this.load();
 	}
 	
 	/**
@@ -56,18 +59,20 @@ class CanvasLayer{
 	 */
 	load(){
 		return new Promise(done=>{
-			if(this.ready) return done();
-			const img = new Image();
-			img.onload = ()=>{
-				this.image = img;
-				if(this.width===null) this.width = img.width;
-				if(this.height===null) this.height = img.height;
-				this.load_cb_stack.forEach(fn=>fn());
-				this.load_cb_stack = [];
-				this.ready = true;
+			if(this.ready){
 				done();
-			};
-			img.src = this.url;
+			}else{
+				const img = new Image();
+				img.onload = ()=>{
+					this.image = img;
+					if(this.width===null) this.width = img.width;
+					if(this.height===null) this.height = img.height;
+					this.ready = true;
+					this.load_cb_stack.forEach(fn=>fn());
+					this.load_cb_stack = [];
+				};
+				img.src = this.url;
+			}
 		});
 	}
 	

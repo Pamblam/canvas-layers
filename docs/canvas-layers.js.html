@@ -30,7 +30,7 @@
           </header>
           <article>
             <pre class="prettyprint linenums"><code>/**
- * canvas-layers - v1.0.21
+ * canvas-layers - v1.1.1
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -41,7 +41,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.0.21
+ * @version 1.1.1
  */
 class Canvas{
 	
@@ -119,6 +119,7 @@ class Canvas{
 	 * @param {Boolean} [opts.selectable&#x3D;true] - Can the user select this layer?
 	 * @param {Number} [opts.width&#x3D;null] - The width of the layer to be drawn. If not specified, defaults to the images natural width.
 	 * @param {Number} [opts.height&#x3D;null] - The height of the layer to be drawn. If not specified, defaults to the images natural height.
+	 * @param {Boolean} [opts.forceBoundary&#x3D;false] - Force the item to stay in bounds.
 	 * @returns {CanvasLayer} - The layer that was added.
 	 */
 	addLayer(url, opts&#x3D;{}){
@@ -132,7 +133,8 @@ class Canvas{
 		const selectable &#x3D; !!opts.selectable &#x3D;&#x3D;&#x3D; undefined ? true : opts.selectable;
 		const width &#x3D; opts.width || null;
 		const height &#x3D; opts.height || null;
-		var layer &#x3D; new CanvasLayer(url, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable);
+		const forceBoundary &#x3D; opts.forceBoundary || false;
+		var layer &#x3D; new CanvasLayer(url, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary);
 		this.layers.unshift(layer);
 		this.draw();
 		return layer;
@@ -211,6 +213,7 @@ class Canvas{
 		this.last_draw_time &#x3D; current_draw_time;
 		
 		this.loadAll().then(()&#x3D;&gt;{
+		
 			if(this.last_draw_time !&#x3D;&#x3D; current_draw_time){
 				return;
 			}
@@ -359,7 +362,7 @@ class Canvas{
 	 * @ignore
 	 */
 	loadAll(){
-		var promises &#x3D; this.layers.map(layer&#x3D;&gt;layer.load());
+		var promises &#x3D; this.layers.map(layer&#x3D;&gt;new Promise(done&#x3D;&gt;layer.onload(done)));
 		return Promise.all(promises);
 	}
 	
@@ -412,9 +415,18 @@ class Canvas{
 				this.draw();
 			}
 		}else if(this.draggingActiveLayer){
+			const newx &#x3D; this.activeLayerMouseOffset.x + x;
+			const newy &#x3D; this.activeLayerMouseOffset.y + y;
+			
+			if(this.activeLayer.forceBoundary &amp;amp;&amp;amp; !this.isNewPosInBounds(this.activeLayer, newx, newy)){
+				this.draggingActiveLayer &#x3D; false;
+				this.draw();
+				return;
+			}
+			
 			if(this.fireEvent(&#x27;layer-drag&#x27;)){
-				this.activeLayer.x &#x3D; this.activeLayerMouseOffset.x + x;
-				this.activeLayer.y &#x3D; this.activeLayerMouseOffset.y + y;
+				this.activeLayer.x &#x3D; newx;
+				this.activeLayer.y &#x3D; newy;
 				this.draw();
 			}
 		}else if(this.resizingActiveLayer){
@@ -544,6 +556,23 @@ class Canvas{
 		return isNear;
 	}
 	
+	isNewPosInBounds(layer, x, y){
+		var _x &#x3D; layer.x;
+		var _y &#x3D; layer.y;
+		layer.x &#x3D; x;
+		layer.y &#x3D; y;
+		var inbounds &#x3D; true;
+		layer.getCorners().forEach(corner&#x3D;&gt;{
+			var pos &#x3D; this.absolutePoint(corner.x, corner.y, layer.x, layer.y, layer.rotation);
+			if(pos.x &amp;lt; 0 || pos.x &gt; this.width || pos.y &amp;lt; 0 || pos.y &gt; this.width){
+				inbounds &#x3D; false;
+			}
+		});
+		layer.x &#x3D; _x;
+		layer.y &#x3D; _y;
+		return inbounds;
+	}
+	
 	/**
 	 * Get the point relative to the center of a given layer.
 	 * @ignore
@@ -570,7 +599,7 @@ class Canvas{
 	}
 	
 	/**
-	 * Convert a relative point ot an absolute point.
+	 * Convert a relative point to an absolute point.
 	 * @ignore
 	 */
 	absolutePoint(relPointX, relPointY, centerX, centerY, rotationDegrees) {
@@ -613,7 +642,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version &#x3D; &#x27;1.0.21&#x27;;
+Canvas.version &#x3D; &#x27;1.1.1&#x27;;
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -674,12 +703,13 @@ class CanvasLayer{
 	 * @param {Number} [height&#x3D;null] - The height of the layer on the canvas.
 	 * @param {Number} [rotation&#x3D;0] - The rotation of the layer on the canvas.
 	 * @param {Boolean} [draggable&#x3D;true] - Is the layer draggable?
-	 * @param {type} [rotateable&#x3D;true] - Is the layer rotateable?
-	 * @param {type} [resizable&#x3D;true] - Is the layer resizable?
-	 * @param {type} [selectable&#x3D;true] - Is the layer selectable?
+	 * @param {Boolean} [rotateable&#x3D;true] - Is the layer rotateable?
+	 * @param {Boolean} [resizable&#x3D;true] - Is the layer resizable?
+	 * @param {Boolean} [selectable&#x3D;true] - Is the layer selectable?
+	 * @param {Boolean} [forceBoundary&#x3D;false] - Force the layer to stay in bounds?
 	 * @returns {CanvasLayer}
 	 */
-	constructor(url, name, x, y, width&#x3D;null, height&#x3D;null, rotation&#x3D;0, draggable&#x3D;true, rotateable&#x3D;true, resizable&#x3D;true, selectable&#x3D;true){
+	constructor(url, name, x, y, width&#x3D;null, height&#x3D;null, rotation&#x3D;0, draggable&#x3D;true, rotateable&#x3D;true, resizable&#x3D;true, selectable&#x3D;true, forceBoundary&#x3D;false){
 		this.name &#x3D; name;
 		this.url &#x3D; url;
 		this.ready &#x3D; false;
@@ -693,7 +723,9 @@ class CanvasLayer{
 		this.rotateable &#x3D; rotateable;
 		this.resizable &#x3D; resizable;
 		this.selectable &#x3D; selectable;
+		this.forceBoundary &#x3D; forceBoundary;
 		this.load_cb_stack &#x3D; [];
+		this.load();
 	}
 	
 	/**
@@ -716,18 +748,20 @@ class CanvasLayer{
 	 */
 	load(){
 		return new Promise(done&#x3D;&gt;{
-			if(this.ready) return done();
-			const img &#x3D; new Image();
-			img.onload &#x3D; ()&#x3D;&gt;{
-				this.image &#x3D; img;
-				if(this.width&#x3D;&#x3D;&#x3D;null) this.width &#x3D; img.width;
-				if(this.height&#x3D;&#x3D;&#x3D;null) this.height &#x3D; img.height;
-				this.load_cb_stack.forEach(fn&#x3D;&gt;fn());
-				this.load_cb_stack &#x3D; [];
-				this.ready &#x3D; true;
+			if(this.ready){
 				done();
-			};
-			img.src &#x3D; this.url;
+			}else{
+				const img &#x3D; new Image();
+				img.onload &#x3D; ()&#x3D;&gt;{
+					this.image &#x3D; img;
+					if(this.width&#x3D;&#x3D;&#x3D;null) this.width &#x3D; img.width;
+					if(this.height&#x3D;&#x3D;&#x3D;null) this.height &#x3D; img.height;
+					this.ready &#x3D; true;
+					this.load_cb_stack.forEach(fn&#x3D;&gt;fn());
+					this.load_cb_stack &#x3D; [];
+				};
+				img.src &#x3D; this.url;
+			}
 		});
 	}
 	
