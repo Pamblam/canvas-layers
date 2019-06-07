@@ -1,0 +1,769 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta name="generator" content="JSDoc 3.6.2">
+  <meta charset="utf-8">
+  <title>Class: Canvas</title>
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
+  <link href="css/baseline.css" rel="stylesheet">
+</head>
+
+<body onload="prettyPrint()">
+  <nav id="jsdoc-navbar" role="navigation" class="jsdoc-navbar">
+    <div id="jsdoc-navbar-container">
+      <div id="jsdoc-navbar-content">
+        <a href="index.html" class="jsdoc-navbar-package-name">Home</a>
+      </div>
+    </div>
+  </nav>
+  <div id="jsdoc-body-container">
+    <div id="jsdoc-content">
+      <div id="jsdoc-content-container">
+        <div id="jsdoc-main" role="main">
+          <header class="page-header">
+            <div class="symbol-detail-labels"><span class="label label-kind">class</span></div>
+            <h1><small></small><span class="symbol-name">Canvas</span></h1>
+            <p class="source-link">Source: <a href="canvas-layers.js.html#source-line-32">canvas-layers.<wbr>js:32</a></p>
+            <div class="symbol-classdesc">
+              <p>Interface for handling all canvas functionality</p>
+            </div>
+            <dl class="dl-compact">
+            </dl>
+          </header>
+          <section id="summary">
+            <div class="summary-callout">
+              <h2 class="summary-callout-heading">Properties</h2>
+              <div class="summary-content">
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
+                    <dt><a href="Canvas.html#.anchorRadius">anchorRadius</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#.cursors">cursors</a></dt>
+                    <dd>
+                    </dd>
+                  </dl>
+                </div>
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
+                    <dt><a href="Canvas.html#.fillStyle">fillStyle</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#.lineWidth">lineWidth</a></dt>
+                    <dd>
+                    </dd>
+                  </dl>
+                </div>
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
+                    <dt><a href="Canvas.html#.strokeStyle">strokeStyle</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#.version">version</a></dt>
+                    <dd>
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+            <div class="summary-callout">
+              <h2 class="summary-callout-heading">Methods</h2>
+              <div class="summary-content">
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
+                    <dt><a href="Canvas.html#addLayer">addLayer(url)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#canvasMousePos">canvasMousePos(e)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#cropToLayer">cropToLayer(layer)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#deSelectLayer">deSelectLayer()</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#draw">draw()</a></dt>
+                    <dd>
+                    </dd>
+                  </dl>
+                </div>
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
+                    <dt><a href="Canvas.html#extractPortion">extractPortion(centerx, centery, width, height[, rotation])</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#getLayerAt">getLayerAt(x, y)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#getLayerByName">getLayerByName(name)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#isOverLayer">isOverLayer(x, y, layer)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#isOverSelectableLayer">isOverSelectableLayer(x, y)</a></dt>
+                    <dd>
+                    </dd>
+                  </dl>
+                </div>
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
+                    <dt><a href="Canvas.html#removeAllLayers">removeAllLayers()</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#removeLayer">removeLayer(layer)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#selectLayer">selectLayer(layer)</a></dt>
+                    <dd>
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section>
+            <h2 id="Canvas">new&nbsp;<span class="symbol-name">Canvas</span><span class="signature"><span class="signature-params">(canvas)</span></span></h2>
+            <p>Construct a new instance of the Canvas class</p>
+            <section>
+              <h3>Parameters</h3>
+              <table class="jsdoc-details-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Optional</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <p>canvas</p>
+                    </td>
+                    <td>
+                      <p>&nbsp;</p>
+                    </td>
+                    <td>
+                      <p>&nbsp;</p>
+                    </td>
+                    <td>
+                      <p>The canvas to instantiate the class upon.</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+            <dl class="dl-compact">
+              <dt>Version<dt>
+    <dd><p>1.0.21</p></dd>
+
+
+
+
+
+
+
+
+
+
+
+
+    <dt>See also</dt>
+              <dd><a href="https://pamblam.github.io/canvas-layers/examples/">https://pamblam.github.io/canvas-layers/examples/</a></dd>
+              <dt>Returns</dt>
+              <dd></dd>
+            </dl>
+          </section>
+          <section>
+            <h2>Properties</h2>
+            <section>
+              <div class="symbol-detail-labels"><span class="label label-static">static</span></div>
+              <h3 id=".anchorRadius"><span class="symbol-name">anchorRadius</span><small class="property-type">
+            &nbsp;Number</small></h3>
+              <p>The default anchorRadius value for all Canvas instances.</p>
+              <dl class="dl-compact">
+              </dl>
+              <div class="symbol-detail-labels"><span class="label label-static">static</span></div>
+              <h3 id=".cursors"><span class="symbol-name">cursors</span><small class="property-type">
+            &nbsp;Object</small></h3>
+              <p>The default Cursor values for all Canvas instances. See the canvas constructor for details.</p>
+              <section>
+                <h4>Properties</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+              </dl>
+              <div class="symbol-detail-labels"><span class="label label-static">static</span></div>
+              <h3 id=".fillStyle"><span class="symbol-name">fillStyle</span><small class="property-type">
+            &nbsp;String</small></h3>
+              <p>The default fillStyle value for all Canvas instances.</p>
+              <dl class="dl-compact">
+              </dl>
+              <div class="symbol-detail-labels"><span class="label label-static">static</span></div>
+              <h3 id=".lineWidth"><span class="symbol-name">lineWidth</span><small class="property-type">
+            &nbsp;Number</small></h3>
+              <p>The default lineWidth value for all Canvas instances.</p>
+              <dl class="dl-compact">
+              </dl>
+              <div class="symbol-detail-labels"><span class="label label-static">static</span></div>
+              <h3 id=".strokeStyle"><span class="symbol-name">strokeStyle</span><small class="property-type">
+            &nbsp;String</small></h3>
+              <p>The default strokeStyle value for all Canvas instances.</p>
+              <dl class="dl-compact">
+              </dl>
+              <div class="symbol-detail-labels"><span class="label label-static">static</span></div>
+              <h3 id=".version"><span class="symbol-name">version</span><small class="property-type">
+            &nbsp;String</small></h3>
+              <p>The version of the library</p>
+              <dl class="dl-compact">
+              </dl>
+            </section>
+            <h2>Methods</h2>
+            <section>
+              <h3 id="addLayer"><span class="symbol-name">addLayer</span><span class="signature"><span class="signature-params">(url)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="CanvasLayer.html">CanvasLayer</a></span></span></h3>
+              <p>Add a layer to the canvas.</p>
+              <section>
+                <h4>Parameters</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>url</p>
+                      </td>
+                      <td>
+                        <p>String</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The URI or URL of an image to draw on the canvas.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code><a href="CanvasLayer.html">CanvasLayer</a></code> - The layer that was added.</p>
+                </dd>
+              </dl>
+              <h3 id="canvasMousePos"><span class="symbol-name">canvasMousePos</span><span class="signature"><span class="signature-params">(e)</span>&nbsp;&rarr; <span class="signature-returns"> Object</span></span></h3>
+              <p>Get the cooresponding coordinates of the mouses position on the canvas.</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>e</p>
+                      </td>
+                      <td>
+                        <p>MouseEvent</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The event passed to a mouse event handler.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>{x: Number, y: Number}</code> </p>
+                </dd>
+              </dl>
+              <h3 id="cropToLayer"><span class="symbol-name">cropToLayer</span><span class="signature"><span class="signature-params">(layer)</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
+              <p>Rotate and crop the canvas to the dimensions and rotation of the specified layer.</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>layer</p>
+                      </td>
+                      <td>
+                        <p><a href="CanvasLayer.html">CanvasLayer</a></p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The layer to crop to.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>Promise</code> - A Promise htat resolves with the DataURI of the cropped area.</p>
+                </dd>
+              </dl>
+              <h3 id="deSelectLayer"><span class="symbol-name">deSelectLayer</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Deselect the selected layer if one is selected.</p>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
+                </dd>
+              </dl>
+              <h3 id="draw"><span class="symbol-name">draw</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Draw the canvas.</p>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
+                </dd>
+              </dl>
+              <h3 id="extractPortion"><span class="symbol-name">extractPortion</span><span class="signature"><span class="signature-params">(centerx, centery, width, height[, rotation])</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
+              <p>Rotate and extract a custom area of the canvas.</p>
+              <section>
+                <h4>Parameters</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>centerx</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The x position of the center of the area to extract.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>centery</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The y position of the center of the area to extract.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>width</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The width of the area to extract from teh canvas.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>height</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The height of the area to extract from teh canvas.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>rotation</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>Yes</p>
+                      </td>
+                      <td>
+                        <p>The rotation of the area to extract, counter-clockwise, in degrees.</p>
+                        <p>Defaults to <code>0</code>.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>Promise</code> - A Promise htat resolves with the DataURI of the cropped area.</p>
+                </dd>
+              </dl>
+              <h3 id="getLayerAt"><span class="symbol-name">getLayerAt</span><span class="signature"><span class="signature-params">(x, y)</span>&nbsp;&rarr; <span class="signature-returns"> (<a href="CanvasLayer.html">CanvasLayer</a> or null)</span></span></h3>
+              <p>Get the layer at the given canvas coordinates.</p>
+              <section>
+                <h4>Parameters</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>x</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The x ordinate.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>y</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The y ordinate.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>(<a href="CanvasLayer.html">CanvasLayer</a> or null)</code> </p>
+                </dd>
+              </dl>
+              <h3 id="getLayerByName"><span class="symbol-name">getLayerByName</span><span class="signature"><span class="signature-params">(name)</span>&nbsp;&rarr; <span class="signature-returns"> (<a href="CanvasLayer.html">CanvasLayer</a> or null)</span></span></h3>
+              <p>Get a layer by it's given name.</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>name</p>
+                      </td>
+                      <td>
+                        <p>String</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The name of the layer.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>(<a href="CanvasLayer.html">CanvasLayer</a> or null)</code> </p>
+                </dd>
+              </dl>
+              <h3 id="isOverLayer"><span class="symbol-name">isOverLayer</span><span class="signature"><span class="signature-params">(x, y, layer)</span>&nbsp;&rarr; <span class="signature-returns"> Boolean</span></span></h3>
+              <p>Are the given coordinates over the given layer?</p>
+              <section>
+                <h4>Parameters</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>x</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The x ordinate.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>y</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The y ordinate.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>layer</p>
+                      </td>
+                      <td>
+                        <p><a href="CanvasLayer.html">CanvasLayer</a></p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The layer to check.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>Boolean</code> </p>
+                </dd>
+              </dl>
+              <h3 id="isOverSelectableLayer"><span class="symbol-name">isOverSelectableLayer</span><span class="signature"><span class="signature-params">(x, y)</span>&nbsp;&rarr; <span class="signature-returns"> Boolean</span></span></h3>
+              <p>Are the given coordinates over a selectable layer?</p>
+              <section>
+                <h4>Parameters</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>x</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The x ordinate.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>y</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The y ordinate.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>Boolean</code> </p>
+                </dd>
+              </dl>
+              <h3 id="removeAllLayers"><span class="symbol-name">removeAllLayers</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Remove all layers from teh canvas.</p>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
+                </dd>
+              </dl>
+              <h3 id="removeLayer"><span class="symbol-name">removeLayer</span><span class="signature"><span class="signature-params">(layer)</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Remove the specified layer from the canvas.</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>layer</p>
+                      </td>
+                      <td>
+                        <p><a href="CanvasLayer.html">CanvasLayer</a></p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The layer to remove</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
+                </dd>
+              </dl>
+              <h3 id="selectLayer"><span class="symbol-name">selectLayer</span><span class="signature"><span class="signature-params">(layer)</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Select the given layer.</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>layer</p>
+                      </td>
+                      <td>
+                        <p><a href="CanvasLayer.html">CanvasLayer</a></p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The layer to select.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
+                </dd>
+              </dl>
+            </section>
+          </section>
+        </div>
+      </div>
+      <nav id="jsdoc-toc-nav" role="navigation"></nav>
+    </div>
+  </div>
+  <footer id="jsdoc-footer" class="jsdoc-footer">
+    <div id="jsdoc-footer-container">
+      <p>
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on June 7, 2019.
+      </p>
+    </div>
+  </footer>
+  <script src="scripts/jquery.min.js"></script>
+  <script src="scripts/jquery.cookie.js"></script>
+  <script src="scripts/tree.jquery.js"></script>
+  <script src="scripts/prettify.js"></script>
+  <script src="scripts/jsdoc-toc.js"></script>
+  <script src="scripts/linenumber.js"></script>
+  <script src="scripts/scrollanchor.js"></script>
+</body>
+
+</html>

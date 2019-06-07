@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Canvas Layers - Basic Example</title>
+		<title>Canvas Layers - Deselect Layer On Click Example</title>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -34,7 +34,7 @@
 					<a class="btn btn-default" href="index.html"><span class="glyphicon glyphicon-send"></span> Examples</a>
 				</div>
 				
-				<h1>Basic Example</h1>
+				<h1>Deselect Layer On Click Example</h1>
 			</center>
 			
 			<div class='row'>
@@ -68,7 +68,8 @@
 			
 			// deselct layer if click is outside of canvas
 			document.addEventListener('click', function(e){
-				if(e.target !== canvasEle){
+				const {x, y} = canvas.canvasMousePos(e);
+				if(!canvas.getLayerAt(x, y)){
 					canvas.deSelectLayer();
 				}
 			});

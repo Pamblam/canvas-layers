@@ -1,0 +1,770 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta name="generator" content="JSDoc 3.6.2">
+  <meta charset="utf-8">
+  <title>Source: canvas-layers.js</title>
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
+  <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
+  <link href="css/baseline.css" rel="stylesheet">
+</head>
+
+<body onload="prettyPrint()">
+  <nav id="jsdoc-navbar" role="navigation" class="jsdoc-navbar">
+    <div id="jsdoc-navbar-container">
+      <div id="jsdoc-navbar-content">
+        <a href="index.html" class="jsdoc-navbar-package-name">Home</a>
+      </div>
+    </div>
+  </nav>
+  <div id="jsdoc-body-container">
+    <div id="jsdoc-content">
+      <div id="jsdoc-content-container">
+        <div id="jsdoc-banner" role="banner">
+        </div>
+        <div id="jsdoc-main" role="main">
+          <header class="page-header">
+            <h1>Source: canvas-layers.js</h1>
+          </header>
+          <article>
+            <pre class="prettyprint linenums"><code>/**
+ * canvas-layers - v1.0.21
+ * Allow user to position and re-arrange images on a canvas.
+ * @author Pamblam
+ * @website 
+ * @license MIT
+ */
+
+
+/**
+ * Interface for handling all canvas functionality
+ * @see https://pamblam.github.io/canvas-layers/examples/
+ * @version 1.0.21
+ */
+class Canvas{
+	
+	/**
+	 * Construct a new instance of the Canvas class
+	 * @param {HTMLElement} canvas - The canvas to instantiate the class upon.
+	 * @param {Number} [opts.anchorRadius&#x3D;Canvas.anchorRadius] - The radius of the anchor points shown on selected elements.
+	 * @param {String} [opts.strokeStyle&#x3D;Canvas.strokeStyle] - The color of the outlines drawn on selceted elements. May be any valid CSS color string.
+	 * @param {String} [opts.fillStyle&#x3D;Canvas.fillStyle] - The color of the anchor points shown on selected elements. May be any valid CSS color string.
+	 * @param {Number} [opts.lineWidth&#x3D;Canvas.lineWidth] - The width of the outlines shown on selected elements.
+	 * @param {String} [opts.cursors.default&#x3D;Canvas.cursors.default] - The default cursor to use when hovering over the canvas. May be any valid css cursor value.
+	 * @param {String} [opts.cursors.grab&#x3D;Canvas.cursors.grab] - The grab cursor to use when hovering over a movable layer. May be any valid css cursor value.
+	 * @param {String} [opts.cursors.grabbing&#x3D;Canvas.cursors.grabbing] - The grabbing cursor to use when dragging a layer. May be any valid css cursor value.
+	 * @param {String} [opts.cursors.move&#x3D;Canvas.cursors.move] - The default cursor to use when hovering over a resize anchor. May be any valid css cursor value.
+	 * @param {String} [opts.cursors.rotate&#x3D;Canvas.cursors.rotate] - The default cursor to use when hovering a rotate anchor point. May be any valid css cursor value.
+	 * @param {String} [opts.cursors.rotating&#x3D;Canvas.cursors.rotating] - The default cursor to use when rotating an active layer. May be any valid css cursor value.
+	 * @returns {Canvas}
+	 */
+	constructor(canvas, opts&#x3D;{}){
+		this.canvas &#x3D; canvas;
+		this.width &#x3D; canvas.width;
+		this.height &#x3D; canvas.height;
+		this.ctx &#x3D; canvas.getContext(&#x27;2d&#x27;);
+		this.layers &#x3D; [];
+		this.activeLayer &#x3D; null;
+		this.draggingActiveLayer &#x3D; false;
+		this.resizingActiveLayer &#x3D; false;
+		this.rotatingActiveLayer &#x3D; false;
+		this.lastMouseDownOffset &#x3D; {x:0, y:0};
+		this.activeLayerMouseOffset &#x3D; {x:0, y:0};
+		this.activeLayerOriginalDimensions &#x3D; {width:0, height:0};
+		this.activeLayerRotateStartPos &#x3D; {x:0, y:0};
+		canvas.addEventListener(&#x27;mousemove&#x27;, this.onmousemove.bind(this));
+		canvas.addEventListener(&#x27;mousedown&#x27;, this.onmousedown.bind(this));
+		canvas.addEventListener(&#x27;mouseout&#x27;, this.onmousereset.bind(this));
+		canvas.addEventListener(&#x27;mouseup&#x27;, this.onmousereset.bind(this));
+		
+		this.anchorRadius &#x3D; opts.anchorRadius || Canvas.anchorRadius;
+		this.strokeStyle &#x3D; opts.strokeStyle || Canvas.strokeStyle;
+		this.fillStyle &#x3D; opts.fillStyle || Canvas.fillStyle;
+		this.lineWidth &#x3D; opts.lineWidth || Canvas.lineWidth;
+		this.cursors &#x3D; opts.cursors || {};
+		this.cursors.default &#x3D; this.cursors.default || Canvas.cursors.default;
+		this.cursors.grab &#x3D; this.cursors.grab || Canvas.cursors.grab;
+		this.cursors.grabbing &#x3D; this.cursors.grabbing || Canvas.cursors.grabbing;
+		this.cursors.move &#x3D; this.cursors.move || Canvas.cursors.move;
+		this.cursors.rotate &#x3D; this.cursors.rotate || Canvas.cursors.rotate;
+		this.cursors.rotating &#x3D; this.cursors.rotating || Canvas.cursors.rotating;
+		
+		this.last_draw_time &#x3D; 0;
+	}	
+	
+	/**
+	 * Get a layer by it&#x27;s given name.
+	 * @param {String} name - The name of the layer. 
+	 * @returns {CanvasLayer|null}
+	 */
+	getLayerByName(name){
+		for(var i&#x3D;this.layers.length; i--;){
+			if(this.layers[i].name &#x3D;&#x3D;&#x3D; name) return this.layers[i];
+		}
+		return null;
+	}
+	
+	/**
+	 * Add a layer to the canvas.
+	 * @param {String} url - The URI or URL of an image to draw on the canvas.
+	 * @param {String} [opts.name&#x3D;&quot;Layer n&quot;] - The name of the layer.
+	 * @param {Number} [opts.x&#x3D;this.width/2] - The x position of the layer.
+	 * @param {Number} [opts.y&#x3D;this.height/2] - The y position of the layer.
+	 * @param {Number} [opts.rotation&#x3D;0] - The rotation of the layer, counter-clockwise, in degrees.
+	 * @param {Boolean} [opts.draggable&#x3D;true] - Can the user move this layer?
+	 * @param {Boolean} [opts.rotateable&#x3D;true] - Can the user rotate this layer?
+	 * @param {Boolean} [opts.resizable&#x3D;true] - Can the user resize this layer?
+	 * @param {Boolean} [opts.selectable&#x3D;true] - Can the user select this layer?
+	 * @param {Number} [opts.width&#x3D;null] - The width of the layer to be drawn. If not specified, defaults to the images natural width.
+	 * @param {Number} [opts.height&#x3D;null] - The height of the layer to be drawn. If not specified, defaults to the images natural height.
+	 * @returns {CanvasLayer} - The layer that was added.
+	 */
+	addLayer(url, opts&#x3D;{}){
+		const name &#x3D; opts.name || &#x60;Layer ${this.layers.length}&#x60;;
+		const x &#x3D; parseFloat(opts.x || this.width/2);
+		const y &#x3D; parseFloat(opts.y || this.height/2);
+		const rotation &#x3D; parseFloat(opts.rotation || 0);
+		const draggable &#x3D; opts.draggable &#x3D;&#x3D;&#x3D; undefined ? true : opts.draggable;
+		const rotateable &#x3D; !!opts.rotateable &#x3D;&#x3D;&#x3D; undefined ? true : opts.rotateable;
+		const resizable &#x3D; !!opts.resizable &#x3D;&#x3D;&#x3D; undefined ? true : opts.resizable;
+		const selectable &#x3D; !!opts.selectable &#x3D;&#x3D;&#x3D; undefined ? true : opts.selectable;
+		const width &#x3D; opts.width || null;
+		const height &#x3D; opts.height || null;
+		var layer &#x3D; new CanvasLayer(url, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable);
+		this.layers.unshift(layer);
+		this.draw();
+		return layer;
+	}
+	
+	/**
+	 * Rotate and crop the canvas to the dimensions and rotation of the specified layer.
+	 * @param {CanvasLayer} layer - The layer to crop to.
+	 * @returns {Promise} - A Promise htat resolves with the DataURI of the cropped area.
+	 */
+	cropToLayer(layer){
+		return this.extractPortion(layer.x, layer.y, layer.width, layer.height, layer.rotation);
+	}
+	
+	/**
+	 * Rotate and extract a custom area of the canvas.
+	 * @param {Number} centerx - The x position of the center of the area to extract.
+	 * @param {Number} centery - The y position of the center of the area to extract.
+	 * @param {Number} width - The width of the area to extract from teh canvas.
+	 * @param {Number} height - The height of the area to extract from teh canvas.
+	 * @param {Number} [rotation&#x3D;0] - The rotation of the area to extract, counter-clockwise, in degrees.
+	 * @returns {Promise} - A Promise htat resolves with the DataURI of the cropped area.
+	 */
+	extractPortion(centerx, centery, width, height, rotation&#x3D;0){
+		var radians &#x3D; rotation * Math.PI / 180;
+		var {x, y} &#x3D; this.absolutePoint(-(width/2), -(height/2), centerx, centery, rotation);
+		
+		var rectBB &#x3D; this.getRotatedRectBB(x, y, width, height, radians);
+		
+		var canvas0 &#x3D; document.createElement(&quot;canvas&quot;);
+		var ctx0 &#x3D; canvas0.getContext(&quot;2d&quot;);
+		var canvas1 &#x3D; document.createElement(&quot;canvas&quot;);
+		var ctx1 &#x3D; canvas1.getContext(&quot;2d&quot;);
+		var canvas2 &#x3D; document.createElement(&quot;canvas&quot;);
+		var ctx2 &#x3D; canvas2.getContext(&quot;2d&quot;);
+		
+		canvas1.width &#x3D; canvas2.width &#x3D; rectBB.width;
+		canvas1.height &#x3D; canvas2.height &#x3D; rectBB.height;
+		canvas0.width &#x3D; this.width;
+		canvas0.height &#x3D; this.height;
+		
+		return new Promise(done&#x3D;&gt;{
+			this.loadAll().then(()&#x3D;&gt;{
+				for(let i&#x3D;this.layers.length; i--;){
+					let layer &#x3D; this.layers[i];
+					var radians &#x3D; layer.rotation * (Math.PI/180);
+					ctx0.translate(layer.x, layer.y);
+					ctx0.rotate(radians);
+					ctx0.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
+					ctx0.rotate(-radians);
+					ctx0.translate(-layer.x, -layer.y);
+				}
+
+				ctx1.drawImage(canvas0, rectBB.cx - rectBB.width / 2, rectBB.cy - rectBB.height / 2, rectBB.width, rectBB.height, 0, 0, rectBB.width, rectBB.height);
+				ctx2.translate(canvas1.width / 2, canvas1.height / 2);
+				ctx2.rotate(-radians);
+				ctx2.drawImage(canvas1, -canvas1.width / 2, -canvas1.height / 2);
+				var ofstx &#x3D; (canvas2.width - width) / 2;
+				var ofsty &#x3D; (canvas2.height - height) / 2;
+				ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
+				canvas1.width &#x3D; width;
+				canvas1.height &#x3D; height;
+				ctx1.drawImage(canvas2, -ofstx, -ofsty);
+				done(canvas1.toDataURL());
+
+			});
+		});
+	}
+	
+	/**
+	 * Draw the canvas.
+	 * @returns {undefined}
+	 */
+	draw(){
+		var current_draw_time &#x3D; new Date().getTime();
+		this.last_draw_time &#x3D; current_draw_time;
+		
+		this.loadAll().then(()&#x3D;&gt;{
+			if(this.last_draw_time !&#x3D;&#x3D; current_draw_time){
+				return;
+			}
+			
+			this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+			for(let i&#x3D;this.layers.length; i--;){
+				let layer &#x3D; this.layers[i];
+				var radians &#x3D; layer.rotation * (Math.PI/180);
+				this.ctx.translate(layer.x, layer.y);
+				this.ctx.rotate(radians);
+				this.ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
+				
+				if(layer &#x3D;&#x3D;&#x3D; this.activeLayer){
+					this.ctx.strokeStyle &#x3D; this.strokeStyle;
+					this.ctx.fillStyle &#x3D; this.fillStyle;
+					this.ctx.lineWidth &#x3D; this.getScale() * this.lineWidth;
+					this.ctx.strokeRect(-(layer.width/2), -(layer.height/2), layer.width, layer.height);
+					if(layer.resizable){
+						layer.getCorners().forEach(corner&#x3D;&gt;{
+							this.drawCircle(corner.x, corner.y, this.getScale() * this.anchorRadius);
+						});
+					}
+					if(layer.rotateable){
+						this.ctx.beginPath();
+						this.ctx.moveTo(0, 0);
+						this.ctx.lineTo((layer.width/2)+25, 0);
+						this.ctx.stroke();
+						this.drawCircle((layer.width/2)+25, 0, this.getScale() * this.anchorRadius);
+					}
+				}
+				this.ctx.rotate(-radians);
+				this.ctx.translate(-layer.x, -layer.y);
+			}
+		});
+	}
+	
+	/**
+	 * Remove all layers from teh canvas.
+	 * @returns {undefined}
+	 */
+	removeAllLayers(){
+		this.deSelectLayer();
+		this.layers &#x3D; [];
+		this.draw();
+	}
+	
+	/**
+	 * Remove the specified layer from the canvas.
+	 * @param {CanvasLayer} layer - The layer to remove
+	 * @returns {undefined}
+	 */
+	removeLayer(layer){
+		if(layer &#x3D;&#x3D;&#x3D; this.activeLayer) this.deSelectLayer();
+		this.layers.splice(this.layers.indexOf(layer), 1);
+		this.draw();
+	}
+	
+	/**
+	 * Select the given layer.
+	 * @param {CanvasLayer} layer - The layer to select.
+	 * @returns {undefined}
+	 */
+	selectLayer(layer){
+		this.layers.unshift(this.layers.splice(this.layers.indexOf(layer), 1)[0]);
+		this.activeLayer &#x3D; layer;
+		this.draw();
+	}
+	
+	/**
+	 * Deselect the selected layer if one is selected.
+	 * @returns {undefined}
+	 */
+	deSelectLayer(){
+		this.activeLayer &#x3D; null;
+		this.draggingActiveLayer &#x3D; false;
+		this.draw();
+	}
+	
+	/**
+	 * Get the cooresponding coordinates of the mouses position on the canvas.
+	 * @param {MouseEvent} e - The event passed to a mouse event handler.
+	 * @returns {{x: Number, y: Number}}
+	 */
+	canvasMousePos(e) {
+		var rect &#x3D; this.canvas.getBoundingClientRect();
+		var x &#x3D; e.clientX - rect.left;
+		var y &#x3D; e.clientY - rect.top;
+		var wfactor &#x3D; this.canvas.width / rect.width;
+		var hfactor &#x3D; this.canvas.height / rect.height;
+		x &#x3D; x*wfactor;
+		y &#x3D; y*hfactor;
+		return {x, y};
+	}
+	
+	/**
+	 * Get the layer at the given canvas coordinates.
+	 * @param {Number} x - The x ordinate.
+	 * @param {Number} y - The y ordinate.
+	 * @returns {CanvasLayer|null}
+	 */
+	getLayerAt(x, y){
+		for(let i&#x3D;0; i&amp;lt;this.layers.length; i++){
+			let layer &#x3D; this.layers[i];
+			if(this.isOverLayer(x, y, layer)) return layer;
+		}
+		return null;
+	}
+	
+	/**
+	 * Are the given coordinates over a selectable layer?
+	 * @param {Number} x - The x ordinate.
+	 * @param {Number} y - The y ordinate.
+	 * @returns {Boolean}
+	 */
+	isOverSelectableLayer(x, y){
+		for(let i&#x3D;this.layers.length; i--;){
+			if(this.isOverLayer(x, y, this.layers[i])){
+				if(this.layers[i].selectable &amp;amp;&amp;amp; this.activeLayer !&#x3D;&#x3D; this.layers[i]) return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Are the given coordinates over the given layer?
+	 * @param {Number} x - The x ordinate.
+	 * @param {Number} y - The y ordinate.
+	 * @param {CanvasLayer} layer - The layer to check.
+	 * @returns {Boolean}
+	 */
+	isOverLayer(x, y, layer){
+		let r &#x3D; this.layerRelativePoint(x, y, layer);
+		if(r.x &gt; (layer.width/2)) return false;
+		if(r.x &amp;lt; -(layer.width/2)) return false;
+		if(r.y &gt; (layer.height/2)) return false;
+		if(r.y &amp;lt; -(layer.height/2)) return false;
+		return true;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////
+	// Undocumented utility layers /////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Load all layers.
+	 * @ignore
+	 */
+	loadAll(){
+		var promises &#x3D; this.layers.map(layer&#x3D;&gt;layer.load());
+		return Promise.all(promises);
+	}
+	
+	/**
+	 * Get the bounding box of the defined area.
+	 * @ignore
+	 */
+	getRotatedRectBB(x, y, width, height, rAngle) {
+		var absCos &#x3D; Math.abs(Math.cos(rAngle));
+		var absSin &#x3D; Math.abs(Math.sin(rAngle));
+		var cx &#x3D; x + width / 2 * Math.cos(rAngle) - height / 2 * Math.sin(rAngle);
+		var cy &#x3D; y + width / 2 * Math.sin(rAngle) + height / 2 * Math.cos(rAngle);
+		var w &#x3D; width * absCos + height * absSin;
+		var h &#x3D; width * absSin + height * absCos;
+		return ({
+			cx: cx,
+			cy: cy,
+			width: w,
+			height: h
+		});
+	}
+	
+	/**
+	 * Draw a circle on the canvas.
+	 * @ignore
+	 */
+	drawCircle(x, y, radius){
+		this.ctx.beginPath();
+		this.ctx.arc(x, y, radius, 0, Math.PI*2, true); 
+		this.ctx.closePath();
+		this.ctx.fill();
+	}
+	
+	/**
+	 * Handle mouse moves over the canvas.
+	 * @ignore
+	 */
+	onmousemove(e){
+		var {x, y} &#x3D; this.canvasMousePos(e);
+		this.setCursor(x, y);
+		if(this.activeLayer &#x3D;&#x3D;&#x3D; null) return;
+		
+		if(this.rotatingActiveLayer){
+			if(this.fireEvent(&#x27;layer-rotate&#x27;)){
+				var dx &#x3D; x - this.activeLayer.x;
+				var dy &#x3D; y - this.activeLayer.y;
+				var angle &#x3D; Math.atan2(dy, dx);
+				var degrees &#x3D; angle * 180 / Math.PI;
+				this.activeLayer.rotation &#x3D; degrees;
+				this.draw();
+			}
+		}else if(this.draggingActiveLayer){
+			if(this.fireEvent(&#x27;layer-drag&#x27;)){
+				this.activeLayer.x &#x3D; this.activeLayerMouseOffset.x + x;
+				this.activeLayer.y &#x3D; this.activeLayerMouseOffset.y + y;
+				this.draw();
+			}
+		}else if(this.resizingActiveLayer){
+			if(this.fireEvent(&#x27;layer-resize&#x27;)){
+				this.doUserLayerResize(x, y);
+				this.draw();
+			}
+		}
+	}
+	
+	/**
+	 * Set the appropriate cursor.
+	 * @ignore
+	 */
+	setCursor(x, y){
+		if(this.rotatingActiveLayer){
+			document.body.style.cursor &#x3D; this.cursors.rotating;
+		}else if(this.draggingActiveLayer){
+			document.body.style.cursor &#x3D; this.cursors.grabbing;
+		}else if(this.resizingActiveLayer){
+			document.body.style.cursor &#x3D; this.cursors.move;
+		}else if(this.isNearActiveCorner(x, y)){
+			document.body.style.cursor &#x3D; this.cursors.move;
+		}else if(this.isNearActiveRotatePoint(x, y)){
+			document.body.style.cursor &#x3D; this.cursors.rotate;
+		}else if(this.isOverSelectableLayer(x, y)){
+			document.body.style.cursor &#x3D; this.cursors.grab;
+		}else{
+			document.body.style.cursor &#x3D; this.cursors.default;
+		}
+	}
+	
+	/**
+	 * Handle the user resizing the layer.
+	 * @ignore
+	 */
+	doUserLayerResize(x, y){
+		var o &#x3D; this.lastMouseDownOffset;
+		var n &#x3D; this.layerRelativePoint(x, y, this.activeLayer);
+		if(o.x &gt; 0){
+			this.activeLayer.width &#x3D; Math.abs(this.activeLayerOriginalDimensions.width - (o.x-n.x)*2);
+		}else{
+			this.activeLayer.width &#x3D; Math.abs(this.activeLayerOriginalDimensions.width - (n.x-o.x)*2);
+		}
+		if(o.y &gt; 0){
+			this.activeLayer.height &#x3D; Math.abs(this.activeLayerOriginalDimensions.height - (o.y-n.y)*2);
+		}else{
+			this.activeLayer.height &#x3D; Math.abs(this.activeLayerOriginalDimensions.height - (n.y-o.y)*2);
+		}
+	}
+	
+	/**
+	 * Fire an event.
+	 * @ignore
+	 */
+	fireEvent(type){
+		var event &#x3D; new CustomEvent(type, {detail: this, cancelable: true, bubbles: true});
+		return this.canvas.dispatchEvent(event);
+	}
+	
+	/**
+	 * Handle mousedown over the canvas.
+	 * @ignore
+	 */
+	onmousedown(e){
+		var {x, y} &#x3D; this.canvasMousePos(e);
+		this.setCursor(x, y);
+		if(this.isNearActiveRotatePoint(x, y)){
+			this.activeLayerRotateStartPos &#x3D; {x, y};
+			this.rotatingActiveLayer &#x3D; true;
+		}else if(this.isNearActiveCorner(x, y)){
+			this.resizingActiveLayer &#x3D; true;
+		}else{
+			var cancelled &#x3D; false;
+			var layer &#x3D; this.getLayerAt(x, y);
+			if(layer !&#x3D;&#x3D; null &amp;amp;&amp;amp; layer.selectable &#x3D;&#x3D;&#x3D; false) layer &#x3D; null;
+			if(layer !&#x3D;&#x3D; null &amp;amp;&amp;amp; this.activeLayer !&#x3D;&#x3D; null &amp;amp;&amp;amp; layer !&#x3D;&#x3D; this.activeLayer){
+				cancelled &#x3D; !this.fireEvent(&#x27;layer-deselect&#x27;);
+				if(!cancelled) !this.deSelectLayer();
+			}
+			if(!cancelled &amp;amp;&amp;amp; layer !&#x3D;&#x3D; null){
+				this.activeLayerMouseOffset.x &#x3D; layer.x - x;
+				this.activeLayerMouseOffset.y &#x3D; layer.y - y;
+				if(layer.draggable) this.draggingActiveLayer &#x3D; true;
+				if(layer !&#x3D;&#x3D; this.activeLayer){
+					if(this.fireEvent(&#x27;layer-select&#x27;)){
+						this.selectLayer(layer);
+					}
+				}
+			}
+		}
+		if(this.activeLayer){
+			this.activeLayerOriginalDimensions &#x3D; {
+				width: this.activeLayer.width,
+				height: this.activeLayer.height
+			};
+			this.lastMouseDownOffset &#x3D; this.layerRelativePoint(x, y, this.activeLayer);
+		}
+	}
+	
+	/**
+	 * Are teh given coordinates near an active rotate anchor.
+	 * @ignore
+	 */
+	isNearActiveRotatePoint(x, y){
+		if(!this.activeLayer || !this.activeLayer.rotateable) return false;
+		var {x, y} &#x3D; this.layerRelativePoint(x, y, this.activeLayer);
+		var mx &#x3D; (this.activeLayer.width/2)+25;
+		var my &#x3D; 0;
+		var dist &#x3D; Math.hypot(mx-x, my-y);
+		if(dist &amp;lt;&#x3D; this.getScale() * this.anchorRadius) return true;
+		return false;
+	}
+	
+	/**
+	 * Are the given coordinates near an active resize anchor.
+	 * @ignore
+	 */
+	isNearActiveCorner(x, y){
+		if(!this.activeLayer || !this.activeLayer.resizable) return false;
+		var {x, y} &#x3D; this.layerRelativePoint(x, y, this.activeLayer);
+		var isNear &#x3D; false;
+		this.activeLayer.getCorners().forEach(corner&#x3D;&gt;{			
+			var dist &#x3D; Math.hypot(corner.x-x, corner.y-y);
+			if(dist &amp;lt;&#x3D; this.getScale() * this.anchorRadius) isNear &#x3D; true;
+		});
+		return isNear;
+	}
+	
+	/**
+	 * Get the point relative to the center of a given layer.
+	 * @ignore
+	 */
+	layerRelativePoint(absPointX, absPointY, layer){
+		return this.relativePoint(absPointX, absPointY, layer.x, layer.y, layer.rotation);
+	}
+	
+	/**
+	 * Get the position of a point relative to another point and possibly rotated.
+	 * @ignore
+	 */
+	relativePoint(absPointX, absPointY, centerX, centerY, rotation){
+		absPointX -&#x3D; centerX;
+		absPointY -&#x3D; centerY;
+		var radians &#x3D; rotation * (Math.PI / 180);
+		var cos &#x3D; Math.cos(radians);
+		var sin &#x3D; Math.sin(radians);
+		var x &#x3D; (absPointX * cos) + (absPointY * sin);
+		var y &#x3D; (-absPointX * sin) + (absPointY * cos);
+		x &#x3D; Math.floor(x * 100) / 100;
+		y &#x3D; Math.floor(y * 100) / 100;
+		return {x, y};
+	}
+	
+	/**
+	 * Convert a relative point ot an absolute point.
+	 * @ignore
+	 */
+	absolutePoint(relPointX, relPointY, centerX, centerY, rotationDegrees) {
+		var radians &#x3D; rotationDegrees * (Math.PI / 180);
+		var cos &#x3D; Math.cos(radians);
+		var sin &#x3D; Math.sin(radians);
+		var x &#x3D; centerX + (relPointX * cos) - (relPointY * sin);
+		var y &#x3D; centerY + (relPointX * sin) + (relPointY * cos);
+		return {x, y};
+	}
+	
+	/**
+	 * Handle mouseup or mouseout.
+	 * @ignore
+	 */
+	onmousereset(e){
+		var {x, y} &#x3D; this.canvasMousePos(e);
+		this.draggingActiveLayer &#x3D; false;
+		this.resizingActiveLayer &#x3D; false;
+		this.rotatingActiveLayer &#x3D; false;
+		this.lastMouseDownOffset &#x3D; {x:0, y:0};
+		this.activeLayerMouseOffset &#x3D; {x:0, y:0};
+		this.activeLayerOriginalDimensions &#x3D; {width:0, height:0};
+		this.activeLayerRotateStartPos &#x3D; {x:0, y:0};
+		this.setCursor(x, y);
+	}
+	
+	/**
+	 * Get the scale of the canvas
+	 * @ignore
+	 */
+	getScale(){
+		var rect &#x3D; this.canvas.getBoundingClientRect();
+		return this.canvas.width / rect.width;
+	}
+	
+}
+
+/**
+ * The version of the library
+ * @type {String}
+ */
+Canvas.version &#x3D; &#x27;1.0.21&#x27;;
+
+/**
+ * The default anchorRadius value for all Canvas instances.
+ * @type {Number}
+ */
+Canvas.anchorRadius &#x3D; 8;
+
+/**
+ * The default strokeStyle value for all Canvas instances.
+ * @type {String}
+ */
+Canvas.strokeStyle &#x3D; &#x27;#ba0000&#x27;;
+
+/**
+ * The default fillStyle value for all Canvas instances.
+ * @type {String}
+ */
+Canvas.fillStyle &#x3D; &#x27;black&#x27;;
+
+/**
+ * The default lineWidth value for all Canvas instances.
+ * @type {Number}
+ */
+Canvas.lineWidth &#x3D; 5;
+
+/**
+ * The default Cursor values for all Canvas instances. See the canvas constructor for details.
+ * @type {Object}
+ * @property {String} Canvas.cursors.default
+ * @property {String} Canvas.cursors.grab
+ * @property {String} Canvas.cursors.grabbing
+ * @property {String} Canvas.cursors.move
+ * @property {String} Canvas.cursors.rotate
+ * @property {String} Canvas.cursors.rotating
+ */
+Canvas.cursors &#x3D; {
+	default: null,
+	grab: &quot;grab&quot;,
+	grabbing: &quot;grabbing&quot;,
+	move: &quot;crosshair&quot;,
+	rotate: &quot;grab&quot;,
+	rotating: &quot;grabbing&quot;
+};
+
+
+/**
+ * Class representing the layers drawn on the canvas.
+ */
+class CanvasLayer{
+	
+	/**
+	 * Create a new Layer.
+	 * @param {String} url - The URL or URI of an image to draw on the canvas.
+	 * @param {String} name - The name of the layer.
+	 * @param {Number} x - The x position of the layer on the canvas.
+	 * @param {Number} y - The y position of the layer on the canvas.
+	 * @param {Number} [width&#x3D;null] - The width of the layer on the canvas.
+	 * @param {Number} [height&#x3D;null] - The height of the layer on the canvas.
+	 * @param {Number} [rotation&#x3D;0] - The rotation of the layer on the canvas.
+	 * @param {Boolean} [draggable&#x3D;true] - Is the layer draggable?
+	 * @param {type} [rotateable&#x3D;true] - Is the layer rotateable?
+	 * @param {type} [resizable&#x3D;true] - Is the layer resizable?
+	 * @param {type} [selectable&#x3D;true] - Is the layer selectable?
+	 * @returns {CanvasLayer}
+	 */
+	constructor(url, name, x, y, width&#x3D;null, height&#x3D;null, rotation&#x3D;0, draggable&#x3D;true, rotateable&#x3D;true, resizable&#x3D;true, selectable&#x3D;true){
+		this.name &#x3D; name;
+		this.url &#x3D; url;
+		this.ready &#x3D; false;
+		this.image &#x3D; null;
+		this.x &#x3D; x;
+		this.y &#x3D; y;
+		this.width &#x3D; width;
+		this.height &#x3D; height;
+		this.rotation &#x3D; rotation;
+		this.draggable &#x3D; draggable;
+		this.rotateable &#x3D; rotateable;
+		this.resizable &#x3D; resizable;
+		this.selectable &#x3D; selectable;
+		this.load_cb_stack &#x3D; [];
+	}
+	
+	/**
+	 * Register a function to be called when the layer is fully loaded.
+	 * @param {Function} fn - The callback function.
+	 * @returns {undefined}
+	 */
+	onload(fn){
+		if(this.ready){
+			fn();
+			return;
+		}else{
+			this.load_cb_stack.push(fn);
+		}
+	}
+	
+	/**
+	 * Load the layer so it is ready to use.
+	 * @returns {Promise} - A promise that resolves when the layer is ready
+	 */
+	load(){
+		return new Promise(done&#x3D;&gt;{
+			if(this.ready) return done();
+			const img &#x3D; new Image();
+			img.onload &#x3D; ()&#x3D;&gt;{
+				this.image &#x3D; img;
+				if(this.width&#x3D;&#x3D;&#x3D;null) this.width &#x3D; img.width;
+				if(this.height&#x3D;&#x3D;&#x3D;null) this.height &#x3D; img.height;
+				this.load_cb_stack.forEach(fn&#x3D;&gt;fn());
+				this.load_cb_stack &#x3D; [];
+				this.ready &#x3D; true;
+				done();
+			};
+			img.src &#x3D; this.url;
+		});
+	}
+	
+	/**
+	 * Get the relative position of all the corners.
+	 * @ignore
+	 */
+	getCorners(){
+		return [
+			{x:-(this.width/2), y:-(this.height/2)},
+			{x:-(this.width/2)+this.width, y:-(this.height/2)},
+			{x:-(this.width/2)+this.width, y:-(this.height/2)+this.height},
+			{x:-(this.width/2), y:-(this.height/2)+this.height}
+		];
+	}
+	
+}</code></pre>
+          </article>
+        </div>
+      </div>
+      <nav id="jsdoc-toc-nav" role="navigation"></nav>
+    </div>
+  </div>
+  <footer id="jsdoc-footer" class="jsdoc-footer">
+    <div id="jsdoc-footer-container">
+      <p>
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on June 7, 2019.
+      </p>
+    </div>
+  </footer>
+  <script src="scripts/jquery.min.js"></script>
+  <script src="scripts/jquery.cookie.js"></script>
+  <script src="scripts/tree.jquery.js"></script>
+  <script src="scripts/prettify.js"></script>
+  <script src="scripts/jsdoc-toc.js"></script>
+  <script src="scripts/linenumber.js"></script>
+  <script src="scripts/scrollanchor.js"></script>
+</body>
+
+</html>

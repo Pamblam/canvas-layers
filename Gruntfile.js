@@ -54,6 +54,18 @@ module.exports = function(grunt) {
 						replacement: '<%= pkg.version %>'
 					}]
 				}
+			},
+			docs: {
+				files: {
+					"docs/index.html": "docs/index.html"
+				},
+				options: {
+					replacements: [{
+						pattern: `<div id="jsdoc-banner" role="banner">
+        </div>`,
+						replacement: '<img src=../logo.png>'
+					}]
+				}
 			}
 		},
 		uglify: {
@@ -71,10 +83,27 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-string-replace');
 	grunt.loadNpmTasks('grunt-contrib-uglify-es');
 	
+	grunt.registerTask('jsdoc', 'Generate docs', function () {
+		const {exec} = require('child_process');
+		var done = this.async();
+		exec('./node_modules/.bin/jsdoc --template ./node_modules/\@sugarcrm/jsdoc-baseline/  --destination ./docs canvas-layers.js', (err, stdout, stderr) => {
+			if (err) {
+				console.log('Unable to generate docs.');
+				return;
+			}
+			console.log(`stdout: ${stdout}`);
+			console.log(`stderr: ${stderr}`);
+			done();
+		});
+	});
+	
 	grunt.registerTask('default', [
 		'concat',
-		'string-replace',
-		'uglify'
+		'string-replace:source',
+		'string-replace:readme',
+		'uglify',
+		'jsdoc',
+		'string-replace:docs'
 	]);
 	
 };
