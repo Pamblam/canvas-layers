@@ -30,7 +30,7 @@
           </header>
           <article>
             <pre class="prettyprint linenums"><code>/**
- * canvas-layers - v1.1.1
+ * canvas-layers - v1.1.4
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -41,7 +41,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.1.1
+ * @version 1.1.4
  */
 class Canvas{
 	
@@ -78,6 +78,8 @@ class Canvas{
 		canvas.addEventListener(&#x27;mousedown&#x27;, this.onmousedown.bind(this));
 		canvas.addEventListener(&#x27;mouseout&#x27;, this.onmousereset.bind(this));
 		canvas.addEventListener(&#x27;mouseup&#x27;, this.onmousereset.bind(this));
+		canvas.addEventListener(&#x27;click&#x27;, this.onclick.bind(this));
+		canvas.addEventListener(&#x27;dblclick&#x27;, this.ondblclick.bind(this));
 		
 		this.anchorRadius &#x3D; opts.anchorRadius || Canvas.anchorRadius;
 		this.strokeStyle &#x3D; opts.strokeStyle || Canvas.strokeStyle;
@@ -92,6 +94,7 @@ class Canvas{
 		this.cursors.rotating &#x3D; this.cursors.rotating || Canvas.cursors.rotating;
 		
 		this.last_draw_time &#x3D; 0;
+		this.last_clicked_layer &#x3D; null;
 	}	
 	
 	/**
@@ -418,7 +421,7 @@ class Canvas{
 			const newx &#x3D; this.activeLayerMouseOffset.x + x;
 			const newy &#x3D; this.activeLayerMouseOffset.y + y;
 			
-			if(this.activeLayer.forceBoundary &amp;amp;&amp;amp; !this.isNewPosInBounds(this.activeLayer, newx, newy)){
+			if(this.activeLayer.forceBoundary &amp;amp;&amp;amp; !this.isNewPosInBounds(this.activeLayer, newx, newy, this.activeLayer.width, this.activeLayer.height)){
 				this.draggingActiveLayer &#x3D; false;
 				this.draw();
 				return;
@@ -430,8 +433,17 @@ class Canvas{
 				this.draw();
 			}
 		}else if(this.resizingActiveLayer){
+			
+			const {width, height} &#x3D; this.calculateLayerResize(x, y);
+			if(this.activeLayer.forceBoundary &amp;amp;&amp;amp; !this.isNewPosInBounds(this.activeLayer, this.activeLayer.x, this.activeLayer.y, width, height)){
+				this.draggingActiveLayer &#x3D; false;
+				this.draw();
+				return;
+			}
+			
 			if(this.fireEvent(&#x27;layer-resize&#x27;)){
-				this.doUserLayerResize(x, y);
+				this.activeLayer.width &#x3D; width;
+				this.activeLayer.height &#x3D; height;
 				this.draw();
 			}
 		}
@@ -460,22 +472,26 @@ class Canvas{
 	}
 	
 	/**
-	 * Handle the user resizing the layer.
+	 * Calculate new width and height of resizing image
 	 * @ignore
 	 */
-	doUserLayerResize(x, y){
+	calculateLayerResize(x, y){
+		var width &#x3D; this.activeLayer.width;
+		var height &#x3D; this.activeLayer.height;
+		
 		var o &#x3D; this.lastMouseDownOffset;
 		var n &#x3D; this.layerRelativePoint(x, y, this.activeLayer);
 		if(o.x &gt; 0){
-			this.activeLayer.width &#x3D; Math.abs(this.activeLayerOriginalDimensions.width - (o.x-n.x)*2);
+			width &#x3D; Math.abs(this.activeLayerOriginalDimensions.width - (o.x-n.x)*2);
 		}else{
-			this.activeLayer.width &#x3D; Math.abs(this.activeLayerOriginalDimensions.width - (n.x-o.x)*2);
+			width &#x3D; Math.abs(this.activeLayerOriginalDimensions.width - (n.x-o.x)*2);
 		}
 		if(o.y &gt; 0){
-			this.activeLayer.height &#x3D; Math.abs(this.activeLayerOriginalDimensions.height - (o.y-n.y)*2);
+			height &#x3D; Math.abs(this.activeLayerOriginalDimensions.height - (o.y-n.y)*2);
 		}else{
-			this.activeLayer.height &#x3D; Math.abs(this.activeLayerOriginalDimensions.height - (n.y-o.y)*2);
+			height &#x3D; Math.abs(this.activeLayerOriginalDimensions.height - (n.y-o.y)*2);
 		}
+		return {width, height};
 	}
 	
 	/**
@@ -485,6 +501,32 @@ class Canvas{
 	fireEvent(type){
 		var event &#x3D; new CustomEvent(type, {detail: this, cancelable: true, bubbles: true});
 		return this.canvas.dispatchEvent(event);
+	}
+	
+	/**
+	 * Listen for click event on a layer
+	 * @ignore
+	 */
+	onclick(e){
+		var {x, y} &#x3D; this.canvasMousePos(e);
+		var lcl &#x3D; this.getLayerAt(x, y);
+		if(lcl){
+			this.last_clicked_layer &#x3D; lcl;
+			this.fireEvent(&#x27;layer-click&#x27;);
+		}
+	}
+	
+	/**
+	 * Listen for dbl click event on a layer
+	 * @ignore
+	 */
+	ondblclick(e){
+		var {x, y} &#x3D; this.canvasMousePos(e);
+		var lcl &#x3D; this.getLayerAt(x, y);
+		if(lcl){
+			this.last_clicked_layer &#x3D; lcl;
+			this.fireEvent(&#x27;layer-dblclick&#x27;);
+		}
 	}
 	
 	/**
@@ -556,11 +598,17 @@ class Canvas{
 		return isNear;
 	}
 	
-	isNewPosInBounds(layer, x, y){
+	isNewPosInBounds(layer, x, y, width, height){
 		var _x &#x3D; layer.x;
 		var _y &#x3D; layer.y;
+		var _width &#x3D; layer.width;
+		var _height &#x3D; layer.height;
+		
 		layer.x &#x3D; x;
 		layer.y &#x3D; y;
+		layer.width &#x3D; width;
+		layer.height &#x3D; height;
+		
 		var inbounds &#x3D; true;
 		layer.getCorners().forEach(corner&#x3D;&gt;{
 			var pos &#x3D; this.absolutePoint(corner.x, corner.y, layer.x, layer.y, layer.rotation);
@@ -570,6 +618,8 @@ class Canvas{
 		});
 		layer.x &#x3D; _x;
 		layer.y &#x3D; _y;
+		layer.width &#x3D; _width;
+		layer.height &#x3D; _height;
 		return inbounds;
 	}
 	
@@ -642,7 +692,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version &#x3D; &#x27;1.1.1&#x27;;
+Canvas.version &#x3D; &#x27;1.1.4&#x27;;
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -788,7 +838,7 @@ class CanvasLayer{
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on June 7, 2019.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on June 13, 2019.
       </p>
     </div>
   </footer>

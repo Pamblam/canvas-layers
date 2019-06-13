@@ -39,6 +39,8 @@ class Canvas{
 		canvas.addEventListener('mousedown', this.onmousedown.bind(this));
 		canvas.addEventListener('mouseout', this.onmousereset.bind(this));
 		canvas.addEventListener('mouseup', this.onmousereset.bind(this));
+		canvas.addEventListener('click', this.onclick.bind(this));
+		canvas.addEventListener('dblclick', this.ondblclick.bind(this));
 		
 		this.anchorRadius = opts.anchorRadius || Canvas.anchorRadius;
 		this.strokeStyle = opts.strokeStyle || Canvas.strokeStyle;
@@ -53,6 +55,7 @@ class Canvas{
 		this.cursors.rotating = this.cursors.rotating || Canvas.cursors.rotating;
 		
 		this.last_draw_time = 0;
+		this.last_clicked_layer = null;
 	}	
 	
 	/**
@@ -379,7 +382,7 @@ class Canvas{
 			const newx = this.activeLayerMouseOffset.x + x;
 			const newy = this.activeLayerMouseOffset.y + y;
 			
-			if(this.activeLayer.forceBoundary && !this.isNewPosInBounds(this.activeLayer, newx, newy)){
+			if(this.activeLayer.forceBoundary && !this.isNewPosInBounds(this.activeLayer, newx, newy, this.activeLayer.width, this.activeLayer.height)){
 				this.draggingActiveLayer = false;
 				this.draw();
 				return;
@@ -391,8 +394,17 @@ class Canvas{
 				this.draw();
 			}
 		}else if(this.resizingActiveLayer){
+			
+			const {width, height} = this.calculateLayerResize(x, y);
+			if(this.activeLayer.forceBoundary && !this.isNewPosInBounds(this.activeLayer, this.activeLayer.x, this.activeLayer.y, width, height)){
+				this.draggingActiveLayer = false;
+				this.draw();
+				return;
+			}
+			
 			if(this.fireEvent('layer-resize')){
-				this.doUserLayerResize(x, y);
+				this.activeLayer.width = width;
+				this.activeLayer.height = height;
 				this.draw();
 			}
 		}
@@ -421,22 +433,26 @@ class Canvas{
 	}
 	
 	/**
-	 * Handle the user resizing the layer.
+	 * Calculate new width and height of resizing image
 	 * @ignore
 	 */
-	doUserLayerResize(x, y){
+	calculateLayerResize(x, y){
+		var width = this.activeLayer.width;
+		var height = this.activeLayer.height;
+		
 		var o = this.lastMouseDownOffset;
 		var n = this.layerRelativePoint(x, y, this.activeLayer);
 		if(o.x > 0){
-			this.activeLayer.width = Math.abs(this.activeLayerOriginalDimensions.width - (o.x-n.x)*2);
+			width = Math.abs(this.activeLayerOriginalDimensions.width - (o.x-n.x)*2);
 		}else{
-			this.activeLayer.width = Math.abs(this.activeLayerOriginalDimensions.width - (n.x-o.x)*2);
+			width = Math.abs(this.activeLayerOriginalDimensions.width - (n.x-o.x)*2);
 		}
 		if(o.y > 0){
-			this.activeLayer.height = Math.abs(this.activeLayerOriginalDimensions.height - (o.y-n.y)*2);
+			height = Math.abs(this.activeLayerOriginalDimensions.height - (o.y-n.y)*2);
 		}else{
-			this.activeLayer.height = Math.abs(this.activeLayerOriginalDimensions.height - (n.y-o.y)*2);
+			height = Math.abs(this.activeLayerOriginalDimensions.height - (n.y-o.y)*2);
 		}
+		return {width, height};
 	}
 	
 	/**
@@ -446,6 +462,32 @@ class Canvas{
 	fireEvent(type){
 		var event = new CustomEvent(type, {detail: this, cancelable: true, bubbles: true});
 		return this.canvas.dispatchEvent(event);
+	}
+	
+	/**
+	 * Listen for click event on a layer
+	 * @ignore
+	 */
+	onclick(e){
+		var {x, y} = this.canvasMousePos(e);
+		var lcl = this.getLayerAt(x, y);
+		if(lcl){
+			this.last_clicked_layer = lcl;
+			this.fireEvent('layer-click');
+		}
+	}
+	
+	/**
+	 * Listen for dbl click event on a layer
+	 * @ignore
+	 */
+	ondblclick(e){
+		var {x, y} = this.canvasMousePos(e);
+		var lcl = this.getLayerAt(x, y);
+		if(lcl){
+			this.last_clicked_layer = lcl;
+			this.fireEvent('layer-dblclick');
+		}
 	}
 	
 	/**
@@ -517,11 +559,17 @@ class Canvas{
 		return isNear;
 	}
 	
-	isNewPosInBounds(layer, x, y){
+	isNewPosInBounds(layer, x, y, width, height){
 		var _x = layer.x;
 		var _y = layer.y;
+		var _width = layer.width;
+		var _height = layer.height;
+		
 		layer.x = x;
 		layer.y = y;
+		layer.width = width;
+		layer.height = height;
+		
 		var inbounds = true;
 		layer.getCorners().forEach(corner=>{
 			var pos = this.absolutePoint(corner.x, corner.y, layer.x, layer.y, layer.rotation);
@@ -531,6 +579,8 @@ class Canvas{
 		});
 		layer.x = _x;
 		layer.y = _y;
+		layer.width = _width;
+		layer.height = _height;
 		return inbounds;
 	}
 	
