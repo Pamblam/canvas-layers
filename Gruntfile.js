@@ -1,17 +1,5 @@
 module.exports = function(grunt) {
 	
-	var pkg = grunt.file.readJSON('package.json');
-	pkg.version = pkg.version.split(".");
-	var subversion = pkg.version.pop();
-	subversion++;
-	pkg.version.push(subversion);
-	pkg.version = pkg.version.join(".");
-	grunt.file.write('package.json', JSON.stringify(pkg, null, 2));
-	
-	console.log("---------------------------------------");
-	console.log("  Building canvas-layers Version "+pkg.version);
-	console.log("---------------------------------------");
-	
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
 		
@@ -83,6 +71,16 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-string-replace');
 	grunt.loadNpmTasks('grunt-contrib-uglify-es');
 	
+	grunt.registerTask('update-version', 'Generate docs', function () {
+		var pkg = grunt.file.readJSON('package.json');
+		pkg.version = pkg.version.split(".");
+		var subversion = pkg.version.pop();
+		subversion++;
+		pkg.version.push(subversion);
+		pkg.version = pkg.version.join(".");
+		grunt.file.write('package.json', JSON.stringify(pkg, null, 2));
+	});
+	
 	grunt.registerTask('jsdoc', 'Generate docs', function () {
 		const {exec} = require('child_process');
 		var done = this.async();
@@ -98,6 +96,7 @@ module.exports = function(grunt) {
 	});
 	
 	grunt.registerTask('default', [
+		'update-version',
 		'concat',
 		'string-replace:source',
 		'string-replace:readme',

@@ -30,7 +30,7 @@
           </header>
           <article>
             <pre class="prettyprint linenums"><code>/**
- * canvas-layers - v1.1.4
+ * canvas-layers - v1.1.7
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -41,7 +41,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.1.4
+ * @version 1.1.7
  */
 class Canvas{
 	
@@ -92,9 +92,9 @@ class Canvas{
 		this.cursors.move &#x3D; this.cursors.move || Canvas.cursors.move;
 		this.cursors.rotate &#x3D; this.cursors.rotate || Canvas.cursors.rotate;
 		this.cursors.rotating &#x3D; this.cursors.rotating || Canvas.cursors.rotating;
-		
-		this.last_draw_time &#x3D; 0;
 		this.last_clicked_layer &#x3D; null;
+		this.pending_layers &#x3D; 0;
+		this.ready &#x3D; true;
 	}	
 	
 	/**
@@ -126,6 +126,7 @@ class Canvas{
 	 * @returns {CanvasLayer} - The layer that was added.
 	 */
 	addLayer(url, opts&#x3D;{}){
+		this.ready &#x3D; false;
 		const name &#x3D; opts.name || &#x60;Layer ${this.layers.length}&#x60;;
 		const x &#x3D; parseFloat(opts.x || this.width/2);
 		const y &#x3D; parseFloat(opts.y || this.height/2);
@@ -139,7 +140,15 @@ class Canvas{
 		const forceBoundary &#x3D; opts.forceBoundary || false;
 		var layer &#x3D; new CanvasLayer(url, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary);
 		this.layers.unshift(layer);
-		this.draw();
+		
+		this.pending_layers++;
+		layer.onload(()&#x3D;&gt;{
+			this.pending_layers--;
+			if(0 &#x3D;&#x3D;&#x3D; this.pending_layers){
+				this.ready &#x3D; true;
+				this.draw();
+			}
+		});
 		return layer;
 	}
 	
@@ -212,45 +221,43 @@ class Canvas{
 	 * @returns {undefined}
 	 */
 	draw(){
-		var current_draw_time &#x3D; new Date().getTime();
-		this.last_draw_time &#x3D; current_draw_time;
-		
-		this.loadAll().then(()&#x3D;&gt;{
-		
-			if(this.last_draw_time !&#x3D;&#x3D; current_draw_time){
-				return;
+		if(!this.ready) return;
+			
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		for(let i&#x3D;this.layers.length; i--;){
+			let layer &#x3D; this.layers[i];
+			var radians &#x3D; layer.rotation * (Math.PI/180);
+			this.ctx.translate(layer.x, layer.y);
+			this.ctx.rotate(radians);
+			
+			try{
+				this.ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
+			}catch(e){
+				console.log(e.message);
+				console.log(layer.image);
 			}
 			
-			this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-			for(let i&#x3D;this.layers.length; i--;){
-				let layer &#x3D; this.layers[i];
-				var radians &#x3D; layer.rotation * (Math.PI/180);
-				this.ctx.translate(layer.x, layer.y);
-				this.ctx.rotate(radians);
-				this.ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
-				
-				if(layer &#x3D;&#x3D;&#x3D; this.activeLayer){
-					this.ctx.strokeStyle &#x3D; this.strokeStyle;
-					this.ctx.fillStyle &#x3D; this.fillStyle;
-					this.ctx.lineWidth &#x3D; this.getScale() * this.lineWidth;
-					this.ctx.strokeRect(-(layer.width/2), -(layer.height/2), layer.width, layer.height);
-					if(layer.resizable){
-						layer.getCorners().forEach(corner&#x3D;&gt;{
-							this.drawCircle(corner.x, corner.y, this.getScale() * this.anchorRadius);
-						});
-					}
-					if(layer.rotateable){
-						this.ctx.beginPath();
-						this.ctx.moveTo(0, 0);
-						this.ctx.lineTo((layer.width/2)+25, 0);
-						this.ctx.stroke();
-						this.drawCircle((layer.width/2)+25, 0, this.getScale() * this.anchorRadius);
-					}
+			if(layer &#x3D;&#x3D;&#x3D; this.activeLayer){
+				this.ctx.strokeStyle &#x3D; this.strokeStyle;
+				this.ctx.fillStyle &#x3D; this.fillStyle;
+				this.ctx.lineWidth &#x3D; this.getScale() * this.lineWidth;
+				this.ctx.strokeRect(-(layer.width/2), -(layer.height/2), layer.width, layer.height);
+				if(layer.resizable){
+					layer.getCorners().forEach(corner&#x3D;&gt;{
+						this.drawCircle(corner.x, corner.y, this.getScale() * this.anchorRadius);
+					});
 				}
-				this.ctx.rotate(-radians);
-				this.ctx.translate(-layer.x, -layer.y);
+				if(layer.rotateable){
+					this.ctx.beginPath();
+					this.ctx.moveTo(0, 0);
+					this.ctx.lineTo((layer.width/2)+25, 0);
+					this.ctx.stroke();
+					this.drawCircle((layer.width/2)+25, 0, this.getScale() * this.anchorRadius);
+				}
 			}
-		});
+			this.ctx.rotate(-radians);
+			this.ctx.translate(-layer.x, -layer.y);
+		}
 	}
 	
 	/**
@@ -692,7 +699,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version &#x3D; &#x27;1.1.4&#x27;;
+Canvas.version &#x3D; &#x27;1.1.7&#x27;;
 
 /**
  * The default anchorRadius value for all Canvas instances.

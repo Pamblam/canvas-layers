@@ -53,9 +53,9 @@ class Canvas{
 		this.cursors.move = this.cursors.move || Canvas.cursors.move;
 		this.cursors.rotate = this.cursors.rotate || Canvas.cursors.rotate;
 		this.cursors.rotating = this.cursors.rotating || Canvas.cursors.rotating;
-		
-		this.last_draw_time = 0;
 		this.last_clicked_layer = null;
+		this.pending_layers = 0;
+		this.ready = true;
 	}	
 	
 	/**
@@ -87,6 +87,7 @@ class Canvas{
 	 * @returns {CanvasLayer} - The layer that was added.
 	 */
 	addLayer(url, opts={}){
+		this.ready = false;
 		const name = opts.name || `Layer ${this.layers.length}`;
 		const x = parseFloat(opts.x || this.width/2);
 		const y = parseFloat(opts.y || this.height/2);
@@ -100,7 +101,14 @@ class Canvas{
 		const forceBoundary = opts.forceBoundary || false;
 		var layer = new CanvasLayer(url, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary);
 		this.layers.unshift(layer);
-		this.draw();
+		this.pending_layers++;
+		layer.onload(()=>{
+			this.pending_layers--;
+			if(0 === this.pending_layers){
+				this.ready = true;
+				this.draw();
+			}
+		});
 		return layer;
 	}
 	
@@ -173,45 +181,43 @@ class Canvas{
 	 * @returns {undefined}
 	 */
 	draw(){
-		var current_draw_time = new Date().getTime();
-		this.last_draw_time = current_draw_time;
-		
-		this.loadAll().then(()=>{
-		
-			if(this.last_draw_time !== current_draw_time){
-				return;
+		if(!this.ready) return;
+			
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		for(let i=this.layers.length; i--;){
+			let layer = this.layers[i];
+			var radians = layer.rotation * (Math.PI/180);
+			this.ctx.translate(layer.x, layer.y);
+			this.ctx.rotate(radians);
+			
+			try{
+				this.ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
+			}catch(e){
+				console.log(e.message);
+				console.log(layer.image);
 			}
 			
-			this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-			for(let i=this.layers.length; i--;){
-				let layer = this.layers[i];
-				var radians = layer.rotation * (Math.PI/180);
-				this.ctx.translate(layer.x, layer.y);
-				this.ctx.rotate(radians);
-				this.ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
-				
-				if(layer === this.activeLayer){
-					this.ctx.strokeStyle = this.strokeStyle;
-					this.ctx.fillStyle = this.fillStyle;
-					this.ctx.lineWidth = this.getScale() * this.lineWidth;
-					this.ctx.strokeRect(-(layer.width/2), -(layer.height/2), layer.width, layer.height);
-					if(layer.resizable){
-						layer.getCorners().forEach(corner=>{
-							this.drawCircle(corner.x, corner.y, this.getScale() * this.anchorRadius);
-						});
-					}
-					if(layer.rotateable){
-						this.ctx.beginPath();
-						this.ctx.moveTo(0, 0);
-						this.ctx.lineTo((layer.width/2)+25, 0);
-						this.ctx.stroke();
-						this.drawCircle((layer.width/2)+25, 0, this.getScale() * this.anchorRadius);
-					}
+			if(layer === this.activeLayer){
+				this.ctx.strokeStyle = this.strokeStyle;
+				this.ctx.fillStyle = this.fillStyle;
+				this.ctx.lineWidth = this.getScale() * this.lineWidth;
+				this.ctx.strokeRect(-(layer.width/2), -(layer.height/2), layer.width, layer.height);
+				if(layer.resizable){
+					layer.getCorners().forEach(corner=>{
+						this.drawCircle(corner.x, corner.y, this.getScale() * this.anchorRadius);
+					});
 				}
-				this.ctx.rotate(-radians);
-				this.ctx.translate(-layer.x, -layer.y);
+				if(layer.rotateable){
+					this.ctx.beginPath();
+					this.ctx.moveTo(0, 0);
+					this.ctx.lineTo((layer.width/2)+25, 0);
+					this.ctx.stroke();
+					this.drawCircle((layer.width/2)+25, 0, this.getScale() * this.anchorRadius);
+				}
 			}
-		});
+			this.ctx.rotate(-radians);
+			this.ctx.translate(-layer.x, -layer.y);
+		}
 	}
 	
 	/**
