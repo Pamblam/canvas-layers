@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v1.1.7
+ * canvas-layers - v1.1.9
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.1.7
+ * @version 1.1.9
  */
 class Canvas{
 	
@@ -36,6 +36,7 @@ class Canvas{
 		this.ctx = canvas.getContext('2d');
 		this.layers = [];
 		this.activeLayer = null;
+		this.shiftKeyDown = false;
 		this.draggingActiveLayer = false;
 		this.resizingActiveLayer = false;
 		this.rotatingActiveLayer = false;
@@ -49,6 +50,8 @@ class Canvas{
 		canvas.addEventListener('mouseup', this.onmousereset.bind(this));
 		canvas.addEventListener('click', this.onclick.bind(this));
 		canvas.addEventListener('dblclick', this.ondblclick.bind(this));
+		document.addEventListener('keydown', this.onkeyevent.bind(this));
+		document.addEventListener('keyup', this.onkeyevent.bind(this));
 		
 		this.anchorRadius = opts.anchorRadius || Canvas.anchorRadius;
 		this.strokeStyle = opts.strokeStyle || Canvas.strokeStyle;
@@ -109,7 +112,6 @@ class Canvas{
 		const forceBoundary = opts.forceBoundary || false;
 		var layer = new CanvasLayer(url, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary);
 		this.layers.unshift(layer);
-		
 		this.pending_layers++;
 		layer.onload(()=>{
 			this.pending_layers--;
@@ -376,6 +378,14 @@ class Canvas{
 	}
 	
 	/**
+	 * Handle key down and keyup.
+	 * @ignore
+	 */
+	onkeyevent(e){
+		this.shiftKeyDown = e.shiftKey;
+	}
+	
+	/**
 	 * Handle mouse moves over the canvas.
 	 * @ignore
 	 */
@@ -467,6 +477,17 @@ class Canvas{
 		}else{
 			height = Math.abs(this.activeLayerOriginalDimensions.height - (n.y-o.y)*2);
 		}
+		
+		console.log(this.shiftKeyDown ? 'scaling' : 'not scaling');
+		if(this.shiftKeyDown){
+			var ratio = Math.min(
+				width/this.activeLayerOriginalDimensions.width, 
+				height/this.activeLayerOriginalDimensions.height
+			);
+			width = this.activeLayerOriginalDimensions.width * ratio;
+			height = this.activeLayerOriginalDimensions.height * ratio;
+		}
+		
 		return {width, height};
 	}
 	
@@ -668,7 +689,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '1.1.7';
+Canvas.version = '1.1.9';
 
 /**
  * The default anchorRadius value for all Canvas instances.

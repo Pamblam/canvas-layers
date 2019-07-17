@@ -28,6 +28,7 @@ class Canvas{
 		this.ctx = canvas.getContext('2d');
 		this.layers = [];
 		this.activeLayer = null;
+		this.shiftKeyDown = false;
 		this.draggingActiveLayer = false;
 		this.resizingActiveLayer = false;
 		this.rotatingActiveLayer = false;
@@ -41,6 +42,8 @@ class Canvas{
 		canvas.addEventListener('mouseup', this.onmousereset.bind(this));
 		canvas.addEventListener('click', this.onclick.bind(this));
 		canvas.addEventListener('dblclick', this.ondblclick.bind(this));
+		document.addEventListener('keydown', this.onkeyevent.bind(this));
+		document.addEventListener('keyup', this.onkeyevent.bind(this));
 		
 		this.anchorRadius = opts.anchorRadius || Canvas.anchorRadius;
 		this.strokeStyle = opts.strokeStyle || Canvas.strokeStyle;
@@ -367,6 +370,14 @@ class Canvas{
 	}
 	
 	/**
+	 * Handle key down and keyup.
+	 * @ignore
+	 */
+	onkeyevent(e){
+		this.shiftKeyDown = e.shiftKey;
+	}
+	
+	/**
 	 * Handle mouse moves over the canvas.
 	 * @ignore
 	 */
@@ -458,6 +469,17 @@ class Canvas{
 		}else{
 			height = Math.abs(this.activeLayerOriginalDimensions.height - (n.y-o.y)*2);
 		}
+		
+		console.log(this.shiftKeyDown ? 'scaling' : 'not scaling');
+		if(this.shiftKeyDown){
+			var ratio = Math.min(
+				width/this.activeLayerOriginalDimensions.width, 
+				height/this.activeLayerOriginalDimensions.height
+			);
+			width = this.activeLayerOriginalDimensions.width * ratio;
+			height = this.activeLayerOriginalDimensions.height * ratio;
+		}
+		
 		return {width, height};
 	}
 	
