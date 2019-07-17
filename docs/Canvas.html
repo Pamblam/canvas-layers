@@ -89,17 +89,23 @@
                     <dt><a href="Canvas.html#draw">draw()</a></dt>
                     <dd>
                     </dd>
+                    <dt><a href="Canvas.html#extractPortion">extractPortion(centerx, centery, width, height[, rotation])</a></dt>
+                    <dd>
+                    </dd>
                   </dl>
                 </div>
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
-                    <dt><a href="Canvas.html#extractPortion">extractPortion(centerx, centery, width, height[, rotation])</a></dt>
+                    <dt><a href="Canvas.html#getGridLines">getGridLines()</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#getLayerAt">getLayerAt(x, y)</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#getLayerByName">getLayerByName(name)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#hideGrid">hideGrid()</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#isOverLayer">isOverLayer(x, y, layer)</a></dt>
@@ -119,6 +125,15 @@
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#selectLayer">selectLayer(layer)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#showGrid">showGrid(gridDistance)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#snapOff">snapOff()</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#snapOn">snapOn()</a></dt>
                     <dd>
                     </dd>
                   </dl>
@@ -160,7 +175,7 @@
             </section>
             <dl class="dl-compact">
               <dt>Version<dt>
-    <dd><p>1.1.9</p></dd>
+    <dd><p>1.1.20</p></dd>
 
 
 
@@ -457,6 +472,12 @@
                   <p><code>Promise</code> - A Promise htat resolves with the DataURI of the cropped area.</p>
                 </dd>
               </dl>
+              <h3 id="getGridLines"><span class="symbol-name">getGridLines</span><span class="signature"><span class="signature-params">()</span></span></h3>
+              <p>Get an object containing arrays of x and y grid line positons</p>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd></dd>
+              </dl>
               <h3 id="getLayerAt"><span class="symbol-name">getLayerAt</span><span class="signature"><span class="signature-params">(x, y)</span>&nbsp;&rarr; <span class="signature-returns"> (<a href="CanvasLayer.html">CanvasLayer</a> or null)</span></span></h3>
               <p>Get the layer at the given canvas coordinates.</p>
               <section>
@@ -543,6 +564,14 @@
                 <dt>Returns</dt>
                 <dd>
                   <p><code>(<a href="CanvasLayer.html">CanvasLayer</a> or null)</code> </p>
+                </dd>
+              </dl>
+              <h3 id="hideGrid"><span class="symbol-name">hideGrid</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Hide the grid lines on the canvas</p>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
                 </dd>
               </dl>
               <h3 id="isOverLayer"><span class="symbol-name">isOverLayer</span><span class="signature"><span class="signature-params">(x, y, layer)</span>&nbsp;&rarr; <span class="signature-returns"> Boolean</span></span></h3>
@@ -737,6 +766,60 @@
                   </tbody>
                 </table>
               </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
+                </dd>
+              </dl>
+              <h3 id="showGrid"><span class="symbol-name">showGrid</span><span class="signature"><span class="signature-params">(gridDistance)</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Show the grid lines on the canvas</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>gridDistance</p>
+                      </td>
+                      <td>
+                        <p>number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>Distance between grid lines in pixels</p>
+                        <p>Defaults to <code>25</code>.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
+                </dd>
+              </dl>
+              <h3 id="snapOff"><span class="symbol-name">snapOff</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Disable snap to grid</p>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
+                </dd>
+              </dl>
+              <h3 id="snapOn"><span class="symbol-name">snapOn</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Enable snap to grid</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>

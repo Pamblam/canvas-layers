@@ -30,7 +30,7 @@
           </header>
           <article>
             <pre class="prettyprint linenums"><code>/**
- * canvas-layers - v1.1.9
+ * canvas-layers - v1.1.20
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -41,7 +41,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.1.9
+ * @version 1.1.20
  */
 class Canvas{
 	
@@ -75,6 +75,8 @@ class Canvas{
 		this.activeLayerMouseOffset &#x3D; {x:0, y:0};
 		this.activeLayerOriginalDimensions &#x3D; {width:0, height:0};
 		this.activeLayerRotateStartPos &#x3D; {x:0, y:0};
+		this.gridDistancePixels &#x3D; null;
+		this.snapToGrid &#x3D; false;
 		canvas.addEventListener(&#x27;mousemove&#x27;, this.onmousemove.bind(this));
 		canvas.addEventListener(&#x27;mousedown&#x27;, this.onmousedown.bind(this));
 		canvas.addEventListener(&#x27;mouseout&#x27;, this.onmousereset.bind(this));
@@ -99,6 +101,43 @@ class Canvas{
 		this.pending_layers &#x3D; 0;
 		this.ready &#x3D; true;
 	}	
+	
+	/**
+	 * Enable snap to grid
+	 * @returns {undefined}
+	 */
+	snapOn(){
+		this.snapToGrid &#x3D; true;
+	}
+	
+	/**
+	 * Disable snap to grid
+	 * @returns {undefined}
+	 */
+	snapOff(){
+		this.snapToGrid &#x3D; false;
+	}
+	
+	/**
+	 * Show the grid lines on the canvas
+	 * @param {number} gridDistance - Distance between grid lines in pixels
+	 * @returns {undefined}
+	 */
+	showGrid(gridDistance&#x3D;25){
+		this.gridDistancePixels &#x3D; gridDistance;
+		this.draw();
+	}
+	
+	/**
+	 * Hide the grid lines on the canvas
+	 * @returns {undefined}
+	 */
+	hideGrid(){
+		if(this.gridDistancePixels){
+			this.gridDistancePixels &#x3D; null;
+			this.draw();
+		}
+	}
 	
 	/**
 	 * Get a layer by it&#x27;s given name.
@@ -232,12 +271,7 @@ class Canvas{
 			this.ctx.translate(layer.x, layer.y);
 			this.ctx.rotate(radians);
 			
-			try{
-				this.ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
-			}catch(e){
-				console.log(e.message);
-				console.log(layer.image);
-			}
+			this.ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
 			
 			if(layer &#x3D;&#x3D;&#x3D; this.activeLayer){
 				this.ctx.strokeStyle &#x3D; this.strokeStyle;
@@ -260,7 +294,25 @@ class Canvas{
 			this.ctx.rotate(-radians);
 			this.ctx.translate(-layer.x, -layer.y);
 		}
-	}
+		
+		if(this.gridDistancePixels){
+			this.ctx.strokeStyle &#x3D; &quot;rgba(0,0,0,0.2)&quot;;
+			this.ctx.lineWidth &#x3D; this.getScale() * 2;
+			var {xs, ys} &#x3D; this.getGridLines();
+			xs.forEach(x&#x3D;&gt;{
+				this.ctx.beginPath();
+				this.ctx.moveTo(x, 0);
+				this.ctx.lineTo(x, this.canvas.height);
+				this.ctx.stroke(); 
+			});
+			ys.forEach(y&#x3D;&gt;{
+				this.ctx.beginPath();
+				this.ctx.moveTo(0, y);
+				this.ctx.lineTo(this.canvas.width, y);
+				this.ctx.stroke(); 
+			});
+		}
+	}	
 	
 	/**
 	 * Remove all layers from teh canvas.
@@ -368,6 +420,28 @@ class Canvas{
 	////////////////////////////////////////////////////////////////////////////
 	// Undocumented utility layers /////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Get an object containing arrays of x and y grid line positons
+	 * @returns {x:[], y:[]};
+	 */
+	getGridLines(){
+		var xs &#x3D; [];
+		var ys &#x3D; [];
+		for(var x&#x3D;0; x&amp;lt;this.canvas.width; x +&#x3D; (this.getScale() * this.gridDistancePixels)){
+			xs.push(x); 
+		}
+		for(var y&#x3D;0; y&amp;lt;this.canvas.height; y +&#x3D; (this.getScale() * this.gridDistancePixels)){
+			ys.push(y);
+		}
+		for(let i&#x3D;this.layers.length; i--;){
+			xs.push(this.layers[i].x);
+			ys.push(this.layers[i].y);
+		}
+		xs.sort();
+		ys.sort();
+		return {xs, ys};
+	}
 	
 	/**
 	 * Load all layers.
@@ -508,8 +582,6 @@ class Canvas{
 		}else{
 			height &#x3D; Math.abs(this.activeLayerOriginalDimensions.height - (n.y-o.y)*2);
 		}
-		
-		console.log(this.shiftKeyDown ? &#x27;scaling&#x27; : &#x27;not scaling&#x27;);
 		if(this.shiftKeyDown){
 			var ratio &#x3D; Math.min(
 				width/this.activeLayerOriginalDimensions.width, 
@@ -694,6 +766,25 @@ class Canvas{
 	 * @ignore
 	 */
 	onmousereset(e){
+		if(this.draggingActiveLayer &amp;amp;&amp;amp; this.snapToGrid &amp;amp;&amp;amp; this.activeLayer){
+			var {xs, ys} &#x3D; this.getGridLines();
+			var redraw_required &#x3D; false;
+			for(var i&#x3D;0; i&amp;lt;xs.length; i++){
+				if(Math.abs(xs[i] - this.activeLayer.x) &amp;lt;&#x3D; 5){
+					this.activeLayer.x &#x3D; xs[i];
+					redraw_required &#x3D; true;
+					break;
+				}
+			}
+			for(var i&#x3D;0; i&amp;lt;ys.length; i++){
+				if(Math.abs(ys[i] - this.activeLayer.y) &amp;lt;&#x3D; 5){
+					this.activeLayer.y &#x3D; ys[i];
+					redraw_required &#x3D; true;
+					break;
+				}
+			}
+			if(redraw_required) this.draw();
+		}
 		var {x, y} &#x3D; this.canvasMousePos(e);
 		this.draggingActiveLayer &#x3D; false;
 		this.resizingActiveLayer &#x3D; false;
@@ -720,7 +811,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version &#x3D; &#x27;1.1.9&#x27;;
+Canvas.version &#x3D; &#x27;1.1.20&#x27;;
 
 /**
  * The default anchorRadius value for all Canvas instances.

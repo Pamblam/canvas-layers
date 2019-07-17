@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v1.1.9
+ * canvas-layers - v1.1.20
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.1.9
+ * @version 1.1.20
  */
 class Canvas{
 	
@@ -44,6 +44,8 @@ class Canvas{
 		this.activeLayerMouseOffset = {x:0, y:0};
 		this.activeLayerOriginalDimensions = {width:0, height:0};
 		this.activeLayerRotateStartPos = {x:0, y:0};
+		this.gridDistancePixels = null;
+		this.snapToGrid = false;
 		canvas.addEventListener('mousemove', this.onmousemove.bind(this));
 		canvas.addEventListener('mousedown', this.onmousedown.bind(this));
 		canvas.addEventListener('mouseout', this.onmousereset.bind(this));
@@ -68,6 +70,43 @@ class Canvas{
 		this.pending_layers = 0;
 		this.ready = true;
 	}	
+	
+	/**
+	 * Enable snap to grid
+	 * @returns {undefined}
+	 */
+	snapOn(){
+		this.snapToGrid = true;
+	}
+	
+	/**
+	 * Disable snap to grid
+	 * @returns {undefined}
+	 */
+	snapOff(){
+		this.snapToGrid = false;
+	}
+	
+	/**
+	 * Show the grid lines on the canvas
+	 * @param {number} gridDistance - Distance between grid lines in pixels
+	 * @returns {undefined}
+	 */
+	showGrid(gridDistance=25){
+		this.gridDistancePixels = gridDistance;
+		this.draw();
+	}
+	
+	/**
+	 * Hide the grid lines on the canvas
+	 * @returns {undefined}
+	 */
+	hideGrid(){
+		if(this.gridDistancePixels){
+			this.gridDistancePixels = null;
+			this.draw();
+		}
+	}
 	
 	/**
 	 * Get a layer by it's given name.
@@ -201,12 +240,7 @@ class Canvas{
 			this.ctx.translate(layer.x, layer.y);
 			this.ctx.rotate(radians);
 			
-			try{
-				this.ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
-			}catch(e){
-				console.log(e.message);
-				console.log(layer.image);
-			}
+			this.ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
 			
 			if(layer === this.activeLayer){
 				this.ctx.strokeStyle = this.strokeStyle;
@@ -229,7 +263,25 @@ class Canvas{
 			this.ctx.rotate(-radians);
 			this.ctx.translate(-layer.x, -layer.y);
 		}
-	}
+		
+		if(this.gridDistancePixels){
+			this.ctx.strokeStyle = "rgba(0,0,0,0.2)";
+			this.ctx.lineWidth = this.getScale() * 2;
+			var {xs, ys} = this.getGridLines();
+			xs.forEach(x=>{
+				this.ctx.beginPath();
+				this.ctx.moveTo(x, 0);
+				this.ctx.lineTo(x, this.canvas.height);
+				this.ctx.stroke(); 
+			});
+			ys.forEach(y=>{
+				this.ctx.beginPath();
+				this.ctx.moveTo(0, y);
+				this.ctx.lineTo(this.canvas.width, y);
+				this.ctx.stroke(); 
+			});
+		}
+	}	
 	
 	/**
 	 * Remove all layers from teh canvas.
@@ -337,6 +389,28 @@ class Canvas{
 	////////////////////////////////////////////////////////////////////////////
 	// Undocumented utility layers /////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Get an object containing arrays of x and y grid line positons
+	 * @returns {x:[], y:[]};
+	 */
+	getGridLines(){
+		var xs = [];
+		var ys = [];
+		for(var x=0; x<this.canvas.width; x += (this.getScale() * this.gridDistancePixels)){
+			xs.push(x); 
+		}
+		for(var y=0; y<this.canvas.height; y += (this.getScale() * this.gridDistancePixels)){
+			ys.push(y);
+		}
+		for(let i=this.layers.length; i--;){
+			xs.push(this.layers[i].x);
+			ys.push(this.layers[i].y);
+		}
+		xs.sort();
+		ys.sort();
+		return {xs, ys};
+	}
 	
 	/**
 	 * Load all layers.
@@ -477,8 +551,6 @@ class Canvas{
 		}else{
 			height = Math.abs(this.activeLayerOriginalDimensions.height - (n.y-o.y)*2);
 		}
-		
-		console.log(this.shiftKeyDown ? 'scaling' : 'not scaling');
 		if(this.shiftKeyDown){
 			var ratio = Math.min(
 				width/this.activeLayerOriginalDimensions.width, 
@@ -663,6 +735,25 @@ class Canvas{
 	 * @ignore
 	 */
 	onmousereset(e){
+		if(this.draggingActiveLayer && this.snapToGrid && this.activeLayer){
+			var {xs, ys} = this.getGridLines();
+			var redraw_required = false;
+			for(var i=0; i<xs.length; i++){
+				if(Math.abs(xs[i] - this.activeLayer.x) <= 5){
+					this.activeLayer.x = xs[i];
+					redraw_required = true;
+					break;
+				}
+			}
+			for(var i=0; i<ys.length; i++){
+				if(Math.abs(ys[i] - this.activeLayer.y) <= 5){
+					this.activeLayer.y = ys[i];
+					redraw_required = true;
+					break;
+				}
+			}
+			if(redraw_required) this.draw();
+		}
 		var {x, y} = this.canvasMousePos(e);
 		this.draggingActiveLayer = false;
 		this.resizingActiveLayer = false;
@@ -689,7 +780,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '1.1.9';
+Canvas.version = '1.1.20';
 
 /**
  * The default anchorRadius value for all Canvas instances.
