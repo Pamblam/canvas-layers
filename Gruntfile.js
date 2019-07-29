@@ -87,6 +87,7 @@ module.exports = function(grunt) {
 		exec('./node_modules/.bin/jsdoc --template ./node_modules/\@sugarcrm/jsdoc-baseline/  --destination ./docs canvas-layers.js', (err, stdout, stderr) => {
 			if (err) {
 				console.log('Unable to generate docs.');
+				console.error(err);
 				return;
 			}
 			console.log(`stdout: ${stdout}`);

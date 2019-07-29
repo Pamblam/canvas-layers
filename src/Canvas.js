@@ -36,8 +36,9 @@ class Canvas{
 		this.activeLayerMouseOffset = {x:0, y:0};
 		this.activeLayerOriginalDimensions = {width:0, height:0};
 		this.activeLayerRotateStartPos = {x:0, y:0};
-		this.gridDistancePixels = null;
+		this.displayGrid = false;
 		this.snapToGrid = false;
+		this.gridDistancePixels = 10;
 		canvas.addEventListener('mousemove', this.onmousemove.bind(this));
 		canvas.addEventListener('mousedown', this.onmousedown.bind(this));
 		canvas.addEventListener('mouseout', this.onmousereset.bind(this));
@@ -67,8 +68,10 @@ class Canvas{
 	 * Enable snap to grid
 	 * @returns {undefined}
 	 */
-	snapOn(){
+	snapOn(gridDistancePixels=10){
 		this.snapToGrid = true;
+		gridDistancePixels = +gridDistancePixels < 3 ? 3 : +gridDistancePixels;
+		this.gridDistancePixels = gridDistancePixels;
 	}
 	
 	/**
@@ -77,15 +80,17 @@ class Canvas{
 	 */
 	snapOff(){
 		this.snapToGrid = false;
+		this.draw();
 	}
 	
 	/**
 	 * Show the grid lines on the canvas
-	 * @param {number} gridDistance - Distance between grid lines in pixels
 	 * @returns {undefined}
 	 */
-	showGrid(gridDistance=25){
-		this.gridDistancePixels = gridDistance;
+	showGrid(gridDistancePixels=10){
+		this.displayGrid = true;
+		gridDistancePixels = +gridDistancePixels < 3 ? 3 : +gridDistancePixels;
+		this.gridDistancePixels = gridDistancePixels;
 		this.draw();
 	}
 	
@@ -94,10 +99,8 @@ class Canvas{
 	 * @returns {undefined}
 	 */
 	hideGrid(){
-		if(this.gridDistancePixels){
-			this.gridDistancePixels = null;
-			this.draw();
-		}
+		this.displayGrid = false;
+		this.draw();
 	}
 	
 	/**
@@ -256,10 +259,10 @@ class Canvas{
 			this.ctx.translate(-layer.x, -layer.y);
 		}
 		
-		if(this.gridDistancePixels){
+		if(this.displayGrid){
 			this.ctx.strokeStyle = "rgba(0,0,0,0.2)";
 			this.ctx.lineWidth = this.getScale() * 2;
-			var {xs, ys} = this.getGridLines();
+			var {xs, ys} = this.getGridLines(false);
 			xs.forEach(x=>{
 				this.ctx.beginPath();
 				this.ctx.moveTo(x, 0);
@@ -384,23 +387,33 @@ class Canvas{
 	
 	/**
 	 * Get an object containing arrays of x and y grid line positons
-	 * @returns {x:[], y:[]};
+	 * @param {Boolean} snap - If true, get lines to snap to, else get lines to display
+	 * @returns {Object} - An object with an 'xs' property containing x positions and a 'ys' property containing y positions;
 	 */
-	getGridLines(){
+	getGridLines(snap=true){
 		var xs = [];
 		var ys = [];
-		for(var x=0; x<this.canvas.width; x += (this.getScale() * this.gridDistancePixels)){
+		var dist = 0;
+		
+		if(snap){
+			dist = this.gridDistancePixels;
+		}else{
+			dist = this.gridDistancePixels * 2;
+		}
+		
+		for(var x=0; x<this.canvas.width; x += (this.getScale() * dist)){
 			xs.push(x); 
 		}
-		for(var y=0; y<this.canvas.height; y += (this.getScale() * this.gridDistancePixels)){
+		for(var y=0; y<this.canvas.height; y += (this.getScale() * dist)){
 			ys.push(y);
 		}
 		for(let i=this.layers.length; i--;){
+			if(snap && this.layers[i] === this.activeLayer) continue;
 			xs.push(this.layers[i].x);
 			ys.push(this.layers[i].y);
 		}
-		xs.sort();
-		ys.sort();
+		[...new Set(xs)].sort();
+		[...new Set(ys)].sort();
 		return {xs, ys};
 	}
 	
@@ -659,6 +672,10 @@ class Canvas{
 		return isNear;
 	}
 	
+	/**
+	 * Given a position, check if it is in bounds
+	 * @ignore
+	 */
 	isNewPosInBounds(layer, x, y, width, height){
 		var _x = layer.x;
 		var _y = layer.y;
@@ -723,28 +740,50 @@ class Canvas{
 	}
 	
 	/**
+	 * Get nearest grid line
+	 * @ignore
+	 */
+	getNearestGridline(n, grid){
+		return Object.values(grid.reduce((acc, val)=>{
+			if(val > n){
+				if(null === acc.high) acc.high = val;
+				else acc.high = Math.min(acc.high, val);
+			}else{
+				if(null === acc.low) acc.low = val;
+				else acc.low = Math.max(acc.low, val);
+			}
+			return acc;
+		}, {low: null, high: null})).reduce((acc, val)=>{
+			var valDistToN = Math.abs(val - n);
+			var accDistToN = acc === null ? null : Math.abs(acc - n);
+			if(acc === null || valDistToN < accDistToN) acc = val;
+			return acc;
+		}, null);
+	}
+	
+	/**
 	 * Handle mouseup or mouseout.
 	 * @ignore
 	 */
 	onmousereset(e){
 		if(this.draggingActiveLayer && this.snapToGrid && this.activeLayer){
 			var {xs, ys} = this.getGridLines();
+			var closestx = this.getNearestGridline(this.activeLayer.x, xs);
+			var closesty = this.getNearestGridline(this.activeLayer.y, ys);
 			var redraw_required = false;
-			for(var i=0; i<xs.length; i++){
-				if(Math.abs(xs[i] - this.activeLayer.x) <= 5){
-					this.activeLayer.x = xs[i];
-					redraw_required = true;
-					break;
-				}
+			var dist = Math.abs(closestx - this.activeLayer.x);
+			if(dist <= this.gridDistancePixels && dist !== 0){
+				this.activeLayer.x = closestx;
+				redraw_required = true;
 			}
-			for(var i=0; i<ys.length; i++){
-				if(Math.abs(ys[i] - this.activeLayer.y) <= 5){
-					this.activeLayer.y = ys[i];
-					redraw_required = true;
-					break;
-				}
+			dist = Math.abs(closesty - this.activeLayer.y);
+			if(dist <= this.gridDistancePixels && dist !== 0){
+				this.activeLayer.y = closesty;
+				redraw_required = true;
 			}
-			if(redraw_required) this.draw();
+			if(redraw_required){
+				this.draw();
+			}
 		}
 		var {x, y} = this.canvasMousePos(e);
 		this.draggingActiveLayer = false;

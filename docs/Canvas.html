@@ -96,7 +96,7 @@
                 </div>
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
-                    <dt><a href="Canvas.html#getGridLines">getGridLines()</a></dt>
+                    <dt><a href="Canvas.html#getGridLines">getGridLines(snap)</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#getLayerAt">getLayerAt(x, y)</a></dt>
@@ -127,7 +127,7 @@
                     <dt><a href="Canvas.html#selectLayer">selectLayer(layer)</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="Canvas.html#showGrid">showGrid(gridDistance)</a></dt>
+                    <dt><a href="Canvas.html#showGrid">showGrid()</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#snapOff">snapOff()</a></dt>
@@ -175,7 +175,7 @@
             </section>
             <dl class="dl-compact">
               <dt>Version<dt>
-    <dd><p>1.1.20</p></dd>
+    <dd><p>1.1.47</p></dd>
 
 
 
@@ -472,11 +472,43 @@
                   <p><code>Promise</code> - A Promise htat resolves with the DataURI of the cropped area.</p>
                 </dd>
               </dl>
-              <h3 id="getGridLines"><span class="symbol-name">getGridLines</span><span class="signature"><span class="signature-params">()</span></span></h3>
+              <h3 id="getGridLines"><span class="symbol-name">getGridLines</span><span class="signature"><span class="signature-params">(snap)</span>&nbsp;&rarr; <span class="signature-returns"> Object</span></span></h3>
               <p>Get an object containing arrays of x and y grid line positons</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>snap</p>
+                      </td>
+                      <td>
+                        <p>Boolean</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>If true, get lines to snap to, else get lines to display</p>
+                        <p>Defaults to <code>true</code>.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
               <dl class="dl-compact">
                 <dt>Returns</dt>
-                <dd></dd>
+                <dd>
+                  <p><code>Object</code> - An object with an 'xs' property containing x positions and a 'ys' property containing y positions;</p>
+                </dd>
               </dl>
               <h3 id="getLayerAt"><span class="symbol-name">getLayerAt</span><span class="signature"><span class="signature-params">(x, y)</span>&nbsp;&rarr; <span class="signature-returns"> (<a href="CanvasLayer.html">CanvasLayer</a> or null)</span></span></h3>
               <p>Get the layer at the given canvas coordinates.</p>
@@ -772,38 +804,8 @@
                   <p><code>undefined</code> </p>
                 </dd>
               </dl>
-              <h3 id="showGrid"><span class="symbol-name">showGrid</span><span class="signature"><span class="signature-params">(gridDistance)</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <h3 id="showGrid"><span class="symbol-name">showGrid</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
               <p>Show the grid lines on the canvas</p>
-              <section>
-                <h4>Parameter</h4>
-                <table class="jsdoc-details-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Type</th>
-                      <th>Optional</th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <p>gridDistance</p>
-                      </td>
-                      <td>
-                        <p>number</p>
-                      </td>
-                      <td>
-                        <p>&nbsp;</p>
-                      </td>
-                      <td>
-                        <p>Distance between grid lines in pixels</p>
-                        <p>Defaults to <code>25</code>.</p>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </section>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
@@ -836,7 +838,7 @@
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on July 17, 2019.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on July 29, 2019.
       </p>
     </div>
   </footer>

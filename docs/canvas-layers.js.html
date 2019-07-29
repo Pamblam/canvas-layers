@@ -30,7 +30,7 @@
           </header>
           <article>
             <pre class="prettyprint linenums"><code>/**
- * canvas-layers - v1.1.20
+ * canvas-layers - v1.1.47
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -41,7 +41,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.1.20
+ * @version 1.1.47
  */
 class Canvas{
 	
@@ -75,8 +75,9 @@ class Canvas{
 		this.activeLayerMouseOffset &#x3D; {x:0, y:0};
 		this.activeLayerOriginalDimensions &#x3D; {width:0, height:0};
 		this.activeLayerRotateStartPos &#x3D; {x:0, y:0};
-		this.gridDistancePixels &#x3D; null;
+		this.displayGrid &#x3D; false;
 		this.snapToGrid &#x3D; false;
+		this.gridDistancePixels &#x3D; 10;
 		canvas.addEventListener(&#x27;mousemove&#x27;, this.onmousemove.bind(this));
 		canvas.addEventListener(&#x27;mousedown&#x27;, this.onmousedown.bind(this));
 		canvas.addEventListener(&#x27;mouseout&#x27;, this.onmousereset.bind(this));
@@ -106,8 +107,10 @@ class Canvas{
 	 * Enable snap to grid
 	 * @returns {undefined}
 	 */
-	snapOn(){
+	snapOn(gridDistancePixels&#x3D;10){
 		this.snapToGrid &#x3D; true;
+		gridDistancePixels &#x3D; +gridDistancePixels &amp;lt; 3 ? 3 : +gridDistancePixels;
+		this.gridDistancePixels &#x3D; gridDistancePixels;
 	}
 	
 	/**
@@ -116,15 +119,17 @@ class Canvas{
 	 */
 	snapOff(){
 		this.snapToGrid &#x3D; false;
+		this.draw();
 	}
 	
 	/**
 	 * Show the grid lines on the canvas
-	 * @param {number} gridDistance - Distance between grid lines in pixels
 	 * @returns {undefined}
 	 */
-	showGrid(gridDistance&#x3D;25){
-		this.gridDistancePixels &#x3D; gridDistance;
+	showGrid(gridDistancePixels&#x3D;10){
+		this.displayGrid &#x3D; true;
+		gridDistancePixels &#x3D; +gridDistancePixels &amp;lt; 3 ? 3 : +gridDistancePixels;
+		this.gridDistancePixels &#x3D; gridDistancePixels;
 		this.draw();
 	}
 	
@@ -133,10 +138,8 @@ class Canvas{
 	 * @returns {undefined}
 	 */
 	hideGrid(){
-		if(this.gridDistancePixels){
-			this.gridDistancePixels &#x3D; null;
-			this.draw();
-		}
+		this.displayGrid &#x3D; false;
+		this.draw();
 	}
 	
 	/**
@@ -295,10 +298,10 @@ class Canvas{
 			this.ctx.translate(-layer.x, -layer.y);
 		}
 		
-		if(this.gridDistancePixels){
+		if(this.displayGrid){
 			this.ctx.strokeStyle &#x3D; &quot;rgba(0,0,0,0.2)&quot;;
 			this.ctx.lineWidth &#x3D; this.getScale() * 2;
-			var {xs, ys} &#x3D; this.getGridLines();
+			var {xs, ys} &#x3D; this.getGridLines(false);
 			xs.forEach(x&#x3D;&gt;{
 				this.ctx.beginPath();
 				this.ctx.moveTo(x, 0);
@@ -423,23 +426,33 @@ class Canvas{
 	
 	/**
 	 * Get an object containing arrays of x and y grid line positons
-	 * @returns {x:[], y:[]};
+	 * @param {Boolean} snap - If true, get lines to snap to, else get lines to display
+	 * @returns {Object} - An object with an &#x27;xs&#x27; property containing x positions and a &#x27;ys&#x27; property containing y positions;
 	 */
-	getGridLines(){
+	getGridLines(snap&#x3D;true){
 		var xs &#x3D; [];
 		var ys &#x3D; [];
-		for(var x&#x3D;0; x&amp;lt;this.canvas.width; x +&#x3D; (this.getScale() * this.gridDistancePixels)){
+		var dist &#x3D; 0;
+		
+		if(snap){
+			dist &#x3D; this.gridDistancePixels;
+		}else{
+			dist &#x3D; this.gridDistancePixels * 2;
+		}
+		
+		for(var x&#x3D;0; x&amp;lt;this.canvas.width; x +&#x3D; (this.getScale() * dist)){
 			xs.push(x); 
 		}
-		for(var y&#x3D;0; y&amp;lt;this.canvas.height; y +&#x3D; (this.getScale() * this.gridDistancePixels)){
+		for(var y&#x3D;0; y&amp;lt;this.canvas.height; y +&#x3D; (this.getScale() * dist)){
 			ys.push(y);
 		}
 		for(let i&#x3D;this.layers.length; i--;){
+			if(snap &amp;amp;&amp;amp; this.layers[i] &#x3D;&#x3D;&#x3D; this.activeLayer) continue;
 			xs.push(this.layers[i].x);
 			ys.push(this.layers[i].y);
 		}
-		xs.sort();
-		ys.sort();
+		[...new Set(xs)].sort();
+		[...new Set(ys)].sort();
 		return {xs, ys};
 	}
 	
@@ -698,6 +711,10 @@ class Canvas{
 		return isNear;
 	}
 	
+	/**
+	 * Given a position, check if it is in bounds
+	 * @ignore
+	 */
 	isNewPosInBounds(layer, x, y, width, height){
 		var _x &#x3D; layer.x;
 		var _y &#x3D; layer.y;
@@ -762,28 +779,50 @@ class Canvas{
 	}
 	
 	/**
+	 * Get nearest grid line
+	 * @ignore
+	 */
+	getNearestGridline(n, grid){
+		return Object.values(grid.reduce((acc, val)&#x3D;&gt;{
+			if(val &gt; n){
+				if(null &#x3D;&#x3D;&#x3D; acc.high) acc.high &#x3D; val;
+				else acc.high &#x3D; Math.min(acc.high, val);
+			}else{
+				if(null &#x3D;&#x3D;&#x3D; acc.low) acc.low &#x3D; val;
+				else acc.low &#x3D; Math.max(acc.low, val);
+			}
+			return acc;
+		}, {low: null, high: null})).reduce((acc, val)&#x3D;&gt;{
+			var valDistToN &#x3D; Math.abs(val - n);
+			var accDistToN &#x3D; acc &#x3D;&#x3D;&#x3D; null ? null : Math.abs(acc - n);
+			if(acc &#x3D;&#x3D;&#x3D; null || valDistToN &amp;lt; accDistToN) acc &#x3D; val;
+			return acc;
+		}, null);
+	}
+	
+	/**
 	 * Handle mouseup or mouseout.
 	 * @ignore
 	 */
 	onmousereset(e){
 		if(this.draggingActiveLayer &amp;amp;&amp;amp; this.snapToGrid &amp;amp;&amp;amp; this.activeLayer){
 			var {xs, ys} &#x3D; this.getGridLines();
+			var closestx &#x3D; this.getNearestGridline(this.activeLayer.x, xs);
+			var closesty &#x3D; this.getNearestGridline(this.activeLayer.y, ys);
 			var redraw_required &#x3D; false;
-			for(var i&#x3D;0; i&amp;lt;xs.length; i++){
-				if(Math.abs(xs[i] - this.activeLayer.x) &amp;lt;&#x3D; 5){
-					this.activeLayer.x &#x3D; xs[i];
-					redraw_required &#x3D; true;
-					break;
-				}
+			var dist &#x3D; Math.abs(closestx - this.activeLayer.x);
+			if(dist &amp;lt;&#x3D; this.gridDistancePixels &amp;amp;&amp;amp; dist !&#x3D;&#x3D; 0){
+				this.activeLayer.x &#x3D; closestx;
+				redraw_required &#x3D; true;
 			}
-			for(var i&#x3D;0; i&amp;lt;ys.length; i++){
-				if(Math.abs(ys[i] - this.activeLayer.y) &amp;lt;&#x3D; 5){
-					this.activeLayer.y &#x3D; ys[i];
-					redraw_required &#x3D; true;
-					break;
-				}
+			dist &#x3D; Math.abs(closesty - this.activeLayer.y);
+			if(dist &amp;lt;&#x3D; this.gridDistancePixels &amp;amp;&amp;amp; dist !&#x3D;&#x3D; 0){
+				this.activeLayer.y &#x3D; closesty;
+				redraw_required &#x3D; true;
 			}
-			if(redraw_required) this.draw();
+			if(redraw_required){
+				this.draw();
+			}
 		}
 		var {x, y} &#x3D; this.canvasMousePos(e);
 		this.draggingActiveLayer &#x3D; false;
@@ -811,7 +850,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version &#x3D; &#x27;1.1.20&#x27;;
+Canvas.version &#x3D; &#x27;1.1.47&#x27;;
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -957,7 +996,7 @@ class CanvasLayer{
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on July 17, 2019.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on July 29, 2019.
       </p>
     </div>
   </footer>
