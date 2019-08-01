@@ -349,6 +349,7 @@ class Canvas{
 	removeLayer(layer){
 		if(layer === this.activeLayer) this.deSelectLayer();
 		this.layers.splice(this.layers.indexOf(layer), 1);
+		this.saveState();
 		this.draw();
 	}
 	
