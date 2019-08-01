@@ -40,6 +40,30 @@ class CanvasLayer{
 	}
 	
 	/**
+	 * jsonify the current layer
+	 * @returns {String} - Serialized layer
+	 */
+	objectify(){
+		return {
+			layer: this, 
+			state: {
+				name: this.name,
+				url: this.url,
+				x: this.x,
+				y: this.y,
+				width: this.width,
+				height: this.height,
+				rotation: this.rotation,
+				draggable: this.draggable,
+				rotatable: this.rotateable,
+				resizable: this.resizable,
+				selectable: this.selectable,
+				forceBoundary: this.forceBoundary
+			}
+		};
+	}
+	
+	/**
 	 * Register a function to be called when the layer is fully loaded.
 	 * @param {Function} fn - The callback function.
 	 * @returns {undefined}
@@ -90,3 +114,16 @@ class CanvasLayer{
 	}
 	
 }
+
+/**
+ * un Serialize a layer
+ * @param {type} str
+ * @returns {CanvasLayer}
+ */
+CanvasLayer.deobjectify = function(d){
+	var layer = d.layer;
+	Object.keys(d.state).forEach(key=>{
+		layer[key] = d.state[key];
+	});
+	return layer;
+};

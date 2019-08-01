@@ -92,16 +92,16 @@
                     <dt><a href="Canvas.html#extractPortion">extractPortion(centerx, centery, width, height[, rotation])</a></dt>
                     <dd>
                     </dd>
-                  </dl>
-                </div>
-                <div class="summary-column">
-                  <dl class="dl-summary-callout">
                     <dt><a href="Canvas.html#getGridLines">getGridLines(snap)</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#getLayerAt">getLayerAt(x, y)</a></dt>
                     <dd>
                     </dd>
+                  </dl>
+                </div>
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
                     <dt><a href="Canvas.html#getLayerByName">getLayerByName(name)</a></dt>
                     <dd>
                     </dd>
@@ -114,14 +114,23 @@
                     <dt><a href="Canvas.html#isOverSelectableLayer">isOverSelectableLayer(x, y)</a></dt>
                     <dd>
                     </dd>
-                  </dl>
-                </div>
-                <div class="summary-column">
-                  <dl class="dl-summary-callout">
+                    <dt><a href="Canvas.html#loadState">loadState(state)</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#redo">redo()</a></dt>
+                    <dd>
+                    </dd>
                     <dt><a href="Canvas.html#removeAllLayers">removeAllLayers()</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#removeLayer">removeLayer(layer)</a></dt>
+                    <dd>
+                    </dd>
+                  </dl>
+                </div>
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
+                    <dt><a href="Canvas.html#saveState">saveState()</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#selectLayer">selectLayer(layer)</a></dt>
@@ -134,6 +143,9 @@
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#snapOn">snapOn()</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#undo">undo()</a></dt>
                     <dd>
                     </dd>
                   </dl>
@@ -175,7 +187,7 @@
             </section>
             <dl class="dl-compact">
               <dt>Version<dt>
-    <dd><p>1.1.47</p></dd>
+    <dd><p>1.1.61</p></dd>
 
 
 
@@ -722,6 +734,50 @@
                   <p><code>Boolean</code> </p>
                 </dd>
               </dl>
+              <h3 id="loadState"><span class="symbol-name">loadState</span><span class="signature"><span class="signature-params">(state)</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Load the state object</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>state</p>
+                      </td>
+                      <td>
+                        <p>type</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
+                </dd>
+              </dl>
+              <h3 id="redo"><span class="symbol-name">redo</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Redo the last un-did action</p>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
+                </dd>
+              </dl>
               <h3 id="removeAllLayers"><span class="symbol-name">removeAllLayers</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
               <p>Remove all layers from teh canvas.</p>
               <dl class="dl-compact">
@@ -761,6 +817,14 @@
                   </tbody>
                 </table>
               </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
+                </dd>
+              </dl>
+              <h3 id="saveState"><span class="symbol-name">saveState</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>saves the current state in the state stack</p>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
@@ -828,6 +892,14 @@
                   <p><code>undefined</code> </p>
                 </dd>
               </dl>
+              <h3 id="undo"><span class="symbol-name">undo</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Undo an action</p>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
+                </dd>
+              </dl>
             </section>
           </section>
         </div>
@@ -838,7 +910,7 @@
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on July 29, 2019.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on July 31, 2019.
       </p>
     </div>
   </footer>

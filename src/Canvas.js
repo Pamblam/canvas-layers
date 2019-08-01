@@ -27,6 +27,8 @@ class Canvas{
 		this.height = canvas.height;
 		this.ctx = canvas.getContext('2d');
 		this.layers = [];
+		this.layer_state_pos = -1;
+		this.layer_states = [];
 		this.activeLayer = null;
 		this.shiftKeyDown = false;
 		this.draggingActiveLayer = false;
@@ -63,6 +65,56 @@ class Canvas{
 		this.pending_layers = 0;
 		this.ready = true;
 	}	
+	
+	/**
+	 * Load the state object
+	 * @param {type} state
+	 * @returns {undefined}
+	 */
+	loadState(state){
+		this.layers = state.map(s=>CanvasLayer.deobjectify(s));
+		this.draggingActiveLayer = false;
+		this.resizingActiveLayer = false;
+		this.rotatingActiveLayer = false;
+		this.lastMouseDownOffset = {x:0, y:0};
+		this.activeLayerMouseOffset = {x:0, y:0};
+		this.activeLayerOriginalDimensions = {width:0, height:0};
+		this.activeLayerRotateStartPos = {x:0, y:0};
+		this.draw();
+	}
+	
+	/**
+	 * saves the current state in the state stack
+	 * @returns {undefined}
+	 */
+	saveState(){
+		var state = this.layers.map(l=>l.objectify());
+		this.layer_states.length = this.layer_state_pos+1;
+		this.layer_states.push(state);
+		this.layer_state_pos = this.layer_states.length-1;
+	}
+	
+	/**
+	 * Undo an action
+	 * @returns {undefined}
+	 */
+	undo(){
+		if(this.layer_state_pos>0){
+			this.layer_state_pos--;
+			this.loadState(this.layer_states[this.layer_state_pos]);
+		}
+	}
+	
+	/**
+	 * Redo the last un-did action
+	 * @returns {undefined}
+	 */
+	redo(){
+		if((this.layer_state_pos+1)<this.layer_states.length){
+			this.layer_state_pos++;
+			this.loadState(this.layer_states[this.layer_state_pos]);
+		}
+	}
 	
 	/**
 	 * Enable snap to grid
@@ -152,6 +204,7 @@ class Canvas{
 			if(0 === this.pending_layers){
 				this.ready = true;
 				this.draw();
+				this.saveState();
 			}
 		});
 		return layer;
@@ -785,6 +838,7 @@ class Canvas{
 				this.draw();
 			}
 		}
+		if(this.draggingActiveLayer || this.resizingActiveLayer || this.rotatingActiveLayer) this.saveState();
 		var {x, y} = this.canvasMousePos(e);
 		this.draggingActiveLayer = false;
 		this.resizingActiveLayer = false;

@@ -74,6 +74,11 @@
 				}
 			});
 			
+			document.addEventListener('keydown', function(e){
+				if (e.keyCode == 90 && e.ctrlKey) canvas.undo();
+				if (e.keyCode == 89 && e.ctrlKey) canvas.redo();
+			});
+			
 		</script>
 	</body>
 </html>
