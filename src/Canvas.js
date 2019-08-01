@@ -361,6 +361,7 @@ class Canvas{
 		this.layers.unshift(this.layers.splice(this.layers.indexOf(layer), 1)[0]);
 		this.activeLayer = layer;
 		this.draw();
+		this.fireEvent('layer-selected');
 	}
 	
 	/**
@@ -371,6 +372,7 @@ class Canvas{
 		this.activeLayer = null;
 		this.draggingActiveLayer = false;
 		this.draw();
+		this.fireEvent('layer-deselected');
 	}
 	
 	/**
