@@ -36,6 +36,13 @@ class CanvasLayer{
 		this.selectable = selectable;
 		this.forceBoundary = forceBoundary;
 		this.load_cb_stack = [];
+		
+		this.xoffset = 0;
+		this.yoffset = 0;
+		this.roffset = 0;
+		this.owidth = 0;
+		this.oheight = 0;
+		
 		this.load();
 	}
 	
@@ -94,6 +101,7 @@ class CanvasLayer{
 					this.ready = true;
 					this.load_cb_stack.forEach(fn=>fn());
 					this.load_cb_stack = [];
+					done();
 				};
 				img.src = this.url;
 			}

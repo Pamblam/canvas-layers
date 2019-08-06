@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Canvas Layers - Basic Example</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		
+		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+		<style>
+			body{
+				background-color: #f6f4ed;
+			}
+			h1, h2, h3, h4, h5{
+				color: #7bb01f;
+			}
+			#canvas, #preview{
+				border:1px solid black; background: white;
+			}
+		</style>
+		
+		<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+		<div class='container'>
+			<center>
+				<img src='../logo.png' class='image-responsive'>
+				<br><br>
+				<div class="btn-group" role="group" aria-label="...">
+					<a class="btn btn-default" href="https://github.com/Pamblam/canvas-layers"><span class="glyphicon glyphicon-flash"></span> Github</a>
+					<a class="btn btn-default" href="index.html"><span class="glyphicon glyphicon-send"></span> Examples</a>
+					<a class="btn btn-default" href="../docs/"><span class="glyphicon glyphicon-book"></span> Docs</a>
+				</div>
+				
+				<h1>Group Example</h1>
+				<p>Hold CTRL to group layers.</p>
+			</center>
+			
+			<div class='row'>
+				<div class='col-sm-12'>
+					<canvas id="canvas" width="1200" height="800" class="img-responsive"></canvas> 
+				</div>
+			</div>
+		</div>
+		
+		<script src="../canvas-layers.js"></script>
+		<script>
+			
+			var canvasEle = document.getElementById("canvas");
+			
+			var canvas = new Canvas(canvasEle, {
+				anchorRadius: 4,
+				strokeStyle: '#ce2500',
+				fillStyle: '#ce2500',
+				lineWidth: 2
+			});
+			
+			
+			
+			var dolphin = canvas.addLayer('./img/dolphin.png?_='+(new Date().getTime()), {
+				name: 'dolphin', 
+				x: (canvas.width * 1/4) * 1,
+				y: (canvas.height * 1/3) * 1
+			});
+			
+			var fish = canvas.addLayer('./img/fish.png?_='+(new Date().getTime()), {
+				name: 'fish', 
+				x: (canvas.width * 1/4) * 2,
+				y: (canvas.height * 1/3) * 1
+			});
+			
+			var octopus = canvas.addLayer('./img/octopus.png?_='+(new Date().getTime()), {
+				name: 'octopus', 
+				x: (canvas.width * 1/4) * 3,
+				y: (canvas.height * 1/3) * 1
+			});
+			
+			var shark = canvas.addLayer('./img/shark.png?_='+(new Date().getTime()), {
+				name: 'shark', 
+				x: (canvas.width * 1/4) * 1,
+				y: (canvas.height * 1/3) * 2
+			});
+			
+			var squid = canvas.addLayer('./img/squid.png?_='+(new Date().getTime()), {
+				name: 'squid', 
+				x: (canvas.width * 1/4) * 2,
+				y: (canvas.height * 1/3) * 2
+			});
+			
+			var stingray = canvas.addLayer('./img/stingray.png?_='+(new Date().getTime()), {
+				name: 'stingray', 
+				x: (canvas.width * 1/4) * 3,
+				y: (canvas.height * 1/3) * 2
+			});
+			
+			// deselct layer if click is outside of canvas
+			document.addEventListener('click', function(e){
+				if(e.target !== canvasEle){
+					canvas.deSelectLayer();
+				}
+			});
+			
+			// use ctrl+z and ctrl+y to undo and redo
+			document.addEventListener('keydown', function(e){
+				if (e.keyCode == 90 && e.ctrlKey) canvas.undo();
+				if (e.keyCode == 89 && e.ctrlKey) canvas.redo();
+			});
+			
+			var groupLayer = new CanvasLayerGroup('control click group');
+			var isGroupOnCanvas = ()=>!!~canvas.layers.indexOf(groupLayer);
+			var isLayerInGroup = layer=>!!~groupLayer.layers.indexOf(layer);
+			var isCtrlPressed = false;
+			
+			['keyup', 'keydown'].forEach(evt=>{
+				document.addEventListener(evt, function(e){
+					isCtrlPressed = e.ctrlKey;
+					if(!isCtrlPressed && isGroupOnCanvas()){
+						groupLayer.layers.forEach(l=>{
+							canvas.addLayer(l);
+						});
+						groupLayer.layers = [];
+						groupLayer.rotation = 0;
+						canvas.removeLayer(groupLayer);
+					}
+				});
+			});
+			
+			document.addEventListener('mousedown', async function(e){
+				const {x, y} = canvas.canvasMousePos(e);
+				var layer = canvas.getLayerAt(x, y);
+				if(layer === groupLayer || !layer) return;
+				
+				if(!isCtrlPressed){
+					// reset and remove group layer
+					groupLayer.layers.forEach(l=>{
+						canvas.addLayer(l);
+					});
+					groupLayer.layers = [];
+					groupLayer.rotation = 0;
+					
+					if(isGroupOnCanvas()){
+						canvas.removeLayer(groupLayer);
+					}
+				}
+				
+				if(!isLayerInGroup(layer)){
+					await groupLayer.addLayer(layer);
+					if(groupLayer.layers.length === 1) canvas.selectLayer(layer);
+				}
+				
+				if(!isGroupOnCanvas() && groupLayer.layers.length > 1){
+					groupLayer.layers.forEach(l=>{
+						canvas.removeLayer(l);
+					});
+					canvas.addLayer(groupLayer);
+					canvas.selectLayer(groupLayer);
+				}
+			});
+		</script>
+	</body>
+</html>

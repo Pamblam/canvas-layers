@@ -1,0 +1,26 @@
+
+module my-httpd 1.0;
+
+require {
+	type mysqld_port_t;
+	type httpd_t;
+	type data_home_t;
+	type httpd_sys_content_t;
+	class tcp_socket name_connect;
+	class file { create getattr };
+	class dir { add_name write };
+}
+
+#============= httpd_t ==============
+
+#!!!! This avc is allowed in the current policy
+allow httpd_t data_home_t:file getattr;
+
+#!!!! This avc is allowed in the current policy
+allow httpd_t httpd_sys_content_t:dir { add_name write };
+
+#!!!! This avc is allowed in the current policy
+allow httpd_t httpd_sys_content_t:file create;
+
+#!!!! This avc is allowed in the current policy
+allow httpd_t mysqld_port_t:tcp_socket name_connect;

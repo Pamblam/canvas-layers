@@ -74,6 +74,9 @@
               <div class="summary-content">
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
+                    <dt><a href="Canvas.html#.isOverLayer">isOverLayer(x, y, layer)</a></dt>
+                    <dd>
+                    </dd>
                     <dt><a href="Canvas.html#addLayer">addLayer(url)</a></dt>
                     <dd>
                     </dd>
@@ -89,26 +92,23 @@
                     <dt><a href="Canvas.html#draw">draw()</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="Canvas.html#extractPortion">extractPortion(centerx, centery, width, height[, rotation])</a></dt>
+                    <dt><a href="Canvas.html#extractPortion">extractPortion(centerx, centery, width, height[, rotation][, unrotated])</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#getGridLines">getGridLines(snap)</a></dt>
-                    <dd>
-                    </dd>
-                    <dt><a href="Canvas.html#getLayerAt">getLayerAt(x, y)</a></dt>
                     <dd>
                     </dd>
                   </dl>
                 </div>
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
+                    <dt><a href="Canvas.html#getLayerAt">getLayerAt(x, y)</a></dt>
+                    <dd>
+                    </dd>
                     <dt><a href="Canvas.html#getLayerByName">getLayerByName(name)</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#hideGrid">hideGrid()</a></dt>
-                    <dd>
-                    </dd>
-                    <dt><a href="Canvas.html#isOverLayer">isOverLayer(x, y, layer)</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#isOverSelectableLayer">isOverSelectableLayer(x, y)</a></dt>
@@ -187,7 +187,7 @@
             </section>
             <dl class="dl-compact">
               <dt>Version<dt>
-    <dd><p>1.1.63</p></dd>
+    <dd><p>1.1.213</p></dd>
 
 
 
@@ -263,6 +263,72 @@
             </section>
             <h2>Methods</h2>
             <section>
+              <div class="symbol-detail-labels"><span class="label label-static">static</span></div>
+              <h3 id=".isOverLayer"><span class="symbol-name">isOverLayer</span><span class="signature"><span class="signature-params">(x, y, layer)</span>&nbsp;&rarr; <span class="signature-returns"> Boolean</span></span></h3>
+              <p>Are the given coordinates over the given layer?</p>
+              <section>
+                <h4>Parameters</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>x</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The x ordinate.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>y</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The y ordinate.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>layer</p>
+                      </td>
+                      <td>
+                        <p><a href="CanvasLayer.html">CanvasLayer</a></p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The layer to check.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>Boolean</code> </p>
+                </dd>
+              </dl>
               <h3 id="addLayer"><span class="symbol-name">addLayer</span><span class="signature"><span class="signature-params">(url)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="CanvasLayer.html">CanvasLayer</a></span></span></h3>
               <p>Add a layer to the canvas.</p>
               <section>
@@ -390,7 +456,7 @@
                   <p><code>undefined</code> </p>
                 </dd>
               </dl>
-              <h3 id="extractPortion"><span class="symbol-name">extractPortion</span><span class="signature"><span class="signature-params">(centerx, centery, width, height[, rotation])</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
+              <h3 id="extractPortion"><span class="symbol-name">extractPortion</span><span class="signature"><span class="signature-params">(centerx, centery, width, height[, rotation][, unrotated])</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
               <p>Rotate and extract a custom area of the canvas.</p>
               <section>
                 <h4>Parameters</h4>
@@ -473,6 +539,21 @@
                       <td>
                         <p>The rotation of the area to extract, counter-clockwise, in degrees.</p>
                         <p>Defaults to <code>0</code>.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>unrotated</p>
+                      </td>
+                      <td>
+                        <p>Boolean</p>
+                      </td>
+                      <td>
+                        <p>Yes</p>
+                      </td>
+                      <td>
+                        <p>If true, undo the rotation so the layer is in it's natural position.</p>
+                        <p>Defaults to <code>true</code>.</p>
                       </td>
                     </tr>
                   </tbody>
@@ -616,71 +697,6 @@
                 <dt>Returns</dt>
                 <dd>
                   <p><code>undefined</code> </p>
-                </dd>
-              </dl>
-              <h3 id="isOverLayer"><span class="symbol-name">isOverLayer</span><span class="signature"><span class="signature-params">(x, y, layer)</span>&nbsp;&rarr; <span class="signature-returns"> Boolean</span></span></h3>
-              <p>Are the given coordinates over the given layer?</p>
-              <section>
-                <h4>Parameters</h4>
-                <table class="jsdoc-details-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Type</th>
-                      <th>Optional</th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <p>x</p>
-                      </td>
-                      <td>
-                        <p>Number</p>
-                      </td>
-                      <td>
-                        <p>&nbsp;</p>
-                      </td>
-                      <td>
-                        <p>The x ordinate.</p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <p>y</p>
-                      </td>
-                      <td>
-                        <p>Number</p>
-                      </td>
-                      <td>
-                        <p>&nbsp;</p>
-                      </td>
-                      <td>
-                        <p>The y ordinate.</p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <p>layer</p>
-                      </td>
-                      <td>
-                        <p><a href="CanvasLayer.html">CanvasLayer</a></p>
-                      </td>
-                      <td>
-                        <p>&nbsp;</p>
-                      </td>
-                      <td>
-                        <p>The layer to check.</p>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </section>
-              <dl class="dl-compact">
-                <dt>Returns</dt>
-                <dd>
-                  <p><code>Boolean</code> </p>
                 </dd>
               </dl>
               <h3 id="isOverSelectableLayer"><span class="symbol-name">isOverSelectableLayer</span><span class="signature"><span class="signature-params">(x, y)</span>&nbsp;&rarr; <span class="signature-returns"> Boolean</span></span></h3>
@@ -910,7 +926,7 @@
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on August 1, 2019.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on August 6, 2019.
       </p>
     </div>
   </footer>

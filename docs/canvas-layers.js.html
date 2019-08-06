@@ -30,7 +30,7 @@
           </header>
           <article>
             <pre class="prettyprint linenums"><code>/**
- * canvas-layers - v1.1.63
+ * canvas-layers - v1.1.213
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -41,7 +41,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.1.63
+ * @version 1.1.213
  */
 class Canvas{
 	
@@ -222,20 +222,25 @@ class Canvas{
 	 * @param {Boolean} [opts.forceBoundary&#x3D;false] - Force the item to stay in bounds.
 	 * @returns {CanvasLayer} - The layer that was added.
 	 */
-	addLayer(url, opts&#x3D;{}){
+	addLayer(layerOrURL, opts&#x3D;{}){
 		this.ready &#x3D; false;
-		const name &#x3D; opts.name || &#x60;Layer ${this.layers.length}&#x60;;
-		const x &#x3D; parseFloat(opts.x || this.width/2);
-		const y &#x3D; parseFloat(opts.y || this.height/2);
-		const rotation &#x3D; parseFloat(opts.rotation || 0);
-		const draggable &#x3D; opts.draggable &#x3D;&#x3D;&#x3D; undefined ? true : opts.draggable;
-		const rotateable &#x3D; !!opts.rotateable &#x3D;&#x3D;&#x3D; undefined ? true : opts.rotateable;
-		const resizable &#x3D; !!opts.resizable &#x3D;&#x3D;&#x3D; undefined ? true : opts.resizable;
-		const selectable &#x3D; !!opts.selectable &#x3D;&#x3D;&#x3D; undefined ? true : opts.selectable;
-		const width &#x3D; opts.width || null;
-		const height &#x3D; opts.height || null;
-		const forceBoundary &#x3D; opts.forceBoundary || false;
-		var layer &#x3D; new CanvasLayer(url, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary);
+		if(layerOrURL instanceof CanvasLayer){
+			var layer &#x3D; layerOrURL;
+		}else{
+			const name &#x3D; opts.name || &#x60;Layer ${this.layers.length}&#x60;;
+			const x &#x3D; parseFloat(opts.x || this.width/2);
+			const y &#x3D; parseFloat(opts.y || this.height/2);
+			const rotation &#x3D; parseFloat(opts.rotation || 0);
+			const draggable &#x3D; opts.draggable &#x3D;&#x3D;&#x3D; undefined ? true : opts.draggable;
+			const rotateable &#x3D; !!opts.rotateable &#x3D;&#x3D;&#x3D; undefined ? true : opts.rotateable;
+			const resizable &#x3D; !!opts.resizable &#x3D;&#x3D;&#x3D; undefined ? true : opts.resizable;
+			const selectable &#x3D; !!opts.selectable &#x3D;&#x3D;&#x3D; undefined ? true : opts.selectable;
+			const width &#x3D; opts.width || null;
+			const height &#x3D; opts.height || null;
+			const forceBoundary &#x3D; opts.forceBoundary || false;
+			var layer &#x3D; new CanvasLayer(layerOrURL, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary);
+		}
+		
 		this.layers.unshift(layer);
 		this.pending_layers++;
 		layer.onload(()&#x3D;&gt;{
@@ -254,8 +259,8 @@ class Canvas{
 	 * @param {CanvasLayer} layer - The layer to crop to.
 	 * @returns {Promise} - A Promise htat resolves with the DataURI of the cropped area.
 	 */
-	cropToLayer(layer){
-		return this.extractPortion(layer.x, layer.y, layer.width, layer.height, layer.rotation);
+	cropToLayer(layer, unrotated&#x3D;true){
+		return this.extractPortion(layer.x, layer.y, layer.width, layer.height, layer.rotation, unrotated);
 	}
 	
 	/**
@@ -265,11 +270,12 @@ class Canvas{
 	 * @param {Number} width - The width of the area to extract from teh canvas.
 	 * @param {Number} height - The height of the area to extract from teh canvas.
 	 * @param {Number} [rotation&#x3D;0] - The rotation of the area to extract, counter-clockwise, in degrees.
+	 * @param {Boolean} [unrotated&#x3D;true] - If true, undo the rotation so the layer is in it&#x27;s natural position.
 	 * @returns {Promise} - A Promise htat resolves with the DataURI of the cropped area.
 	 */
-	extractPortion(centerx, centery, width, height, rotation&#x3D;0){
+	async extractPortion(centerx, centery, width, height, rotation&#x3D;0, unrotated&#x3D;true){
 		var radians &#x3D; rotation * Math.PI / 180;
-		var {x, y} &#x3D; this.absolutePoint(-(width/2), -(height/2), centerx, centery, rotation);
+		var {x, y} &#x3D; Canvas.absolutePoint(-(width/2), -(height/2), centerx, centery, rotation);
 		
 		var rectBB &#x3D; this.getRotatedRectBB(x, y, width, height, radians);
 		
@@ -285,33 +291,36 @@ class Canvas{
 		canvas0.width &#x3D; this.width;
 		canvas0.height &#x3D; this.height;
 		
-		return new Promise(done&#x3D;&gt;{
-			this.loadAll().then(()&#x3D;&gt;{
-				for(let i&#x3D;this.layers.length; i--;){
-					let layer &#x3D; this.layers[i];
-					var radians &#x3D; layer.rotation * (Math.PI/180);
-					ctx0.translate(layer.x, layer.y);
-					ctx0.rotate(radians);
-					ctx0.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
-					ctx0.rotate(-radians);
-					ctx0.translate(-layer.x, -layer.y);
-				}
+		await this.loadAll();
+		
+		for(let i&#x3D;this.layers.length; i--;){
+			let layer &#x3D; this.layers[i];
+			var radians &#x3D; layer.rotation * (Math.PI/180);
+			ctx0.translate(layer.x, layer.y);
+			ctx0.rotate(radians);
+			ctx0.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
+			ctx0.rotate(-radians);
+			ctx0.translate(-layer.x, -layer.y);
+		}
 
-				ctx1.drawImage(canvas0, rectBB.cx - rectBB.width / 2, rectBB.cy - rectBB.height / 2, rectBB.width, rectBB.height, 0, 0, rectBB.width, rectBB.height);
-				ctx2.translate(canvas1.width / 2, canvas1.height / 2);
-				ctx2.rotate(-radians);
-				ctx2.drawImage(canvas1, -canvas1.width / 2, -canvas1.height / 2);
-				var ofstx &#x3D; (canvas2.width - width) / 2;
-				var ofsty &#x3D; (canvas2.height - height) / 2;
-				ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
-				canvas1.width &#x3D; width;
-				canvas1.height &#x3D; height;
-				ctx1.drawImage(canvas2, -ofstx, -ofsty);
-				done(canvas1.toDataURL());
-
-			});
-		});
+		ctx1.drawImage(canvas0, rectBB.cx - rectBB.width / 2, rectBB.cy - rectBB.height / 2, rectBB.width, rectBB.height, 0, 0, rectBB.width, rectBB.height);
+		
+		if(!unrotated){
+			return canvas1.toDataURL();
+		}
+		
+		ctx2.translate(canvas1.width / 2, canvas1.height / 2);
+		ctx2.rotate(-radians);
+		ctx2.drawImage(canvas1, -canvas1.width / 2, -canvas1.height / 2);
+		var ofstx &#x3D; (canvas2.width - width) / 2;
+		var ofsty &#x3D; (canvas2.height - height) / 2;
+		ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
+		canvas1.width &#x3D; width;
+		canvas1.height &#x3D; height;
+		ctx1.drawImage(canvas2, -ofstx, -ofsty);
+		return canvas1.toDataURL();
 	}
+	
 	
 	/**
 	 * Draw the canvas.
@@ -440,7 +449,7 @@ class Canvas{
 	getLayerAt(x, y){
 		for(let i&#x3D;0; i&amp;lt;this.layers.length; i++){
 			let layer &#x3D; this.layers[i];
-			if(this.isOverLayer(x, y, layer)) return layer;
+			if(Canvas.isOverLayer(x, y, layer)) return layer;
 		}
 		return null;
 	}
@@ -453,27 +462,11 @@ class Canvas{
 	 */
 	isOverSelectableLayer(x, y){
 		for(let i&#x3D;this.layers.length; i--;){
-			if(this.isOverLayer(x, y, this.layers[i])){
+			if(Canvas.isOverLayer(x, y, this.layers[i])){
 				if(this.layers[i].selectable &amp;amp;&amp;amp; this.activeLayer !&#x3D;&#x3D; this.layers[i]) return true;
 			}
 		}
 		return false;
-	}
-	
-	/**
-	 * Are the given coordinates over the given layer?
-	 * @param {Number} x - The x ordinate.
-	 * @param {Number} y - The y ordinate.
-	 * @param {CanvasLayer} layer - The layer to check.
-	 * @returns {Boolean}
-	 */
-	isOverLayer(x, y, layer){
-		let r &#x3D; this.layerRelativePoint(x, y, layer);
-		if(r.x &gt; (layer.width/2)) return false;
-		if(r.x &amp;lt; -(layer.width/2)) return false;
-		if(r.y &gt; (layer.height/2)) return false;
-		if(r.y &amp;lt; -(layer.height/2)) return false;
-		return true;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////
@@ -517,7 +510,7 @@ class Canvas{
 	 * @ignore
 	 */
 	loadAll(){
-		var promises &#x3D; this.layers.map(layer&#x3D;&gt;new Promise(done&#x3D;&gt;layer.onload(done)));
+		var promises &#x3D; this.layers.map(layer&#x3D;&gt;layer.load());
 		return Promise.all(promises);
 	}
 	
@@ -575,6 +568,9 @@ class Canvas{
 				var angle &#x3D; Math.atan2(dy, dx);
 				var degrees &#x3D; angle * 180 / Math.PI;
 				this.activeLayer.rotation &#x3D; degrees;
+				if(this.activeLayer instanceof CanvasLayerGroup){
+					this.activeLayer.updateLayers();
+				}
 				this.draw();
 			}
 		}else if(this.draggingActiveLayer){
@@ -588,8 +584,17 @@ class Canvas{
 			}
 			
 			if(this.fireEvent(&#x27;layer-drag&#x27;)){
-				this.activeLayer.x &#x3D; newx;
-				this.activeLayer.y &#x3D; newy;
+				
+				var moveRightPixels &#x3D; newx - this.activeLayer.x;
+				var moveDownPixels &#x3D; newy - this.activeLayer.y;
+				
+				this.activeLayer.x +&#x3D; moveRightPixels;
+				this.activeLayer.y +&#x3D; moveDownPixels;
+				
+				if(this.activeLayer instanceof CanvasLayerGroup){
+					this.activeLayer.updateLayers();
+				}
+				
 				this.draw();
 			}
 		}else if(this.resizingActiveLayer){
@@ -604,6 +609,11 @@ class Canvas{
 			if(this.fireEvent(&#x27;layer-resize&#x27;)){
 				this.activeLayer.width &#x3D; width;
 				this.activeLayer.height &#x3D; height;
+				
+				if(this.activeLayer instanceof CanvasLayerGroup){
+					this.activeLayer.updateLayers();
+				}
+				
 				this.draw();
 			}
 		}
@@ -640,7 +650,7 @@ class Canvas{
 		var height &#x3D; this.activeLayer.height;
 		
 		var o &#x3D; this.lastMouseDownOffset;
-		var n &#x3D; this.layerRelativePoint(x, y, this.activeLayer);
+		var n &#x3D; Canvas.layerRelativePoint(x, y, this.activeLayer);
 		if(o.x &gt; 0){
 			width &#x3D; Math.abs(this.activeLayerOriginalDimensions.width - (o.x-n.x)*2);
 		}else{
@@ -734,7 +744,7 @@ class Canvas{
 				width: this.activeLayer.width,
 				height: this.activeLayer.height
 			};
-			this.lastMouseDownOffset &#x3D; this.layerRelativePoint(x, y, this.activeLayer);
+			this.lastMouseDownOffset &#x3D; Canvas.layerRelativePoint(x, y, this.activeLayer);
 		}
 	}
 	
@@ -744,7 +754,7 @@ class Canvas{
 	 */
 	isNearActiveRotatePoint(x, y){
 		if(!this.activeLayer || !this.activeLayer.rotateable) return false;
-		var {x, y} &#x3D; this.layerRelativePoint(x, y, this.activeLayer);
+		var {x, y} &#x3D; Canvas.layerRelativePoint(x, y, this.activeLayer);
 		var mx &#x3D; (this.activeLayer.width/2)+25;
 		var my &#x3D; 0;
 		var dist &#x3D; Math.hypot(mx-x, my-y);
@@ -758,7 +768,7 @@ class Canvas{
 	 */
 	isNearActiveCorner(x, y){
 		if(!this.activeLayer || !this.activeLayer.resizable) return false;
-		var {x, y} &#x3D; this.layerRelativePoint(x, y, this.activeLayer);
+		var {x, y} &#x3D; Canvas.layerRelativePoint(x, y, this.activeLayer);
 		var isNear &#x3D; false;
 		this.activeLayer.getCorners().forEach(corner&#x3D;&gt;{			
 			var dist &#x3D; Math.hypot(corner.x-x, corner.y-y);
@@ -784,7 +794,7 @@ class Canvas{
 		
 		var inbounds &#x3D; true;
 		layer.getCorners().forEach(corner&#x3D;&gt;{
-			var pos &#x3D; this.absolutePoint(corner.x, corner.y, layer.x, layer.y, layer.rotation);
+			var pos &#x3D; Canvas.absolutePoint(corner.x, corner.y, layer.x, layer.y, layer.rotation);
 			if(pos.x &amp;lt; 0 || pos.x &gt; this.width || pos.y &amp;lt; 0 || pos.y &gt; this.width){
 				inbounds &#x3D; false;
 			}
@@ -794,44 +804,6 @@ class Canvas{
 		layer.width &#x3D; _width;
 		layer.height &#x3D; _height;
 		return inbounds;
-	}
-	
-	/**
-	 * Get the point relative to the center of a given layer.
-	 * @ignore
-	 */
-	layerRelativePoint(absPointX, absPointY, layer){
-		return this.relativePoint(absPointX, absPointY, layer.x, layer.y, layer.rotation);
-	}
-	
-	/**
-	 * Get the position of a point relative to another point and possibly rotated.
-	 * @ignore
-	 */
-	relativePoint(absPointX, absPointY, centerX, centerY, rotation){
-		absPointX -&#x3D; centerX;
-		absPointY -&#x3D; centerY;
-		var radians &#x3D; rotation * (Math.PI / 180);
-		var cos &#x3D; Math.cos(radians);
-		var sin &#x3D; Math.sin(radians);
-		var x &#x3D; (absPointX * cos) + (absPointY * sin);
-		var y &#x3D; (-absPointX * sin) + (absPointY * cos);
-		x &#x3D; Math.floor(x * 100) / 100;
-		y &#x3D; Math.floor(y * 100) / 100;
-		return {x, y};
-	}
-	
-	/**
-	 * Convert a relative point to an absolute point.
-	 * @ignore
-	 */
-	absolutePoint(relPointX, relPointY, centerX, centerY, rotationDegrees) {
-		var radians &#x3D; rotationDegrees * (Math.PI / 180);
-		var cos &#x3D; Math.cos(radians);
-		var sin &#x3D; Math.sin(radians);
-		var x &#x3D; centerX + (relPointX * cos) - (relPointY * sin);
-		var y &#x3D; centerY + (relPointX * sin) + (relPointY * cos);
-		return {x, y};
 	}
 	
 	/**
@@ -907,7 +879,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version &#x3D; &#x27;1.1.63&#x27;;
+Canvas.version &#x3D; &#x27;1.1.213&#x27;;
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -954,6 +926,60 @@ Canvas.cursors &#x3D; {
 
 
 /**
+ * Convert a relative point to an absolute point.
+ * @ignore
+ */
+Canvas.absolutePoint &#x3D; (relPointX, relPointY, centerX, centerY, rotationDegrees) &#x3D;&gt; {
+   var radians &#x3D; rotationDegrees * (Math.PI / 180);
+   var cos &#x3D; Math.cos(radians);
+   var sin &#x3D; Math.sin(radians);
+   var x &#x3D; centerX + (relPointX * cos) - (relPointY * sin);
+   var y &#x3D; centerY + (relPointX * sin) + (relPointY * cos);
+   return {x, y};
+};
+
+/**
+ * Get the position of a point relative to another point and possibly rotated.
+ * @ignore
+ */
+Canvas.relativePoint &#x3D; (absPointX, absPointY, centerX, centerY, rotation) &#x3D;&gt; {
+   absPointX -&#x3D; centerX;
+   absPointY -&#x3D; centerY;
+   var radians &#x3D; rotation * (Math.PI / 180);
+   var cos &#x3D; Math.cos(radians);
+   var sin &#x3D; Math.sin(radians);
+   var x &#x3D; (absPointX * cos) + (absPointY * sin);
+   var y &#x3D; (-absPointX * sin) + (absPointY * cos);
+   x &#x3D; Math.floor(x * 100) / 100;
+   y &#x3D; Math.floor(y * 100) / 100;
+   return {x, y};
+};
+
+/**
+ * Get the point relative to the center of a given layer.
+ * @ignore
+ */
+Canvas.layerRelativePoint &#x3D; (absPointX, absPointY, layer) &#x3D;&gt; {
+   return Canvas.relativePoint(absPointX, absPointY, layer.x, layer.y, layer.rotation);
+};
+
+/**
+ * Are the given coordinates over the given layer?
+ * @param {Number} x - The x ordinate.
+ * @param {Number} y - The y ordinate.
+ * @param {CanvasLayer} layer - The layer to check.
+ * @returns {Boolean}
+ */
+Canvas.isOverLayer &#x3D; (x, y, layer)&#x3D;&gt;{
+	let r &#x3D; Canvas.layerRelativePoint(x, y, layer);
+	if(r.x &gt; (layer.width/2)) return false;
+	if(r.x &amp;lt; -(layer.width/2)) return false;
+	if(r.y &gt; (layer.height/2)) return false;
+	if(r.y &amp;lt; -(layer.height/2)) return false;
+	return true;
+};
+
+/**
  * Class representing the layers drawn on the canvas.
  */
 class CanvasLayer{
@@ -990,6 +1016,13 @@ class CanvasLayer{
 		this.selectable &#x3D; selectable;
 		this.forceBoundary &#x3D; forceBoundary;
 		this.load_cb_stack &#x3D; [];
+		
+		this.xoffset &#x3D; 0;
+		this.yoffset &#x3D; 0;
+		this.roffset &#x3D; 0;
+		this.owidth &#x3D; 0;
+		this.oheight &#x3D; 0;
+		
 		this.load();
 	}
 	
@@ -1048,6 +1081,7 @@ class CanvasLayer{
 					this.ready &#x3D; true;
 					this.load_cb_stack.forEach(fn&#x3D;&gt;fn());
 					this.load_cb_stack &#x3D; [];
+					done();
 				};
 				img.src &#x3D; this.url;
 			}
@@ -1080,7 +1114,133 @@ CanvasLayer.deobjectify &#x3D; function(d){
 		layer[key] &#x3D; d.state[key];
 	});
 	return layer;
-};</code></pre>
+};
+class CanvasLayerGroup extends CanvasLayer{
+	
+	constructor(name, draggable&#x3D;true, rotateable&#x3D;true, resizable&#x3D;true, selectable&#x3D;true, forceBoundary&#x3D;false){
+		var url &#x3D; &#x27;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/1+yHgAHtAKYD9BncgAAAABJRU5ErkJggg&#x3D;&#x3D;&#x27;;
+		super(url, name, 0, 0, 1, 1, 0, draggable, rotateable, resizable, selectable, forceBoundary);
+		this.layers &#x3D; [];
+	}
+	
+	getLayerOrSubLayerAt(canvas, x, y){
+		for(let i&#x3D;0; i&amp;lt;canvas.layers.length; i++){
+			
+			let layer &#x3D; canvas.layers[i];
+			
+			if(layer &#x3D;&#x3D;&#x3D; this){
+				for(let i&#x3D;this.layers.length; i--;){
+					let layer &#x3D; this.layers[i];
+					if(Canvas.isOverLayer(x, y, layer)) return layer;
+				}
+			}
+			
+			if(Canvas.isOverLayer(x, y, layer)) return layer;
+		}
+		return null;
+	}
+	
+	async removeLayer(layer){
+		delete layer.xoffset;
+		delete layer.yoffset;
+		this.layers.splice(this.layers.indexOf(layer), 1);
+		return await this.regenerate();
+	}
+	
+	async addLayer(layer){
+		if(layer &#x3D;&#x3D;&#x3D; this) return;
+		if(layer instanceof CanvasLayerGroup){
+			this.layers.push(...layer.layers);
+		}else{			
+			this.layers.push(layer);
+		}
+		return await this.regenerate();
+	}
+	
+	async regenerate(){
+		var params &#x3D; await this.getParams();
+		
+		this.width &#x3D; this.owidth &#x3D; params.width;
+		this.height &#x3D; this.oheight &#x3D; params.height;
+		
+		this.x &#x3D; params.x;
+		this.y &#x3D; params.y;
+		this.rotation &#x3D; 0;
+		
+		this.forceBoundary &#x3D; params.forceBoundary;
+		this.draggable &#x3D;  params.draggable;
+		this.rotateable &#x3D;  params.rotateable;
+		this.resizable &#x3D;  params.resizable;
+		this.selectable &#x3D; params.selectable;
+		
+		this.url &#x3D; params.uri;
+		this.ready &#x3D; false;
+		return await this.load();
+	}
+	
+	updateLayers(){
+		var ratiox &#x3D; this.width/this.owidth;
+		var ratioy &#x3D; this.height/this.oheight;
+		this.layers.forEach(layer&#x3D;&gt;{
+			layer.width &#x3D; layer.owidth * ratiox;
+			layer.height &#x3D; layer.oheight * ratioy;			
+			layer.rotation &#x3D; layer.roffset + this.rotation;
+			var pos &#x3D; Canvas.absolutePoint(layer.xoffset*ratiox, layer.yoffset*ratioy, this.x, this.y, this.rotation);
+			layer.x &#x3D; pos.x;
+			layer.y &#x3D; pos.y;
+			
+		});
+	}
+	
+	async getParams(){
+		const allCorners &#x3D; this.layers.map(layer &#x3D;&gt; {
+			return layer.getCorners().map(corner&#x3D;&gt;{
+				return Canvas.absolutePoint(corner.x, corner.y, layer.x, layer.y, layer.rotation);
+			});
+		});
+		
+		const allBounds &#x3D; [];
+		allCorners.forEach(corners&#x3D;&gt;{
+			allBounds.push(...corners);
+		});
+
+		var pos &#x3D; {
+			left: allBounds.reduce((acc, cur)&#x3D;&gt;Math.min(acc, cur.x), Infinity),
+			top: allBounds.reduce((acc, cur)&#x3D;&gt;Math.min(acc, cur.y), Infinity),
+			right: allBounds.reduce((acc, cur)&#x3D;&gt;Math.max(acc, cur.x),0),
+			bottom: allBounds.reduce((acc, cur)&#x3D;&gt;Math.max(acc, cur.y),0)
+		};
+		pos.width &#x3D; pos.right - pos.left;
+		pos.height &#x3D; pos.bottom - pos.top;
+		pos.x &#x3D; pos.left+(pos.width/2);
+		pos.y &#x3D; pos.top+(pos.height/2);
+
+		var ele &#x3D; document.createElement(&#x27;canvas&#x27;);
+		ele.width &#x3D; pos.right+2;
+		ele.height &#x3D; pos.bottom+2;
+		var canvas &#x3D; new Canvas(ele);
+		this.layers.forEach(layer&#x3D;&gt;canvas.addLayer(layer));
+		
+		pos.uri &#x3D; await canvas.extractPortion(pos.x, pos.y, pos.width, pos.height, 0, false);
+		
+		pos.forceBoundary &#x3D; this.layers.reduce((acc, itm)&#x3D;&gt;itm.forceBoundary||acc,false);
+		pos.draggable &#x3D; this.layers.reduce((acc, itm)&#x3D;&gt;acc&#x3D;&#x3D;&#x3D;false?false:itm.draggable,true);
+		pos.rotateable &#x3D; this.layers.reduce((acc, itm)&#x3D;&gt;acc&#x3D;&#x3D;&#x3D;false?false:itm.draggable,true);
+		pos.resizable &#x3D; this.layers.reduce((acc, itm)&#x3D;&gt;acc&#x3D;&#x3D;&#x3D;false?false:itm.draggable,true);
+		pos.selectable &#x3D; this.layers.reduce((acc, itm)&#x3D;&gt;acc&#x3D;&#x3D;&#x3D;false?false:itm.draggable,true);
+		
+		this.layers.forEach(l&#x3D;&gt;{
+			l.xoffset &#x3D; l.x - pos.x;
+			l.yoffset &#x3D; l.y - pos.y;
+			l.roffset &#x3D; l.rotation;
+			l.owidth &#x3D; l.width;
+			l.oheight &#x3D; l.height;
+		});
+		
+		return pos;
+	}
+
+}</code></pre>
           </article>
         </div>
       </div>
@@ -1090,7 +1250,7 @@ CanvasLayer.deobjectify &#x3D; function(d){
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on August 1, 2019.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on August 6, 2019.
       </p>
     </div>
   </footer>

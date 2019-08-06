@@ -15,7 +15,8 @@ module.exports = function(grunt) {
 			dist: {
 				src: [
 					'src/Canvas.js',
-					'src/CanvasLayer.js'
+					'src/CanvasLayer.js',
+					'src/CanvasLayerGroup.js'
 				],
 				dest: 'canvas-layers.js',
 			},

@@ -46,6 +46,11 @@
 				<li>Use the <code>cropToLayer</code> method to get the cropped image behind the selected invisible layer.</li>
 			</ol>
 			
+			
+			<div class="checkbox">
+				<label><input type="checkbox" id="unrotate" checked>Unrotate crop?</label>
+			</div>
+			
 			<div class='row'>
 				<div class='col-sm-6'>
 					<h3>Full Canvas</h3>
@@ -103,7 +108,7 @@
 			canvasEle.addEventListener('layer-resize', cropit);
 			
 			function cropit(){
-				canvas.cropToLayer(invisible_box).then(datauri=>{
+				canvas.cropToLayer(invisible_box, !!document.getElementById('unrotate').checked).then(datauri=>{
 					preview.src = datauri;
 				});
 			}
