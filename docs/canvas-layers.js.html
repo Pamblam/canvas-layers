@@ -30,7 +30,7 @@
           </header>
           <article>
             <pre class="prettyprint linenums"><code>/**
- * canvas-layers - v1.2.4
+ * canvas-layers - v1.2.17
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -41,7 +41,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.2.4
+ * @version 1.2.17
  */
 class Canvas{
 	
@@ -600,8 +600,14 @@ class Canvas{
 	 * @ignore
 	 */
 	onkeyevent(e){
-		this.shiftKeyDown &#x3D; e.shiftKey;
-		this.isCtrlPressed &#x3D; e.ctrlKey;
+		if(&#x27;Shift&#x27; &#x3D;&#x3D;&#x3D; e.key){
+			if(e.type &#x3D;&#x3D;&#x3D; &#x27;keydown&#x27;) this.shiftKeyDown &#x3D; true;
+			else this.shiftKeyDown &#x3D; false
+		}
+		if(&#x27;Control&#x27; &#x3D;&#x3D;&#x3D; e.key){
+			if(e.type &#x3D;&#x3D;&#x3D; &#x27;keydown&#x27;) this.isCtrlPressed &#x3D; true;
+			else this.isCtrlPressed &#x3D; false
+		}
 		if(!this.isCtrlPressed &amp;amp;&amp;amp; this.isGroupOnCanvas()){
 			this.destroyCtrlGroup();
 		}
@@ -804,7 +810,7 @@ class Canvas{
 		
 		// Handling the grouping 
 		var layer &#x3D; this.getLayerAt(x, y);
-		if(layer &amp;amp;&amp;amp; layer !&#x3D;&#x3D; this.ctrlGroupLayer){
+		if(layer &amp;amp;&amp;amp; layer !&#x3D;&#x3D; this.ctrlGroupLayer &amp;amp;&amp;amp; layer.selectable){
 			if(!this.isCtrlPressed) this.destroyCtrlGroup();	
 			if(!this.isLayerInGroup(layer)){
 				this.muteStateChanges &#x3D; true;
@@ -962,7 +968,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version &#x3D; &#x27;1.2.4&#x27;;
+Canvas.version &#x3D; &#x27;1.2.17&#x27;;
 
 /**
  * The default anchorRadius value for all Canvas instances.

@@ -561,8 +561,14 @@ class Canvas{
 	 * @ignore
 	 */
 	onkeyevent(e){
-		this.shiftKeyDown = e.shiftKey;
-		this.isCtrlPressed = e.ctrlKey;
+		if('Shift' === e.key){
+			if(e.type === 'keydown') this.shiftKeyDown = true;
+			else this.shiftKeyDown = false
+		}
+		if('Control' === e.key){
+			if(e.type === 'keydown') this.isCtrlPressed = true;
+			else this.isCtrlPressed = false
+		}
 		if(!this.isCtrlPressed && this.isGroupOnCanvas()){
 			this.destroyCtrlGroup();
 		}
@@ -765,7 +771,7 @@ class Canvas{
 		
 		// Handling the grouping 
 		var layer = this.getLayerAt(x, y);
-		if(layer && layer !== this.ctrlGroupLayer){
+		if(layer && layer !== this.ctrlGroupLayer && layer.selectable){
 			if(!this.isCtrlPressed) this.destroyCtrlGroup();	
 			if(!this.isLayerInGroup(layer)){
 				this.muteStateChanges = true;

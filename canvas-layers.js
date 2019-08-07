@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v1.2.4
+ * canvas-layers - v1.2.17
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.2.4
+ * @version 1.2.17
  */
 class Canvas{
 	
@@ -569,8 +569,14 @@ class Canvas{
 	 * @ignore
 	 */
 	onkeyevent(e){
-		this.shiftKeyDown = e.shiftKey;
-		this.isCtrlPressed = e.ctrlKey;
+		if('Shift' === e.key){
+			if(e.type === 'keydown') this.shiftKeyDown = true;
+			else this.shiftKeyDown = false
+		}
+		if('Control' === e.key){
+			if(e.type === 'keydown') this.isCtrlPressed = true;
+			else this.isCtrlPressed = false
+		}
 		if(!this.isCtrlPressed && this.isGroupOnCanvas()){
 			this.destroyCtrlGroup();
 		}
@@ -773,7 +779,7 @@ class Canvas{
 		
 		// Handling the grouping 
 		var layer = this.getLayerAt(x, y);
-		if(layer && layer !== this.ctrlGroupLayer){
+		if(layer && layer !== this.ctrlGroupLayer && layer.selectable){
 			if(!this.isCtrlPressed) this.destroyCtrlGroup();	
 			if(!this.isLayerInGroup(layer)){
 				this.muteStateChanges = true;
@@ -931,7 +937,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '1.2.4';
+Canvas.version = '1.2.17';
 
 /**
  * The default anchorRadius value for all Canvas instances.
