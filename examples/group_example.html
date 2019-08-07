@@ -114,16 +114,26 @@
 			var isLayerInGroup = layer=>!!~groupLayer.layers.indexOf(layer);
 			var isCtrlPressed = false;
 			
+			var destroyGroup =  async ()=>{
+				canvas.muteStateChanges = true;
+				var promises = groupLayer.layers.map(layer=>{
+					return new Promise(done=>{
+						canvas.addLayer(layer);
+						layer.onload(()=>done());
+					});
+				});
+				await Promise.all(promises);
+				groupLayer.layers = [];
+				groupLayer.rotation = 0;
+				if(isGroupOnCanvas()) canvas.removeLayer(groupLayer);
+				canvas.muteStateChanges = false;
+			};
+			
 			['keyup', 'keydown'].forEach(evt=>{
-				document.addEventListener(evt, function(e){
+				document.addEventListener(evt, async function(e){
 					isCtrlPressed = e.ctrlKey;
 					if(!isCtrlPressed && isGroupOnCanvas()){
-						groupLayer.layers.forEach(l=>{
-							canvas.addLayer(l);
-						});
-						groupLayer.layers = [];
-						groupLayer.rotation = 0;
-						canvas.removeLayer(groupLayer);
+						destroyGroup();
 					}
 				});
 			});
@@ -133,29 +143,29 @@
 				var layer = canvas.getLayerAt(x, y);
 				if(layer === groupLayer || !layer) return;
 				
-				if(!isCtrlPressed){
-					// reset and remove group layer
-					groupLayer.layers.forEach(l=>{
-						canvas.addLayer(l);
-					});
-					groupLayer.layers = [];
-					groupLayer.rotation = 0;
-					
-					if(isGroupOnCanvas()){
-						canvas.removeLayer(groupLayer);
-					}
-				}
+				if(!isCtrlPressed) destroyGroup();
 				
 				if(!isLayerInGroup(layer)){
+					canvas.muteStateChanges = true;
 					await groupLayer.addLayer(layer);
 					if(groupLayer.layers.length === 1) canvas.selectLayer(layer);
+					layer.onload(()=>{
+						canvas.muteStateChanges = false;
+					});
 				}
 				
 				if(!isGroupOnCanvas() && groupLayer.layers.length > 1){
+					canvas.muteStateChanges = true;
 					groupLayer.layers.forEach(l=>{
 						canvas.removeLayer(l);
 					});
 					canvas.addLayer(groupLayer);
+					groupLayer.onload(()=>{
+						canvas.muteStateChanges = false;
+					});
+				}
+				
+				if(isGroupOnCanvas()){
 					canvas.selectLayer(groupLayer);
 				}
 			});

@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v1.1.213
+ * canvas-layers - v1.1.215
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.1.213
+ * @version 1.1.215
  */
 class Canvas{
 	
@@ -72,6 +72,9 @@ class Canvas{
 		this.last_clicked_layer = null;
 		this.pending_layers = 0;
 		this.ready = true;
+		
+		// if turned on, no state will be saved.
+		this.muteStateChanges = false;
 	}	
 	
 	/**
@@ -96,7 +99,15 @@ class Canvas{
 	 * @returns {undefined}
 	 */
 	saveState(){
-		var state = this.layers.map(l=>l.objectify());
+		if(this.muteStateChanges) return;
+		var state = [];
+		const getState = (layers) => {
+			layers.forEach(layer=>{
+				if(layer instanceof CanvasLayerGroup) getState(layer.layers);
+				else state.push(layer.objectify());
+			});
+		}
+		getState(this.layers);
 		this.layer_states.length = this.layer_state_pos+1;
 		this.layer_states.push(state);
 		this.layer_state_pos = this.layer_states.length-1;
@@ -848,7 +859,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '1.1.213';
+Canvas.version = '1.1.215';
 
 /**
  * The default anchorRadius value for all Canvas instances.
