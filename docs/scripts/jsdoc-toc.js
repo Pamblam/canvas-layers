@@ -6,7 +6,7 @@
     treeNode.tree({
         autoEscape: false,
         closedIcon: '&#x21e2;',
-        data: [{"label":"<a href=\"Canvas.html\">Canvas</a>","id":"Canvas","children":[]},{"label":"<a href=\"CanvasLayer.html\">CanvasLayer</a>","id":"CanvasLayer","children":[]}],
+        data: [{"label":"<a href=\"Canvas.html\">Canvas</a>","id":"Canvas","children":[]},{"label":"<a href=\"CanvasLayer.html\">CanvasLayer</a>","id":"CanvasLayer","children":[]},{"label":"<a href=\"CanvasLayerGroup.html\">CanvasLayerGroup</a>","id":"CanvasLayerGroup","children":[]}],
         openedIcon: ' &#x21e3;',
         saveState: true,
         useContextMenu: false

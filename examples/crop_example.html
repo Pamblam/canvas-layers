@@ -66,6 +66,7 @@
 		<script src="../canvas-layers.js"></script>
 		<script>
 			
+			var rotatecb = document.getElementById('unrotate'); 
 			var preview = document.getElementById('preview');
 			var canvasEle = document.getElementById("canvas");
 			
@@ -107,8 +108,12 @@
 			canvasEle.addEventListener('layer-rotate', cropit);
 			canvasEle.addEventListener('layer-resize', cropit);
 			
+			rotatecb.addEventListener('input', function(){
+				cropit();
+			});
+			
 			function cropit(){
-				canvas.cropToLayer(invisible_box, !!document.getElementById('unrotate').checked).then(datauri=>{
+				canvas.cropToLayer(invisible_box, !!rotatecb.checked).then(datauri=>{
 					preview.src = datauri;
 				});
 			}

@@ -4,7 +4,7 @@
 <head>
   <meta name="generator" content="JSDoc 3.6.2">
   <meta charset="utf-8">
-  <title>Class: CanvasLayer</title>
+  <title>Class: CanvasLayerGroup</title>
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
@@ -25,10 +25,10 @@
         <div id="jsdoc-main" role="main">
           <header class="page-header">
             <div class="symbol-detail-labels"><span class="label label-kind">class</span></div>
-            <h1><small></small><span class="symbol-name">CanvasLayer</span></h1>
-            <p class="source-link">Source: <a href="canvas-layers.js.html#source-line-1055">canvas-layers.<wbr>js:1055</a></p>
+            <h1><small></small><span class="symbol-name">CanvasLayerGroup</span></h1>
+            <p class="source-link">Source: <a href="canvas-layers.js.html#source-line-1186">canvas-layers.<wbr>js:1186</a></p>
             <div class="symbol-classdesc">
-              <p>Class representing the layers drawn on the canvas.</p>
+              <p>CavnasLayer that controls multiple layers</p>
             </div>
             <dl class="dl-compact">
             </dl>
@@ -39,31 +39,30 @@
               <div class="summary-content">
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
-                    <dt><a href="CanvasLayer.html#.deobjectify">deobjectify(str)</a></dt>
-                    <dd>
-                    </dd>
-                    <dt><a href="CanvasLayer.html#load">load()</a></dt>
+                    <dt><a href="CanvasLayerGroup.html#addLayer">addLayer(layer)</a></dt>
                     <dd>
                     </dd>
                   </dl>
                 </div>
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
-                    <dt><a href="CanvasLayer.html#objectify">objectify()</a></dt>
-                    <dd>
-                    </dd>
-                    <dt><a href="CanvasLayer.html#onload">onload(fn)</a></dt>
+                    <dt><a href="CanvasLayerGroup.html#getLayerOrSubLayerAt">getLayerOrSubLayerAt(canvas, x, y)</a></dt>
                     <dd>
                     </dd>
                   </dl>
                 </div>
                 <div class="summary-column">
+                  <dl class="dl-summary-callout">
+                    <dt><a href="CanvasLayerGroup.html#removeLayer">removeLayer(layer)</a></dt>
+                    <dd>
+                    </dd>
+                  </dl>
                 </div>
               </div>
             </div>
           </section>
           <section>
-            <h2 id="CanvasLayer">new&nbsp;<span class="symbol-name">CanvasLayer</span><span class="signature"><span class="signature-params">(url, name, x, y[, width][, height][, rotation][, draggable][, rotateable][, resizable][, selectable][, forceBoundary])</span></span></h2>
+            <h2 id="CanvasLayerGroup">new&nbsp;<span class="symbol-name">CanvasLayerGroup</span><span class="signature"><span class="signature-params">(name[, draggable][, rotateable][, resizable][, selectable][, forceBoundary])</span></span></h2>
             <p>Create a new Layer.</p>
             <section>
               <h3>Parameters</h3>
@@ -79,20 +78,6 @@
                 <tbody>
                   <tr>
                     <td>
-                      <p>url</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>The URL or URI of an image to draw on the canvas.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
                       <p>name</p>
                     </td>
                     <td>
@@ -103,79 +88,6 @@
                     </td>
                     <td>
                       <p>The name of the layer.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>x</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>The x position of the layer on the canvas.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>y</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>The y position of the layer on the canvas.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>width</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>Yes</p>
-                    </td>
-                    <td>
-                      <p>The width of the layer on the canvas.</p>
-                      <p>Defaults to <code>null</code>.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>height</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>Yes</p>
-                    </td>
-                    <td>
-                      <p>The height of the layer on the canvas.</p>
-                      <p>Defaults to <code>null</code>.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>rotation</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>Yes</p>
-                    </td>
-                    <td>
-                      <p>The rotation of the layer on the canvas.</p>
-                      <p>Defaults to <code>0</code>.</p>
                     </td>
                   </tr>
                   <tr>
@@ -264,9 +176,8 @@
           <section>
             <h2>Methods</h2>
             <section>
-              <div class="symbol-detail-labels"><span class="label label-static">static</span></div>
-              <h3 id=".deobjectify"><span class="symbol-name">deobjectify</span><span class="signature"><span class="signature-params">(str)</span>&nbsp;&rarr; <span class="signature-returns"> <a href="CanvasLayer.html">CanvasLayer</a></span></span></h3>
-              <p>un Serialize a layer</p>
+              <h3 id="addLayer"><span class="symbol-name">addLayer</span><span class="signature"><span class="signature-params">(layer)</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
+              <p>Add a layer to the group</p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -281,15 +192,16 @@
                   <tbody>
                     <tr>
                       <td>
-                        <p>str</p>
+                        <p>layer</p>
                       </td>
                       <td>
-                        <p>type</p>
+                        <p><a href="CanvasLayer.html">CanvasLayer</a></p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
                       </td>
                       <td>
+                        <p>The layer to add.</p>
                       </td>
                     </tr>
                   </tbody>
@@ -298,27 +210,76 @@
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
-                  <p><code><a href="CanvasLayer.html">CanvasLayer</a></code> </p>
+                  <p><code>Promise</code> </p>
                 </dd>
               </dl>
-              <h3 id="load"><span class="symbol-name">load</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
-              <p>Load the layer so it is ready to use.</p>
+              <h3 id="getLayerOrSubLayerAt"><span class="symbol-name">getLayerOrSubLayerAt</span><span class="signature"><span class="signature-params">(canvas, x, y)</span>&nbsp;&rarr; <span class="signature-returns"> (layer or null)</span></span></h3>
+              <p>Get the layer on the given canvas at the given position. If this group is selected it will return the layer in this group at the given position, if applicatble.</p>
+              <section>
+                <h4>Parameters</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>canvas</p>
+                      </td>
+                      <td>
+                        <p><a href="Canvas.html">Canvas</a></p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The Canvas element that owns the layers.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>x</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The x position of the mouseclick relative to the canvas.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>y</p>
+                      </td>
+                      <td>
+                        <p>Number</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The y position of the mouseclick relative to the canvas.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code> - A promise that resolves when the layer is ready</p>
+                  <p><code>(layer or null)</code> </p>
                 </dd>
               </dl>
-              <h3 id="objectify"><span class="symbol-name">objectify</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> String</span></span></h3>
-              <p>jsonify the current layer</p>
-              <dl class="dl-compact">
-                <dt>Returns</dt>
-                <dd>
-                  <p><code>String</code> - Serialized layer</p>
-                </dd>
-              </dl>
-              <h3 id="onload"><span class="symbol-name">onload</span><span class="signature"><span class="signature-params">(fn)</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
-              <p>Register a function to be called when the layer is fully loaded.</p>
+              <h3 id="removeLayer"><span class="symbol-name">removeLayer</span><span class="signature"><span class="signature-params">(layer)</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
+              <p>Remove the provided layer from the group.</p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -333,16 +294,16 @@
                   <tbody>
                     <tr>
                       <td>
-                        <p>fn</p>
+                        <p>layer</p>
                       </td>
                       <td>
-                        <p>function()</p>
+                        <p><a href="CanvasLayer.html">CanvasLayer</a></p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>The callback function.</p>
+                        <p>The layer to remove.</p>
                       </td>
                     </tr>
                   </tbody>
@@ -351,7 +312,7 @@
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>undefined</code> </p>
+                  <p><code>Promise</code> </p>
                 </dd>
               </dl>
             </section>

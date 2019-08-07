@@ -89,6 +89,9 @@
                     <dt><a href="Canvas.html#deSelectLayer">deSelectLayer()</a></dt>
                     <dd>
                     </dd>
+                    <dt><a href="Canvas.html#destroyCtrlGroup">destroyCtrlGroup()</a></dt>
+                    <dd>
+                    </dd>
                     <dt><a href="Canvas.html#draw">draw()</a></dt>
                     <dd>
                     </dd>
@@ -111,6 +114,12 @@
                     <dt><a href="Canvas.html#hideGrid">hideGrid()</a></dt>
                     <dd>
                     </dd>
+                    <dt><a href="Canvas.html#isGroupOnCanvas">isGroupOnCanvas()</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#isLayerInGroup">isLayerInGroup(layer)</a></dt>
+                    <dd>
+                    </dd>
                     <dt><a href="Canvas.html#isOverSelectableLayer">isOverSelectableLayer(x, y)</a></dt>
                     <dd>
                     </dd>
@@ -123,13 +132,13 @@
                     <dt><a href="Canvas.html#removeAllLayers">removeAllLayers()</a></dt>
                     <dd>
                     </dd>
-                    <dt><a href="Canvas.html#removeLayer">removeLayer(layer)</a></dt>
-                    <dd>
-                    </dd>
                   </dl>
                 </div>
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
+                    <dt><a href="Canvas.html#removeLayer">removeLayer(layer)</a></dt>
+                    <dd>
+                    </dd>
                     <dt><a href="Canvas.html#saveState">saveState()</a></dt>
                     <dd>
                     </dd>
@@ -187,7 +196,7 @@
             </section>
             <dl class="dl-compact">
               <dt>Version<dt>
-    <dd><p>1.1.215</p></dd>
+    <dd><p>1.2.4</p></dd>
 
 
 
@@ -448,6 +457,14 @@
                   <p><code>undefined</code> </p>
                 </dd>
               </dl>
+              <h3 id="destroyCtrlGroup"><span class="symbol-name">destroyCtrlGroup</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
+              <p>Remove the ctrl-grp from the canvas</p>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>Promise</code> </p>
+                </dd>
+              </dl>
               <h3 id="draw"><span class="symbol-name">draw</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
               <p>Draw the canvas.</p>
               <dl class="dl-compact">
@@ -697,6 +714,50 @@
                 <dt>Returns</dt>
                 <dd>
                   <p><code>undefined</code> </p>
+                </dd>
+              </dl>
+              <h3 id="isGroupOnCanvas"><span class="symbol-name">isGroupOnCanvas</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Boolean</span></span></h3>
+              <p>Is the ctrl-grp on the canvas?</p>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>Boolean</code> </p>
+                </dd>
+              </dl>
+              <h3 id="isLayerInGroup"><span class="symbol-name">isLayerInGroup</span><span class="signature"><span class="signature-params">(layer)</span>&nbsp;&rarr; <span class="signature-returns"> Boolean</span></span></h3>
+              <p>Is the provided layer part of the ctrl-grp</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>layer</p>
+                      </td>
+                      <td>
+                        <p>CavnasLayer</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>Boolean</code> </p>
                 </dd>
               </dl>
               <h3 id="isOverSelectableLayer"><span class="symbol-name">isOverSelectableLayer</span><span class="signature"><span class="signature-params">(x, y)</span>&nbsp;&rarr; <span class="signature-returns"> Boolean</span></span></h3>

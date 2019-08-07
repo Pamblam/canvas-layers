@@ -41,6 +41,8 @@ class Canvas{
 		this.displayGrid = false;
 		this.snapToGrid = false;
 		this.gridDistancePixels = 10;
+		
+		
 		canvas.addEventListener('mousemove', this.onmousemove.bind(this));
 		canvas.addEventListener('mousedown', this.onmousedown.bind(this));
 		canvas.addEventListener('mouseout', this.onmousereset.bind(this));
@@ -67,7 +69,45 @@ class Canvas{
 		
 		// if turned on, no state will be saved.
 		this.muteStateChanges = false;
+		this.isCtrlPressed = false;
+		this.ctrlGroupLayer = new CanvasLayerGroup('ctrl-grp');
 	}	
+	
+	/**
+	 * Is the provided layer part of the ctrl-grp
+	 * @param {CavnasLayer} layer
+	 * @returns {Boolean}
+	 */
+	isLayerInGroup(layer){
+		return !!~this.ctrlGroupLayer.layers.indexOf(layer);
+	}
+	
+	/**
+	 * Is the ctrl-grp on the canvas?
+	 * @returns {Boolean}
+	 */
+	isGroupOnCanvas(){ 
+		return !!~this.layers.indexOf(this.ctrlGroupLayer) 
+	}
+	
+	/**
+	 * Remove the ctrl-grp from the canvas
+	 * @returns {Promise}
+	 */
+	async destroyCtrlGroup(){
+		this.muteStateChanges = true;
+		var promises = this.ctrlGroupLayer.layers.map(layer=>{
+			return new Promise(done=>{
+				this.addLayer(layer);
+				layer.onload(()=>done());
+			});
+		});
+		await Promise.all(promises);
+		this.ctrlGroupLayer.layers = [];
+		this.ctrlGroupLayer.rotation = 0;
+		if(this.isGroupOnCanvas()) this.removeLayer(this.ctrlGroupLayer);
+		this.muteStateChanges = false;
+	}
 	
 	/**
 	 * Load the state object
@@ -522,6 +562,10 @@ class Canvas{
 	 */
 	onkeyevent(e){
 		this.shiftKeyDown = e.shiftKey;
+		this.isCtrlPressed = e.ctrlKey;
+		if(!this.isCtrlPressed && this.isGroupOnCanvas()){
+			this.destroyCtrlGroup();
+		}
 	}
 	
 	/**
@@ -684,7 +728,7 @@ class Canvas{
 	 * Handle mousedown over the canvas.
 	 * @ignore
 	 */
-	onmousedown(e){
+	async onmousedown(e){
 		var {x, y} = this.canvasMousePos(e);
 		this.setCursor(x, y);
 		if(this.isNearActiveRotatePoint(x, y)){
@@ -718,6 +762,34 @@ class Canvas{
 			};
 			this.lastMouseDownOffset = Canvas.layerRelativePoint(x, y, this.activeLayer);
 		}
+		
+		// Handling the grouping 
+		var layer = this.getLayerAt(x, y);
+		if(layer && layer !== this.ctrlGroupLayer){
+			if(!this.isCtrlPressed) this.destroyCtrlGroup();	
+			if(!this.isLayerInGroup(layer)){
+				this.muteStateChanges = true;
+				await this.ctrlGroupLayer.addLayer(layer);
+				if(this.ctrlGroupLayer.layers.length === 1) this.selectLayer(layer);
+				layer.onload(()=>{
+					this.muteStateChanges = false;
+				});
+			}
+			if(!this.isGroupOnCanvas() && this.ctrlGroupLayer.layers.length > 1){
+				this.muteStateChanges = true;
+				this.ctrlGroupLayer.layers.forEach(l=>{
+					this.removeLayer(l);
+				});
+				this.addLayer(this.ctrlGroupLayer);
+				this.ctrlGroupLayer.onload(()=>{
+					this.muteStateChanges = false;
+				});
+			}
+			if(this.isGroupOnCanvas()){
+				this.selectLayer(this.ctrlGroupLayer);
+			}
+		}
+		
 	}
 	
 	/**

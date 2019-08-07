@@ -68,13 +68,31 @@
 			});
 			
 			canvasEle.addEventListener('layer-click', function(e){
-				var layer = e.detail.last_clicked_layer;
-				console.log(`Clicked on ${layer.name}`);
+				console.log(`Clicked on layer`);
 			});
 			
 			canvasEle.addEventListener('layer-dblclick', function(e){
-				var layer = e.detail.last_clicked_layer;
-				console.log(`Double clicked on ${layer.name}`);
+				console.log(`Double clicked layer`);
+			});
+			
+			canvasEle.addEventListener('layer-select', function(e){
+				console.log(`Trying to select a layer`);
+				// You can cancel event too.
+				if(!confirm('Are you sure you want to select this layer?')){
+					e.preventDefault();
+				}
+			});
+			
+			canvasEle.addEventListener('layer-deselect', function(e){
+				console.log(`Deselecting Layer`);
+			});
+			
+			canvasEle.addEventListener('layer-selected', function(e){
+				console.log(`Selected Layer`);
+			});
+			
+			canvasEle.addEventListener('layer-deselected', function(e){
+				console.log(`Deselected Layer`);
 			});
 			
 		</script>

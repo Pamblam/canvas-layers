@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Canvas Layers - Basic Example</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		
+		<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+		<style>
+			body{
+				background-color: #f6f4ed;
+			}
+			h1, h2, h3, h4, h5{
+				color: #7bb01f;
+			}
+			#canvas{
+				border:1px solid black; background: white;
+				margin: 0 auto;
+				max-width: 100%;
+				margin-top: 1em;
+			}
+		</style>
+		
+		<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+		<div class='container'>
+			<center>
+				<img src='../logo.png' class='image-responsive'>
+				<br><br>
+				<div class="btn-group" role="group" aria-label="...">
+					<a class="btn btn-default" href="https://github.com/Pamblam/canvas-layers"><span class="glyphicon glyphicon-flash"></span> Github</a>
+					<a class="btn btn-default" href="index.html"><span class="glyphicon glyphicon-send"></span> Examples</a>
+					<a class="btn btn-default" href="../docs/"><span class="glyphicon glyphicon-book"></span> Docs</a>
+				</div>
+				
+				<h1>Seamless Tile Generator Example</h1>
+				<p>Use the buttons to add images to the canvas. The contents of the inner square will tile seamlessly. To preview the image tiled press <b>crop</b>, This will generate a base64 image in the textarea below.</p>
+				<p>I needed a tile generator so I threw this together. Check the source code to see how it works.</p>
+			</center>
+			
+			<div class='row'>
+				<div class='col-sm-12 text-center'>
+					<div>
+						<button class='btn btn-primary' id="fileinput">Upload an Image</button>
+						<button class='btn btn-primary' id="cropbtn">Crop</button>
+						<button class='btn btn-primary' id="resetbtn">Reset</button>
+					</div>
+					<canvas id="canvas" width="700" height="700"></canvas>
+					
+					<div class="form-group">
+						<label for="DataURL">Data URL:</label>
+						<textarea class="form-control" rows="5" id="DataURL"></textarea>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+		
+		<script src="../canvas-layers.js"></script>
+		<script src="./assets/file-input.js"></script>
+		<script>
+			class Tiler extends Canvas{
+				constructor(canvas, tileWidth, tileHeight, padding=100){
+					super(canvas, {
+						height: tileHeight+(padding*2),
+						width: tileWidth+(padding*2)
+					});
+					this.tileWidth = tileWidth;
+					this.tileHeight = tileHeight;
+					this.padding = padding;
+					this.canvas.on
+				}
+				draw(){
+					this.tile();
+					super.draw();
+					this.ctx.strokeStyle = 'black';
+					this.ctx.lineWidth = 1;
+					this.ctx.strokeRect(this.padding, this.padding, this.tileWidth, this.tileHeight);
+				}
+				addLayer(url, opts={}){
+					var layer = super.addLayer(url, opts={});
+					
+					layer.mirrors = {
+						top: super.addLayer(url, {selectable: false, y: layer.y-this.tileHeight}),
+						topleft: super.addLayer(url, {selectable: false, x: layer.x-this.tileWidth, y: layer.y-this.tileHeight}),
+						topright: super.addLayer(url, {selectable: false, x: layer.x+this.tileWidth, y: layer.y-this.tileHeight}),
+						
+						
+						bottom: super.addLayer(url, {selectable: false, y: layer.y+this.tileHeight}),
+						bottomleft: super.addLayer(url, {selectable: false, x: layer.x-this.tileWidth, y: layer.y-this.tileHeight}),
+						bottomright: super.addLayer(url, {selectable: false, x: layer.x+this.tileWidth, y: layer.y+this.tileHeight}),
+						
+						left: super.addLayer(url, {selectable: false, x: layer.x-this.tileWidth}),
+						right: super.addLayer(url, {selectable: false, x: layer.x+this.tileWidth}),
+					};
+				}
+				tile(){
+					var layers = [], mirror_layers = [], select_layer;
+					this.layers.forEach(layer=>{
+						if('Select Area' === layer.name) select_layer = layer;
+						if(!layer.mirrors) return;
+						['top','topleft','topright','bottom','bottomleft','bottomright','left','right'].forEach(side=>{
+							var l = layer.mirrors[side];
+							
+							switch(side){
+								case 'top':
+									l.y = layer.y-this.tileHeight;
+									l.x = layer.x;
+									break;
+								case 'topleft':
+									l.y = layer.y-this.tileHeight;
+									l.x = layer.x-this.tileWidth;
+									break;
+								case 'topright':
+									l.y = layer.y-this.tileHeight;
+									l.x = layer.x+this.tileWidth;
+									break;
+								case 'bottom':
+									l.y = layer.y+this.tileHeight;
+									l.x = layer.x;
+									break;
+								case 'bottomleft':
+									l.y = layer.y+this.tileHeight;
+									l.x = layer.x-this.tileWidth;
+									break;
+								case 'bottomright':
+									l.y = layer.y+this.tileHeight;
+									l.x = layer.x+this.tileWidth;
+									break
+								case 'left':
+									l.x = layer.x-this.tileWidth;
+									l.y = layer.y;
+									break;
+								case 'right':
+									l.x = layer.x+this.tileWidth;
+									l.y = layer.y;
+									break;
+							}
+							
+							l.rotation = layer.rotation;
+							l.width = layer.width;
+							l.height = layer.height;
+							mirror_layers.push(l);
+						});
+						
+						layers.push(layer);
+					});
+					if(select_layer) layers.push(select_layer);
+					this.layers = mirror_layers.concat(layers);
+				}
+				crop(){
+					return new Promise(done=>{
+						var invisible_box = super.addLayer('./img/1x1.png', {
+							name: 'Select Area',
+							width: this.tileWidth,
+							height: this.tileHeight,
+							src: './img/1x1.png'
+						});
+						this.selectLayer(invisible_box); 
+						this.cropToLayer(invisible_box, false).then(datauri=>{
+							this.removeLayer(invisible_box);
+							done(datauri);
+						});
+					});
+				}
+			}
+			
+			
+			var ele = document.getElementById("canvas");
+			var btn = document.getElementById("fileinput");
+			var cropbtn = document.getElementById('cropbtn');
+			var resetbtn = document.getElementById('resetbtn');
+			var textarea = document.getElementById('DataURL');
+			var tiler = new Tiler(ele, 500, 500);
+			
+			textarea.parentElement.style.display = 'none';
+			
+			const fi = new FI({
+				button: btn,
+				accept: ["png", "jpg"]
+			});
+			
+			btn.addEventListener('fi-files-added', async function(e){
+				const file = e.detail.get_files()[0];
+				const uri = await e.detail.get_file_datauri(file);
+				if(uri) tiler.addLayer(uri);
+				tiler.tile();
+				fi.clear_files();
+			});
+			
+			cropbtn.addEventListener('click', async function(e){
+				const datauri = await tiler.crop();
+				document.body.style.backgroundImage = "url('"+datauri+"')";
+				textarea.value = datauri;
+				textarea.parentElement.style.display = null;
+			});
+			
+			resetbtn.addEventListener('click', async function(){
+				document.body.style.backgroundImage = null;
+				tiler.layers.forEach(l=>tiler.removeLayer(l));
+				textarea.parentElement.style.display = 'none';
+			});
+		</script>
+	</body>
+</html>

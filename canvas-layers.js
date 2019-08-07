@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v1.1.215
+ * canvas-layers - v1.2.4
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.1.215
+ * @version 1.2.4
  */
 class Canvas{
 	
@@ -49,6 +49,8 @@ class Canvas{
 		this.displayGrid = false;
 		this.snapToGrid = false;
 		this.gridDistancePixels = 10;
+		
+		
 		canvas.addEventListener('mousemove', this.onmousemove.bind(this));
 		canvas.addEventListener('mousedown', this.onmousedown.bind(this));
 		canvas.addEventListener('mouseout', this.onmousereset.bind(this));
@@ -75,7 +77,45 @@ class Canvas{
 		
 		// if turned on, no state will be saved.
 		this.muteStateChanges = false;
+		this.isCtrlPressed = false;
+		this.ctrlGroupLayer = new CanvasLayerGroup('ctrl-grp');
 	}	
+	
+	/**
+	 * Is the provided layer part of the ctrl-grp
+	 * @param {CavnasLayer} layer
+	 * @returns {Boolean}
+	 */
+	isLayerInGroup(layer){
+		return !!~this.ctrlGroupLayer.layers.indexOf(layer);
+	}
+	
+	/**
+	 * Is the ctrl-grp on the canvas?
+	 * @returns {Boolean}
+	 */
+	isGroupOnCanvas(){ 
+		return !!~this.layers.indexOf(this.ctrlGroupLayer) 
+	}
+	
+	/**
+	 * Remove the ctrl-grp from the canvas
+	 * @returns {Promise}
+	 */
+	async destroyCtrlGroup(){
+		this.muteStateChanges = true;
+		var promises = this.ctrlGroupLayer.layers.map(layer=>{
+			return new Promise(done=>{
+				this.addLayer(layer);
+				layer.onload(()=>done());
+			});
+		});
+		await Promise.all(promises);
+		this.ctrlGroupLayer.layers = [];
+		this.ctrlGroupLayer.rotation = 0;
+		if(this.isGroupOnCanvas()) this.removeLayer(this.ctrlGroupLayer);
+		this.muteStateChanges = false;
+	}
 	
 	/**
 	 * Load the state object
@@ -530,6 +570,10 @@ class Canvas{
 	 */
 	onkeyevent(e){
 		this.shiftKeyDown = e.shiftKey;
+		this.isCtrlPressed = e.ctrlKey;
+		if(!this.isCtrlPressed && this.isGroupOnCanvas()){
+			this.destroyCtrlGroup();
+		}
 	}
 	
 	/**
@@ -692,7 +736,7 @@ class Canvas{
 	 * Handle mousedown over the canvas.
 	 * @ignore
 	 */
-	onmousedown(e){
+	async onmousedown(e){
 		var {x, y} = this.canvasMousePos(e);
 		this.setCursor(x, y);
 		if(this.isNearActiveRotatePoint(x, y)){
@@ -726,6 +770,34 @@ class Canvas{
 			};
 			this.lastMouseDownOffset = Canvas.layerRelativePoint(x, y, this.activeLayer);
 		}
+		
+		// Handling the grouping 
+		var layer = this.getLayerAt(x, y);
+		if(layer && layer !== this.ctrlGroupLayer){
+			if(!this.isCtrlPressed) this.destroyCtrlGroup();	
+			if(!this.isLayerInGroup(layer)){
+				this.muteStateChanges = true;
+				await this.ctrlGroupLayer.addLayer(layer);
+				if(this.ctrlGroupLayer.layers.length === 1) this.selectLayer(layer);
+				layer.onload(()=>{
+					this.muteStateChanges = false;
+				});
+			}
+			if(!this.isGroupOnCanvas() && this.ctrlGroupLayer.layers.length > 1){
+				this.muteStateChanges = true;
+				this.ctrlGroupLayer.layers.forEach(l=>{
+					this.removeLayer(l);
+				});
+				this.addLayer(this.ctrlGroupLayer);
+				this.ctrlGroupLayer.onload(()=>{
+					this.muteStateChanges = false;
+				});
+			}
+			if(this.isGroupOnCanvas()){
+				this.selectLayer(this.ctrlGroupLayer);
+			}
+		}
+		
 	}
 	
 	/**
@@ -859,7 +931,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '1.1.215';
+Canvas.version = '1.2.4';
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -1095,14 +1167,37 @@ CanvasLayer.deobjectify = function(d){
 	});
 	return layer;
 };
+
+/**
+ * CavnasLayer that controls multiple layers
+ */
 class CanvasLayerGroup extends CanvasLayer{
 	
+	/**
+	 * Create a new Layer.
+	 * @param {String} name - The name of the layer.
+	 * @param {Boolean} [draggable=true] - Is the layer draggable?
+	 * @param {Boolean} [rotateable=true] - Is the layer rotateable?
+	 * @param {Boolean} [resizable=true] - Is the layer resizable?
+	 * @param {Boolean} [selectable=true] - Is the layer selectable?
+	 * @param {Boolean} [forceBoundary=false] - Force the layer to stay in bounds?
+	 * @returns {CanvasLayerGroup}
+	 */
 	constructor(name, draggable=true, rotateable=true, resizable=true, selectable=true, forceBoundary=false){
 		var url = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/1+yHgAHtAKYD9BncgAAAABJRU5ErkJggg==';
 		super(url, name, 0, 0, 1, 1, 0, draggable, rotateable, resizable, selectable, forceBoundary);
 		this.layers = [];
 	}
 	
+	/**
+	 * Get the layer on the given canvas at the given position. If this group 
+	 * is selected it will return the layer in this group at the given 
+	 * position, if applicatble.
+	 * @param {Canvas} canvas - The Canvas element that owns the layers.
+	 * @param {Number} x - The x position of the mouseclick relative to the canvas.
+	 * @param {Number} y - The y position of the mouseclick relative to the canvas.
+	 * @returns {layer|null}
+	 */
 	getLayerOrSubLayerAt(canvas, x, y){
 		for(let i=0; i<canvas.layers.length; i++){
 			
@@ -1120,6 +1215,11 @@ class CanvasLayerGroup extends CanvasLayer{
 		return null;
 	}
 	
+	/**
+	 * Remove the provided layer from the group.
+	 * @param {CanvasLayer} layer - The layer to remove.
+	 * @returns {Promise}
+	 */
 	async removeLayer(layer){
 		delete layer.xoffset;
 		delete layer.yoffset;
@@ -1127,6 +1227,11 @@ class CanvasLayerGroup extends CanvasLayer{
 		return await this.regenerate();
 	}
 	
+	/**
+	 * Add a layer to the group
+	 * @param {CanvasLayer} layer - The layer to add.
+	 * @returns {Promise}
+	 */
 	async addLayer(layer){
 		if(layer === this) return;
 		if(layer instanceof CanvasLayerGroup){
@@ -1137,6 +1242,10 @@ class CanvasLayerGroup extends CanvasLayer{
 		return await this.regenerate();
 	}
 	
+	/**
+	 * Regenerate images and dimensions.
+	 * @ignore
+	 */
 	async regenerate(){
 		var params = await this.getParams();
 		
@@ -1158,6 +1267,10 @@ class CanvasLayerGroup extends CanvasLayer{
 		return await this.load();
 	}
 	
+	/**
+	 * Update the sublayers of this group.
+	 * @ignore
+	 */
 	updateLayers(){
 		var ratiox = this.width/this.owidth;
 		var ratioy = this.height/this.oheight;
@@ -1172,6 +1285,10 @@ class CanvasLayerGroup extends CanvasLayer{
 		});
 	}
 	
+	/**
+	 * Regenerate images and dimensions.
+	 * @ignore
+	 */
 	async getParams(){
 		const allCorners = this.layers.map(layer => {
 			return layer.getCorners().map(corner=>{
