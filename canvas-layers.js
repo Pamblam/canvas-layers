@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v1.2.17
+ * canvas-layers - v1.2.18
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.2.17
+ * @version 1.2.18
  */
 class Canvas{
 	
@@ -37,6 +37,7 @@ class Canvas{
 		this.layers = [];
 		this.layer_state_pos = -1;
 		this.layer_states = [];
+		this.drawPromises = [];
 		this.activeLayer = null;
 		this.shiftKeyDown = false;
 		this.draggingActiveLayer = false;
@@ -344,59 +345,64 @@ class Canvas{
 	
 	/**
 	 * Draw the canvas.
-	 * @returns {undefined}
+	 * @returns {Promise}
 	 */
 	draw(){
-		if(!this.ready) return;
-			
-		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		for(let i=this.layers.length; i--;){
-			let layer = this.layers[i];
-			var radians = layer.rotation * (Math.PI/180);
-			this.ctx.translate(layer.x, layer.y);
-			this.ctx.rotate(radians);
-			
-			this.ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
-			
-			if(layer === this.activeLayer){
-				this.ctx.strokeStyle = this.strokeStyle;
-				this.ctx.fillStyle = this.fillStyle;
-				this.ctx.lineWidth = this.getScale() * this.lineWidth;
-				this.ctx.strokeRect(-(layer.width/2), -(layer.height/2), layer.width, layer.height);
-				if(layer.resizable){
-					layer.getCorners().forEach(corner=>{
-						this.drawCircle(corner.x, corner.y, this.getScale() * this.anchorRadius);
-					});
+		return new Promise(done=>{
+			this.drawPromises.push(done);
+			if(!this.ready) return;
+
+			this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+			for(let i=this.layers.length; i--;){
+				let layer = this.layers[i];
+				var radians = layer.rotation * (Math.PI/180);
+				this.ctx.translate(layer.x, layer.y);
+				this.ctx.rotate(radians);
+
+				this.ctx.drawImage(layer.image, -(layer.width/2), -(layer.height/2), layer.width, layer.height);
+
+				if(layer === this.activeLayer){
+					this.ctx.strokeStyle = this.strokeStyle;
+					this.ctx.fillStyle = this.fillStyle;
+					this.ctx.lineWidth = this.getScale() * this.lineWidth;
+					this.ctx.strokeRect(-(layer.width/2), -(layer.height/2), layer.width, layer.height);
+					if(layer.resizable){
+						layer.getCorners().forEach(corner=>{
+							this.drawCircle(corner.x, corner.y, this.getScale() * this.anchorRadius);
+						});
+					}
+					if(layer.rotateable){
+						this.ctx.beginPath();
+						this.ctx.moveTo(0, 0);
+						this.ctx.lineTo((layer.width/2)+25, 0);
+						this.ctx.stroke();
+						this.drawCircle((layer.width/2)+25, 0, this.getScale() * this.anchorRadius);
+					}
 				}
-				if(layer.rotateable){
-					this.ctx.beginPath();
-					this.ctx.moveTo(0, 0);
-					this.ctx.lineTo((layer.width/2)+25, 0);
-					this.ctx.stroke();
-					this.drawCircle((layer.width/2)+25, 0, this.getScale() * this.anchorRadius);
-				}
+				this.ctx.rotate(-radians);
+				this.ctx.translate(-layer.x, -layer.y);
 			}
-			this.ctx.rotate(-radians);
-			this.ctx.translate(-layer.x, -layer.y);
-		}
-		
-		if(this.displayGrid){
-			this.ctx.strokeStyle = "rgba(0,0,0,0.2)";
-			this.ctx.lineWidth = this.getScale() * 2;
-			var {xs, ys} = this.getGridLines(false);
-			xs.forEach(x=>{
-				this.ctx.beginPath();
-				this.ctx.moveTo(x, 0);
-				this.ctx.lineTo(x, this.canvas.height);
-				this.ctx.stroke(); 
-			});
-			ys.forEach(y=>{
-				this.ctx.beginPath();
-				this.ctx.moveTo(0, y);
-				this.ctx.lineTo(this.canvas.width, y);
-				this.ctx.stroke(); 
-			});
-		}
+
+			if(this.displayGrid){
+				this.ctx.strokeStyle = "rgba(0,0,0,0.2)";
+				this.ctx.lineWidth = this.getScale() * 2;
+				var {xs, ys} = this.getGridLines(false);
+				xs.forEach(x=>{
+					this.ctx.beginPath();
+					this.ctx.moveTo(x, 0);
+					this.ctx.lineTo(x, this.canvas.height);
+					this.ctx.stroke(); 
+				});
+				ys.forEach(y=>{
+					this.ctx.beginPath();
+					this.ctx.moveTo(0, y);
+					this.ctx.lineTo(this.canvas.width, y);
+					this.ctx.stroke(); 
+				});
+			}
+			
+			while(this.drawPromises.length) this.drawPromises.shift()();
+		});
 	}	
 	
 	/**
@@ -937,7 +943,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '1.2.17';
+Canvas.version = '1.2.18';
 
 /**
  * The default anchorRadius value for all Canvas instances.
