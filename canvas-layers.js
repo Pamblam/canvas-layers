@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v1.2.18
+ * canvas-layers - v1.2.26
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.2.18
+ * @version 1.2.26
  */
 class Canvas{
 	
@@ -50,7 +50,6 @@ class Canvas{
 		this.displayGrid = false;
 		this.snapToGrid = false;
 		this.gridDistancePixels = 10;
-		
 		
 		canvas.addEventListener('mousemove', this.onmousemove.bind(this));
 		canvas.addEventListener('mousedown', this.onmousedown.bind(this));
@@ -241,6 +240,7 @@ class Canvas{
 	 * @param {Number} [opts.width=null] - The width of the layer to be drawn. If not specified, defaults to the images natural width.
 	 * @param {Number} [opts.height=null] - The height of the layer to be drawn. If not specified, defaults to the images natural height.
 	 * @param {Boolean} [opts.forceBoundary=false] - Force the item to stay in bounds.
+	 * @param {Boolean} [opts.allowOverlap=true] - Allow layers to overlap with this one.
 	 * @returns {CanvasLayer} - The layer that was added.
 	 */
 	addLayer(layerOrURL, opts={}){
@@ -259,7 +259,8 @@ class Canvas{
 			const width = opts.width || null;
 			const height = opts.height || null;
 			const forceBoundary = opts.forceBoundary || false;
-			var layer = new CanvasLayer(layerOrURL, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary);
+			const allowOverlap = opts.hasOwnProperty('allowOverlap') ? !!opts.allowOverlap : true;
+			var layer = new CanvasLayer(layerOrURL, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary, allowOverlap);
 		}
 		
 		this.layers.unshift(layer);
@@ -589,6 +590,75 @@ class Canvas{
 	}
 	
 	/**
+	 * Check if two given layers overlap
+	 * @param {CanvasLayer} layer1
+	 * @param {CanvasLayer} layer2
+	 * @returns {Boolean}
+	 */
+	doLayersOverlap(layer1, layer2){
+		const abs_corners = l => l.getCorners().map(c=>Canvas.absolutePoint(c.x, c.y, l.x, l.y, l.rotation));
+		const corners_to_lines = c => [
+			[{x:c[0].x, y:c[0].y},{x:c[1].x, y:c[1].y}],
+			[{x:c[1].x, y:c[1].y},{x:c[2].x, y:c[2].y}],
+			[{x:c[2].x, y:c[2].y},{x:c[3].x, y:c[3].y}],
+			[{x:c[3].x, y:c[3].y},{x:c[0].x, y:c[0].y}]
+		];
+		
+		var l1_corners = abs_corners(layer1);
+		var l1_lines = corners_to_lines(l1_corners);
+		
+		var l2_corners = abs_corners(layer2);
+		var l2_lines = corners_to_lines(l2_corners);
+		
+		// Check if any of the edges intersect
+		// This covers partial overlaps.
+		for(let n1=0; n1<l1_lines.length; n1++){
+			for(let n2=0; n2<l2_lines.length; n2++){
+				let a = l1_lines[n1][0].x;
+				let b = l1_lines[n1][0].y;
+				let c = l1_lines[n1][1].x;
+				let d = l1_lines[n1][1].y;
+				let p = l2_lines[n2][0].x;
+				let q = l2_lines[n2][0].y;
+				let r = l2_lines[n2][1].x;
+				let s = l2_lines[n2][1].y;
+				if(Canvas.doLinesIntersect(a, b, c, d, p, q, r, s)) return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Returns true if the active layer can be moved to the specified coordinates.
+	 * @ignore
+	 */
+	canMoveActiveLayer(newx, newy){
+		const inBounds = this.isNewPosInBounds(this.activeLayer, newx, newy, this.activeLayer.width, this.activeLayer.height);
+		if(this.activeLayer.forceBoundary && !inBounds) return false;
+		
+		var x = this.activeLayer.x;
+		var y = this.activeLayer.y;
+		this.activeLayer.x = newx;
+		this.activeLayer.y = newy;
+		
+		var canMove = true;
+		for(var i=0; i<this.layers.length; i++){
+			if(this.layers[i] === this.activeLayer) continue;
+			if(this.activeLayer.allowOverlap && this.layers[i].allowOverlap) continue;
+			if(this.doLayersOverlap(this.activeLayer, this.layers[i])){
+				canMove = false;
+				break;
+			}
+		}
+		
+		this.activeLayer.x = x;
+		this.activeLayer.y = y;
+		
+		return canMove;
+	}
+	
+	/**
 	 * Handle mouse moves over the canvas.
 	 * @ignore
 	 */
@@ -613,7 +683,7 @@ class Canvas{
 			const newx = this.activeLayerMouseOffset.x + x;
 			const newy = this.activeLayerMouseOffset.y + y;
 			
-			if(this.activeLayer.forceBoundary && !this.isNewPosInBounds(this.activeLayer, newx, newy, this.activeLayer.width, this.activeLayer.height)){
+			if(!this.canMoveActiveLayer(newx, newy)){
 				this.draggingActiveLayer = false;
 				this.draw();
 				return;
@@ -857,9 +927,9 @@ class Canvas{
 		layer.height = height;
 		
 		var inbounds = true;
-		layer.getCorners().forEach(corner=>{
+		layer.getCorners().forEach(corner => {
 			var pos = Canvas.absolutePoint(corner.x, corner.y, layer.x, layer.y, layer.rotation);
-			if(pos.x < 0 || pos.x > this.width || pos.y < 0 || pos.y > this.width){
+			if (pos.x < 0 || pos.x > this.width || pos.y < 0 || pos.y > this.width) {
 				inbounds = false;
 			}
 		});
@@ -943,7 +1013,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '1.2.18';
+Canvas.version = '1.2.26';
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -1034,13 +1104,30 @@ Canvas.layerRelativePoint = (absPointX, absPointY, layer) => {
  * @param {CanvasLayer} layer - The layer to check.
  * @returns {Boolean}
  */
-Canvas.isOverLayer = (x, y, layer)=>{
+Canvas.isOverLayer = (x, y, layer) => {
 	let r = Canvas.layerRelativePoint(x, y, layer);
 	if(r.x > (layer.width/2)) return false;
 	if(r.x < -(layer.width/2)) return false;
 	if(r.y > (layer.height/2)) return false;
 	if(r.y < -(layer.height/2)) return false;
 	return true;
+};
+
+/**
+ * returns true if the line from (a,b)->(c,d) intersects with (p,q)->(r,s)
+ * @url https://stackoverflow.com/questions/9043805/test-if-two-lines-intersect-javascript-function
+ * @returns {Boolean}
+ */
+Canvas.doLinesIntersect = (a,b,c,d,p,q,r,s) => {
+	var det, gamma, lambda;
+	det = (c - a) * (s - q) - (r - p) * (d - b);
+	if (det === 0) {
+		return false;
+	} else {
+		lambda = ((s - q) * (r - a) + (p - r) * (s - b)) / det;
+		gamma = ((b - d) * (r - a) + (c - a) * (s - b)) / det;
+		return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
+	}
 };
 
 /**
@@ -1062,9 +1149,10 @@ class CanvasLayer{
 	 * @param {Boolean} [resizable=true] - Is the layer resizable?
 	 * @param {Boolean} [selectable=true] - Is the layer selectable?
 	 * @param {Boolean} [forceBoundary=false] - Force the layer to stay in bounds?
+	 * @param {Boolean} [opts.allowOverlap=true] - Allow layers to overlap with this one.
 	 * @returns {CanvasLayer}
 	 */
-	constructor(url, name, x, y, width=null, height=null, rotation=0, draggable=true, rotateable=true, resizable=true, selectable=true, forceBoundary=false){
+	constructor(url, name, x, y, width=null, height=null, rotation=0, draggable=true, rotateable=true, resizable=true, selectable=true, forceBoundary=false, allowOverlap=true){
 		this.name = name;
 		this.url = url;
 		this.ready = false;
@@ -1079,6 +1167,7 @@ class CanvasLayer{
 		this.resizable = resizable;
 		this.selectable = selectable;
 		this.forceBoundary = forceBoundary;
+		this.allowOverlap = allowOverlap;
 		this.load_cb_stack = [];
 		
 		this.xoffset = 0;

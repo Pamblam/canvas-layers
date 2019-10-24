@@ -30,7 +30,7 @@
           </header>
           <article>
             <pre class="prettyprint linenums"><code>/**
- * canvas-layers - v1.2.18
+ * canvas-layers - v1.2.26
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -41,7 +41,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.2.18
+ * @version 1.2.26
  */
 class Canvas{
 	
@@ -81,7 +81,6 @@ class Canvas{
 		this.displayGrid &#x3D; false;
 		this.snapToGrid &#x3D; false;
 		this.gridDistancePixels &#x3D; 10;
-		
 		
 		canvas.addEventListener(&#x27;mousemove&#x27;, this.onmousemove.bind(this));
 		canvas.addEventListener(&#x27;mousedown&#x27;, this.onmousedown.bind(this));
@@ -272,6 +271,7 @@ class Canvas{
 	 * @param {Number} [opts.width&#x3D;null] - The width of the layer to be drawn. If not specified, defaults to the images natural width.
 	 * @param {Number} [opts.height&#x3D;null] - The height of the layer to be drawn. If not specified, defaults to the images natural height.
 	 * @param {Boolean} [opts.forceBoundary&#x3D;false] - Force the item to stay in bounds.
+	 * @param {Boolean} [opts.allowOverlap&#x3D;true] - Allow layers to overlap with this one.
 	 * @returns {CanvasLayer} - The layer that was added.
 	 */
 	addLayer(layerOrURL, opts&#x3D;{}){
@@ -290,7 +290,8 @@ class Canvas{
 			const width &#x3D; opts.width || null;
 			const height &#x3D; opts.height || null;
 			const forceBoundary &#x3D; opts.forceBoundary || false;
-			var layer &#x3D; new CanvasLayer(layerOrURL, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary);
+			const allowOverlap &#x3D; opts.hasOwnProperty(&#x27;allowOverlap&#x27;) ? !!opts.allowOverlap : true;
+			var layer &#x3D; new CanvasLayer(layerOrURL, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary, allowOverlap);
 		}
 		
 		this.layers.unshift(layer);
@@ -620,6 +621,75 @@ class Canvas{
 	}
 	
 	/**
+	 * Check if two given layers overlap
+	 * @param {CanvasLayer} layer1
+	 * @param {CanvasLayer} layer2
+	 * @returns {Boolean}
+	 */
+	doLayersOverlap(layer1, layer2){
+		const abs_corners &#x3D; l &#x3D;&gt; l.getCorners().map(c&#x3D;&gt;Canvas.absolutePoint(c.x, c.y, l.x, l.y, l.rotation));
+		const corners_to_lines &#x3D; c &#x3D;&gt; [
+			[{x:c[0].x, y:c[0].y},{x:c[1].x, y:c[1].y}],
+			[{x:c[1].x, y:c[1].y},{x:c[2].x, y:c[2].y}],
+			[{x:c[2].x, y:c[2].y},{x:c[3].x, y:c[3].y}],
+			[{x:c[3].x, y:c[3].y},{x:c[0].x, y:c[0].y}]
+		];
+		
+		var l1_corners &#x3D; abs_corners(layer1);
+		var l1_lines &#x3D; corners_to_lines(l1_corners);
+		
+		var l2_corners &#x3D; abs_corners(layer2);
+		var l2_lines &#x3D; corners_to_lines(l2_corners);
+		
+		// Check if any of the edges intersect
+		// This covers partial overlaps.
+		for(let n1&#x3D;0; n1&amp;lt;l1_lines.length; n1++){
+			for(let n2&#x3D;0; n2&amp;lt;l2_lines.length; n2++){
+				let a &#x3D; l1_lines[n1][0].x;
+				let b &#x3D; l1_lines[n1][0].y;
+				let c &#x3D; l1_lines[n1][1].x;
+				let d &#x3D; l1_lines[n1][1].y;
+				let p &#x3D; l2_lines[n2][0].x;
+				let q &#x3D; l2_lines[n2][0].y;
+				let r &#x3D; l2_lines[n2][1].x;
+				let s &#x3D; l2_lines[n2][1].y;
+				if(Canvas.doLinesIntersect(a, b, c, d, p, q, r, s)) return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Returns true if the active layer can be moved to the specified coordinates.
+	 * @ignore
+	 */
+	canMoveActiveLayer(newx, newy){
+		const inBounds &#x3D; this.isNewPosInBounds(this.activeLayer, newx, newy, this.activeLayer.width, this.activeLayer.height);
+		if(this.activeLayer.forceBoundary &amp;amp;&amp;amp; !inBounds) return false;
+		
+		var x &#x3D; this.activeLayer.x;
+		var y &#x3D; this.activeLayer.y;
+		this.activeLayer.x &#x3D; newx;
+		this.activeLayer.y &#x3D; newy;
+		
+		var canMove &#x3D; true;
+		for(var i&#x3D;0; i&amp;lt;this.layers.length; i++){
+			if(this.layers[i] &#x3D;&#x3D;&#x3D; this.activeLayer) continue;
+			if(this.activeLayer.allowOverlap &amp;amp;&amp;amp; this.layers[i].allowOverlap) continue;
+			if(this.doLayersOverlap(this.activeLayer, this.layers[i])){
+				canMove &#x3D; false;
+				break;
+			}
+		}
+		
+		this.activeLayer.x &#x3D; x;
+		this.activeLayer.y &#x3D; y;
+		
+		return canMove;
+	}
+	
+	/**
 	 * Handle mouse moves over the canvas.
 	 * @ignore
 	 */
@@ -644,7 +714,7 @@ class Canvas{
 			const newx &#x3D; this.activeLayerMouseOffset.x + x;
 			const newy &#x3D; this.activeLayerMouseOffset.y + y;
 			
-			if(this.activeLayer.forceBoundary &amp;amp;&amp;amp; !this.isNewPosInBounds(this.activeLayer, newx, newy, this.activeLayer.width, this.activeLayer.height)){
+			if(!this.canMoveActiveLayer(newx, newy)){
 				this.draggingActiveLayer &#x3D; false;
 				this.draw();
 				return;
@@ -888,9 +958,9 @@ class Canvas{
 		layer.height &#x3D; height;
 		
 		var inbounds &#x3D; true;
-		layer.getCorners().forEach(corner&#x3D;&gt;{
+		layer.getCorners().forEach(corner &#x3D;&gt; {
 			var pos &#x3D; Canvas.absolutePoint(corner.x, corner.y, layer.x, layer.y, layer.rotation);
-			if(pos.x &amp;lt; 0 || pos.x &gt; this.width || pos.y &amp;lt; 0 || pos.y &gt; this.width){
+			if (pos.x &amp;lt; 0 || pos.x &gt; this.width || pos.y &amp;lt; 0 || pos.y &gt; this.width) {
 				inbounds &#x3D; false;
 			}
 		});
@@ -974,7 +1044,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version &#x3D; &#x27;1.2.18&#x27;;
+Canvas.version &#x3D; &#x27;1.2.26&#x27;;
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -1065,13 +1135,30 @@ Canvas.layerRelativePoint &#x3D; (absPointX, absPointY, layer) &#x3D;&gt; {
  * @param {CanvasLayer} layer - The layer to check.
  * @returns {Boolean}
  */
-Canvas.isOverLayer &#x3D; (x, y, layer)&#x3D;&gt;{
+Canvas.isOverLayer &#x3D; (x, y, layer) &#x3D;&gt; {
 	let r &#x3D; Canvas.layerRelativePoint(x, y, layer);
 	if(r.x &gt; (layer.width/2)) return false;
 	if(r.x &amp;lt; -(layer.width/2)) return false;
 	if(r.y &gt; (layer.height/2)) return false;
 	if(r.y &amp;lt; -(layer.height/2)) return false;
 	return true;
+};
+
+/**
+ * returns true if the line from (a,b)-&gt;(c,d) intersects with (p,q)-&gt;(r,s)
+ * @url https://stackoverflow.com/questions/9043805/test-if-two-lines-intersect-javascript-function
+ * @returns {Boolean}
+ */
+Canvas.doLinesIntersect &#x3D; (a,b,c,d,p,q,r,s) &#x3D;&gt; {
+	var det, gamma, lambda;
+	det &#x3D; (c - a) * (s - q) - (r - p) * (d - b);
+	if (det &#x3D;&#x3D;&#x3D; 0) {
+		return false;
+	} else {
+		lambda &#x3D; ((s - q) * (r - a) + (p - r) * (s - b)) / det;
+		gamma &#x3D; ((b - d) * (r - a) + (c - a) * (s - b)) / det;
+		return (0 &amp;lt; lambda &amp;amp;&amp;amp; lambda &amp;lt; 1) &amp;amp;&amp;amp; (0 &amp;lt; gamma &amp;amp;&amp;amp; gamma &amp;lt; 1);
+	}
 };
 
 /**
@@ -1093,9 +1180,10 @@ class CanvasLayer{
 	 * @param {Boolean} [resizable&#x3D;true] - Is the layer resizable?
 	 * @param {Boolean} [selectable&#x3D;true] - Is the layer selectable?
 	 * @param {Boolean} [forceBoundary&#x3D;false] - Force the layer to stay in bounds?
+	 * @param {Boolean} [opts.allowOverlap&#x3D;true] - Allow layers to overlap with this one.
 	 * @returns {CanvasLayer}
 	 */
-	constructor(url, name, x, y, width&#x3D;null, height&#x3D;null, rotation&#x3D;0, draggable&#x3D;true, rotateable&#x3D;true, resizable&#x3D;true, selectable&#x3D;true, forceBoundary&#x3D;false){
+	constructor(url, name, x, y, width&#x3D;null, height&#x3D;null, rotation&#x3D;0, draggable&#x3D;true, rotateable&#x3D;true, resizable&#x3D;true, selectable&#x3D;true, forceBoundary&#x3D;false, allowOverlap&#x3D;true){
 		this.name &#x3D; name;
 		this.url &#x3D; url;
 		this.ready &#x3D; false;
@@ -1110,6 +1198,7 @@ class CanvasLayer{
 		this.resizable &#x3D; resizable;
 		this.selectable &#x3D; selectable;
 		this.forceBoundary &#x3D; forceBoundary;
+		this.allowOverlap &#x3D; allowOverlap;
 		this.load_cb_stack &#x3D; [];
 		
 		this.xoffset &#x3D; 0;
@@ -1390,7 +1479,7 @@ class CanvasLayerGroup extends CanvasLayer{
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on August 9, 2019.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on October 24, 2019.
       </p>
     </div>
   </footer>

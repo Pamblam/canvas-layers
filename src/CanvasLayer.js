@@ -18,9 +18,10 @@ class CanvasLayer{
 	 * @param {Boolean} [resizable=true] - Is the layer resizable?
 	 * @param {Boolean} [selectable=true] - Is the layer selectable?
 	 * @param {Boolean} [forceBoundary=false] - Force the layer to stay in bounds?
+	 * @param {Boolean} [opts.allowOverlap=true] - Allow layers to overlap with this one.
 	 * @returns {CanvasLayer}
 	 */
-	constructor(url, name, x, y, width=null, height=null, rotation=0, draggable=true, rotateable=true, resizable=true, selectable=true, forceBoundary=false){
+	constructor(url, name, x, y, width=null, height=null, rotation=0, draggable=true, rotateable=true, resizable=true, selectable=true, forceBoundary=false, allowOverlap=true){
 		this.name = name;
 		this.url = url;
 		this.ready = false;
@@ -35,6 +36,7 @@ class CanvasLayer{
 		this.resizable = resizable;
 		this.selectable = selectable;
 		this.forceBoundary = forceBoundary;
+		this.allowOverlap = allowOverlap;
 		this.load_cb_stack = [];
 		
 		this.xoffset = 0;

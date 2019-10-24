@@ -74,6 +74,9 @@
               <div class="summary-content">
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
+                    <dt><a href="Canvas.html#.doLinesIntersect">doLinesIntersect()</a></dt>
+                    <dd>
+                    </dd>
                     <dt><a href="Canvas.html#.isOverLayer">isOverLayer(x, y, layer)</a></dt>
                     <dd>
                     </dd>
@@ -92,19 +95,22 @@
                     <dt><a href="Canvas.html#destroyCtrlGroup">destroyCtrlGroup()</a></dt>
                     <dd>
                     </dd>
+                    <dt><a href="Canvas.html#doLayersOverlap">doLayersOverlap(layer1, layer2)</a></dt>
+                    <dd>
+                    </dd>
                     <dt><a href="Canvas.html#draw">draw()</a></dt>
-                    <dd>
-                    </dd>
-                    <dt><a href="Canvas.html#extractPortion">extractPortion(centerx, centery, width, height[, rotation][, unrotated])</a></dt>
-                    <dd>
-                    </dd>
-                    <dt><a href="Canvas.html#getGridLines">getGridLines(snap)</a></dt>
                     <dd>
                     </dd>
                   </dl>
                 </div>
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
+                    <dt><a href="Canvas.html#extractPortion">extractPortion(centerx, centery, width, height[, rotation][, unrotated])</a></dt>
+                    <dd>
+                    </dd>
+                    <dt><a href="Canvas.html#getGridLines">getGridLines(snap)</a></dt>
+                    <dd>
+                    </dd>
                     <dt><a href="Canvas.html#getLayerAt">getLayerAt(x, y)</a></dt>
                     <dd>
                     </dd>
@@ -126,16 +132,16 @@
                     <dt><a href="Canvas.html#loadState">loadState(state)</a></dt>
                     <dd>
                     </dd>
+                  </dl>
+                </div>
+                <div class="summary-column">
+                  <dl class="dl-summary-callout">
                     <dt><a href="Canvas.html#redo">redo()</a></dt>
                     <dd>
                     </dd>
                     <dt><a href="Canvas.html#removeAllLayers">removeAllLayers()</a></dt>
                     <dd>
                     </dd>
-                  </dl>
-                </div>
-                <div class="summary-column">
-                  <dl class="dl-summary-callout">
                     <dt><a href="Canvas.html#removeLayer">removeLayer(layer)</a></dt>
                     <dd>
                     </dd>
@@ -196,7 +202,7 @@
             </section>
             <dl class="dl-compact">
               <dt>Version<dt>
-    <dd><p>1.2.18</p></dd>
+    <dd><p>1.2.26</p></dd>
 
 
 
@@ -272,6 +278,15 @@
             </section>
             <h2>Methods</h2>
             <section>
+              <div class="symbol-detail-labels"><span class="label label-static">static</span></div>
+              <h3 id=".doLinesIntersect"><span class="symbol-name">doLinesIntersect</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Boolean</span></span></h3>
+              <p>returns true if the line from (a,b)-&gt;(c,d) intersects with (p,q)-&gt;(r,s)</p>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>Boolean</code> </p>
+                </dd>
+              </dl>
               <div class="symbol-detail-labels"><span class="label label-static">static</span></div>
               <h3 id=".isOverLayer"><span class="symbol-name">isOverLayer</span><span class="signature"><span class="signature-params">(x, y, layer)</span>&nbsp;&rarr; <span class="signature-returns"> Boolean</span></span></h3>
               <p>Are the given coordinates over the given layer?</p>
@@ -463,6 +478,55 @@
                 <dt>Returns</dt>
                 <dd>
                   <p><code>Promise</code> </p>
+                </dd>
+              </dl>
+              <h3 id="doLayersOverlap"><span class="symbol-name">doLayersOverlap</span><span class="signature"><span class="signature-params">(layer1, layer2)</span>&nbsp;&rarr; <span class="signature-returns"> Boolean</span></span></h3>
+              <p>Check if two given layers overlap</p>
+              <section>
+                <h4>Parameters</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>layer1</p>
+                      </td>
+                      <td>
+                        <p><a href="CanvasLayer.html">CanvasLayer</a></p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>layer2</p>
+                      </td>
+                      <td>
+                        <p><a href="CanvasLayer.html">CanvasLayer</a></p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>Boolean</code> </p>
                 </dd>
               </dl>
               <h3 id="draw"><span class="symbol-name">draw</span><span class="signature"><span class="signature-params">()</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
@@ -987,7 +1051,7 @@
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on August 9, 2019.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on October 24, 2019.
       </p>
     </div>
   </footer>
