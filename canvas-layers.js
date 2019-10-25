@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v1.2.26
+ * canvas-layers - v1.2.28
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.2.26
+ * @version 1.2.28
  */
 class Canvas{
 	
@@ -659,6 +659,61 @@ class Canvas{
 	}
 	
 	/**
+	 * Returns true if the active layer can be resized to the specified dimensions.
+	 * @ignore
+	 */
+	canResizeActiveLayer(width, height){
+		const inBounds = this.isNewPosInBounds(this.activeLayer, this.activeLayer.x, this.activeLayer.y, width, height);
+		if(this.activeLayer.forceBoundary && !inBounds) return false;
+		
+		var w = this.activeLayer.width;
+		var h = this.activeLayer.height;
+		this.activeLayer.width = w;
+		this.activeLayer.height = h;
+		
+		var canResize = true;
+		for(var i=0; i<this.layers.length; i++){
+			if(this.layers[i] === this.activeLayer) continue;
+			if(this.activeLayer.allowOverlap && this.layers[i].allowOverlap) continue;
+			if(this.doLayersOverlap(this.activeLayer, this.layers[i])){
+				canResize = false;
+				break;
+			}
+		}
+		
+		this.activeLayer.width = w;
+		this.activeLayer.height = h;
+		
+		return canResize;
+	}
+	
+	/**
+	 * Returns true if the active layer can be rotated to the specified degree.
+	 * @ignore
+	 */
+	canRotateActiveLayer(degrees){
+		var r = this.activeLayer.rotation;
+		this.activeLayer.rotation = degrees;
+		
+		const inBounds = this.isNewPosInBounds(this.activeLayer, this.activeLayer.x, this.activeLayer.y, this.activeLayer.width, this.activeLayer.height);
+		if(this.activeLayer.forceBoundary && !inBounds) return false;
+		
+		var canRotate = true;
+		for(var i=0; i<this.layers.length; i++){
+			if(this.layers[i] === this.activeLayer) continue;
+			if(this.activeLayer.allowOverlap && this.layers[i].allowOverlap) continue;
+			if(this.doLayersOverlap(this.activeLayer, this.layers[i])){
+				canRotate = false;
+				break;
+			}
+		}
+		
+		this.activeLayer.rotation = r;
+		
+		return canRotate;
+	}
+	
+	/**
 	 * Handle mouse moves over the canvas.
 	 * @ignore
 	 */
@@ -668,11 +723,19 @@ class Canvas{
 		if(this.activeLayer === null) return;
 		
 		if(this.rotatingActiveLayer){
+			
+			var dx = x - this.activeLayer.x;
+			var dy = y - this.activeLayer.y;
+			var angle = Math.atan2(dy, dx);
+			var degrees = angle * 180 / Math.PI;
+			
+			if(!this.canRotateActiveLayer(degrees)){
+				this.rotatingActiveLayer = false;
+				this.draw();
+				return;
+			}
+			
 			if(this.fireEvent('layer-rotate')){
-				var dx = x - this.activeLayer.x;
-				var dy = y - this.activeLayer.y;
-				var angle = Math.atan2(dy, dx);
-				var degrees = angle * 180 / Math.PI;
 				this.activeLayer.rotation = degrees;
 				if(this.activeLayer instanceof CanvasLayerGroup){
 					this.activeLayer.updateLayers();
@@ -706,7 +769,7 @@ class Canvas{
 		}else if(this.resizingActiveLayer){
 			
 			const {width, height} = this.calculateLayerResize(x, y);
-			if(this.activeLayer.forceBoundary && !this.isNewPosInBounds(this.activeLayer, this.activeLayer.x, this.activeLayer.y, width, height)){
+			if(!this.canResizeActiveLayer(width, height)){
 				this.draggingActiveLayer = false;
 				this.draw();
 				return;
@@ -1013,7 +1076,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '1.2.26';
+Canvas.version = '1.2.28';
 
 /**
  * The default anchorRadius value for all Canvas instances.
