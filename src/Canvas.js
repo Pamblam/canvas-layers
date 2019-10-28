@@ -488,6 +488,22 @@ class Canvas{
 		return false;
 	}
 	
+	/**
+	 * Get an array of all layers that the given layer overlaps.
+	 * @param {type} layer
+	 * @returns {Array|Canvas.getOverlappingLayers.layers}
+	 */
+	getOverlappingLayers(layer){
+		var layers = [];
+		for(var i=0; i<this.layers.length; i++){
+			if(this.layers[i] === layer) continue;l
+			if(this.doLayersOverlap(layer, this.layers[i])){
+				layers.push(this.layers[i]);
+			}
+		}
+		return layers;
+	}
+	
 	////////////////////////////////////////////////////////////////////////////
 	// Undocumented utility layers /////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////
@@ -877,10 +893,14 @@ class Canvas{
 		var {x, y} = this.canvasMousePos(e);
 		this.setCursor(x, y);
 		if(this.isNearActiveRotatePoint(x, y)){
-			this.activeLayerRotateStartPos = {x, y};
-			this.rotatingActiveLayer = true;
+			if(this.fireEvent('layer-rotate-start')){
+				this.activeLayerRotateStartPos = {x, y};
+				this.rotatingActiveLayer = true;
+			}
 		}else if(this.isNearActiveCorner(x, y)){
-			this.resizingActiveLayer = true;
+			if(this.fireEvent('layer-resize-start')){
+				this.resizingActiveLayer = true;
+			}
 		}else{
 			var cancelled = false;
 			var layer = this.getLayerAt(x, y);
@@ -889,7 +909,7 @@ class Canvas{
 				cancelled = !this.fireEvent('layer-deselect');
 				if(!cancelled) !this.deSelectLayer();
 			}
-			if(!cancelled && layer !== null){
+			if(!cancelled && layer !== null && this.fireEvent('layer-drag-start')){
 				this.activeLayerMouseOffset.x = layer.x - x;
 				this.activeLayerMouseOffset.y = layer.y - y;
 				if(layer.draggable) this.draggingActiveLayer = true;
@@ -1022,6 +1042,10 @@ class Canvas{
 	 * @ignore
 	 */
 	onmousereset(e){
+		if(this.draggingActiveLayer) this.fireEvent("layer-drag-end");
+		if(this.resizingActiveLayer) this.fireEvent("layer-resize-end");
+		if(this.rotatingActiveLayer) this.fireEvent("layer-rotate-end");
+		
 		if(this.draggingActiveLayer && this.snapToGrid && this.activeLayer){
 			var {xs, ys} = this.getGridLines();
 			var closestx = this.getNearestGridline(this.activeLayer.x, xs);

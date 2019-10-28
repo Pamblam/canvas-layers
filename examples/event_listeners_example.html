@@ -67,13 +67,14 @@
 				x: canvas.width * 2/3
 			});
 			
-			canvasEle.addEventListener('layer-click', function(e){
-				console.log(`Clicked on layer`);
-			});
-			
-			canvasEle.addEventListener('layer-dblclick', function(e){
-				console.log(`Double clicked layer`);
-			});
+			['layer-selected','layer-deselected','layer-rotate','layer-drag',
+				'layer-resize','layer-click','layer-dblclick','layer-rotate-start',
+				'layer-resize-start','layer-deselect','layer-drag-start','layer-select',
+				'layer-drag-end','layer-resize-end'
+			].forEach(evt=>canvasEle.addEventListener(evt, function(e){
+				var layer = e.detail.activeLayer ? e.detail.activeLayer.name : "none";
+				console.log(`Event fired: ${evt}, Layer: ${layer}`);
+			}));
 			
 			canvasEle.addEventListener('layer-select', function(e){
 				console.log(`Trying to select a layer`);
@@ -81,18 +82,6 @@
 				if(!confirm('Are you sure you want to select this layer?')){
 					e.preventDefault();
 				}
-			});
-			
-			canvasEle.addEventListener('layer-deselect', function(e){
-				console.log(`Deselecting Layer`);
-			});
-			
-			canvasEle.addEventListener('layer-selected', function(e){
-				console.log(`Selected Layer`);
-			});
-			
-			canvasEle.addEventListener('layer-deselected', function(e){
-				console.log(`Deselected Layer`);
 			});
 			
 		</script>
