@@ -30,7 +30,7 @@
           </header>
           <article>
             <pre class="prettyprint linenums"><code>/**
- * canvas-layers - v1.2.29
+ * canvas-layers - v1.2.30
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -41,7 +41,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.2.29
+ * @version 1.2.30
  */
 class Canvas{
 	
@@ -292,6 +292,10 @@ class Canvas{
 			const forceBoundary &#x3D; opts.forceBoundary || false;
 			const allowOverlap &#x3D; opts.hasOwnProperty(&#x27;allowOverlap&#x27;) ? !!opts.allowOverlap : true;
 			var layer &#x3D; new CanvasLayer(layerOrURL, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary, allowOverlap);
+		}
+		
+		if(!(layer instanceof CanvasLayerGroup)){
+			this.fireEvent(&#x27;layer-added&#x27;);
 		}
 		
 		this.layers.unshift(layer);
@@ -1131,7 +1135,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version &#x3D; &#x27;1.2.29&#x27;;
+Canvas.version &#x3D; &#x27;1.2.30&#x27;;
 
 /**
  * The default anchorRadius value for all Canvas instances.
