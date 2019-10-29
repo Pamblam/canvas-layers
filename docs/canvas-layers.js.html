@@ -30,7 +30,7 @@
           </header>
           <article>
             <pre class="prettyprint linenums"><code>/**
- * canvas-layers - v1.2.32
+ * canvas-layers - v1.2.33
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -41,7 +41,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.2.32
+ * @version 1.2.33
  */
 class Canvas{
 	
@@ -544,7 +544,7 @@ class Canvas{
 			if(this.layers[i] &#x3D;&#x3D;&#x3D; layer) continue;
 			if(this.doLayersOverlap(layer, this.layers[i])){
 				layers.push(this.layers[i]);
-			}
+			}			
 		}
 		return layers;
 	}
@@ -678,6 +678,15 @@ class Canvas{
 				if(Canvas.doLinesIntersect(a, b, c, d, p, q, r, s)) return true;
 			}
 		}
+		
+		// Check for one corner. This covers full overlaps.
+		var c1 &#x3D; layer1.getCorners()[0];
+		c1 &#x3D; Canvas.absolutePoint(c1.x, c1.y, layer1.x, layer1.y, layer1.rotation);
+		if(Canvas.isOverLayer(c1.x, c1.y, layer2)) return true;
+		
+		var c2 &#x3D; layer2.getCorners()[0];
+		c2 &#x3D; Canvas.absolutePoint(c2.x, c2.y, layer2.x, layer2.y, layer2.rotation);
+		if(Canvas.isOverLayer(c2.x, c2.y, layer1)) return true;
 		
 		return false;
 	}
@@ -1137,7 +1146,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version &#x3D; &#x27;1.2.32&#x27;;
+Canvas.version &#x3D; &#x27;1.2.33&#x27;;
 
 /**
  * The default anchorRadius value for all Canvas instances.
