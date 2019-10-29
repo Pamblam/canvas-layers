@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v1.2.31
+ * canvas-layers - v1.2.32
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.2.31
+ * @version 1.2.32
  */
 class Canvas{
 	
@@ -263,18 +263,20 @@ class Canvas{
 			var layer = new CanvasLayer(layerOrURL, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary, allowOverlap);
 		}
 		
-		if(!(layer instanceof CanvasLayerGroup)){
-			this.fireEvent('layer-added');
-		}
-		
 		this.layers.unshift(layer);
 		this.pending_layers++;
+		
 		layer.onload(()=>{
 			this.pending_layers--;
 			if(0 === this.pending_layers){
 				this.ready = true;
 				this.draw();
 				this.saveState();
+				
+				if(!(layer instanceof CanvasLayerGroup)){
+					this.fireEvent('layer-added');
+				}
+				
 			}
 		});
 		return layer;
@@ -1104,7 +1106,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '1.2.31';
+Canvas.version = '1.2.32';
 
 /**
  * The default anchorRadius value for all Canvas instances.

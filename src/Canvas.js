@@ -255,18 +255,20 @@ class Canvas{
 			var layer = new CanvasLayer(layerOrURL, name, x, y, width, height, rotation, draggable, rotateable, resizable, selectable, forceBoundary, allowOverlap);
 		}
 		
-		if(!(layer instanceof CanvasLayerGroup)){
-			this.fireEvent('layer-added');
-		}
-		
 		this.layers.unshift(layer);
 		this.pending_layers++;
+		
 		layer.onload(()=>{
 			this.pending_layers--;
 			if(0 === this.pending_layers){
 				this.ready = true;
 				this.draw();
 				this.saveState();
+				
+				if(!(layer instanceof CanvasLayerGroup)){
+					this.fireEvent('layer-added');
+				}
+				
 			}
 		});
 		return layer;
