@@ -500,7 +500,7 @@ class Canvas{
 	getOverlappingLayers(layer){
 		var layers = [];
 		for(var i=0; i<this.layers.length; i++){
-			if(this.layers[i] === layer) continue;l
+			if(this.layers[i] === layer) continue;
 			if(this.doLayersOverlap(layer, this.layers[i])){
 				layers.push(this.layers[i]);
 			}

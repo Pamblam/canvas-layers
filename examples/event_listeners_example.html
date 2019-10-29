@@ -70,19 +70,23 @@
 			['layer-selected','layer-deselected','layer-rotate','layer-drag',
 				'layer-resize','layer-click','layer-dblclick','layer-rotate-start',
 				'layer-resize-start','layer-deselect','layer-drag-start','layer-select',
-				'layer-drag-end','layer-resize-end'
+				'layer-drag-end','layer-resize-end', 'layer-rotate-end'
 			].forEach(evt=>canvasEle.addEventListener(evt, function(e){
-				var layer = e.detail.activeLayer ? e.detail.activeLayer.name : "none";
+				var layer = canvas.activeLayer ? canvas.activeLayer.name : "none";
 				console.log(`Event fired: ${evt}, Layer: ${layer}`);
-			}));
-			
-			canvasEle.addEventListener('layer-select', function(e){
-				console.log(`Trying to select a layer`);
-				// You can cancel event too.
-				if(!confirm('Are you sure you want to select this layer?')){
-					e.preventDefault();
+				
+				if(evt === 'layer-select'){
+					if(!confirm('Are you sure you want to select this layer?')){
+						e.preventDefault();
+					}
 				}
-			});
+				
+				if(['layer-drag-end', 'layer-resize-end', 'layer-rotate-end'].includes(evt)){
+					var olayers = canvas.getOverlappingLayers(canvas.activeLayer).map(l=>l.name)
+					if(olayers.length) console.log(`${layer} is overlapping ${olayers.join(", ")}`);
+				}
+				
+			}));
 			
 		</script>
 	</body>
