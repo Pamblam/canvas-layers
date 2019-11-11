@@ -4,7 +4,7 @@
 <head>
   <meta name="generator" content="JSDoc 3.6.2">
   <meta charset="utf-8">
-  <title>Class: CanvasLayerGroup</title>
+  <title>Class: DrawingCanvas</title>
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
@@ -25,10 +25,10 @@
         <div id="jsdoc-main" role="main">
           <header class="page-header">
             <div class="symbol-detail-labels"><span class="label label-kind">class</span></div>
-            <h1><small></small><span class="symbol-name">CanvasLayerGroup</span></h1>
-            <p class="source-link">Source: <a href="canvas-layers.js.html#source-line-1389">canvas-layers.<wbr>js:1389</a></p>
+            <h1><small></small><span class="symbol-name">DrawingCanvas</span></h1>
+            <p class="source-link">Source: <a href="canvas-layers.js.html#source-line-1565">canvas-layers.<wbr>js:1565</a></p>
             <div class="symbol-classdesc">
-              <p>CavnasLayer that controls multiple layers</p>
+              <p>Extention class that provides drawing abilities</p>
             </div>
             <dl class="dl-compact">
             </dl>
@@ -39,21 +39,21 @@
               <div class="summary-content">
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
-                    <dt><a href="CanvasLayerGroup.html#addLayer">addLayer(layer)</a></dt>
+                    <dt><a href="DrawingCanvas.html#setFillStyle">setFillStyle(style)</a></dt>
                     <dd>
                     </dd>
                   </dl>
                 </div>
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
-                    <dt><a href="CanvasLayerGroup.html#getLayerOrSubLayerAt">getLayerOrSubLayerAt(canvas, x, y)</a></dt>
+                    <dt><a href="DrawingCanvas.html#setLineWidth">setLineWidth(width)</a></dt>
                     <dd>
                     </dd>
                   </dl>
                 </div>
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
-                    <dt><a href="CanvasLayerGroup.html#removeLayer">removeLayer(layer)</a></dt>
+                    <dt><a href="DrawingCanvas.html#setStrokeStyle">setStrokeStyle(style)</a></dt>
                     <dd>
                     </dd>
                   </dl>
@@ -62,8 +62,8 @@
             </div>
           </section>
           <section>
-            <h2 id="CanvasLayerGroup">new&nbsp;<span class="symbol-name">CanvasLayerGroup</span><span class="signature"><span class="signature-params">(name[, draggable][, rotateable][, resizable][, selectable][, forceBoundary])</span></span></h2>
-            <p>Create a new Layer.</p>
+            <h2 id="DrawingCanvas">new&nbsp;<span class="symbol-name">DrawingCanvas</span><span class="signature"><span class="signature-params">(canvas)</span></span></h2>
+            <p>Construct a new instance of the Canvas class</p>
             <section>
               <h3>Parameters</h3>
               <table class="jsdoc-details-table">
@@ -78,7 +78,7 @@
                 <tbody>
                   <tr>
                     <td>
-                      <p>name</p>
+                      <p>canvas</p>
                     </td>
                     <td>
                       <p>&nbsp;</p>
@@ -87,82 +87,7 @@
                       <p>&nbsp;</p>
                     </td>
                     <td>
-                      <p>The name of the layer.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>draggable</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>Yes</p>
-                    </td>
-                    <td>
-                      <p>Is the layer draggable?</p>
-                      <p>Defaults to <code>true</code>.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>rotateable</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>Yes</p>
-                    </td>
-                    <td>
-                      <p>Is the layer rotateable?</p>
-                      <p>Defaults to <code>true</code>.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>resizable</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>Yes</p>
-                    </td>
-                    <td>
-                      <p>Is the layer resizable?</p>
-                      <p>Defaults to <code>true</code>.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>selectable</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>Yes</p>
-                    </td>
-                    <td>
-                      <p>Is the layer selectable?</p>
-                      <p>Defaults to <code>true</code>.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>forceBoundary</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>Yes</p>
-                    </td>
-                    <td>
-                      <p>Force the layer to stay in bounds?</p>
-                      <p>Defaults to <code>false</code>.</p>
+                      <p>The canvas to instantiate the class upon.</p>
                     </td>
                   </tr>
                 </tbody>
@@ -176,8 +101,8 @@
           <section>
             <h2>Methods</h2>
             <section>
-              <h3 id="addLayer"><span class="symbol-name">addLayer</span><span class="signature"><span class="signature-params">(layer)</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
-              <p>Add a layer to the group</p>
+              <h3 id="setFillStyle"><span class="symbol-name">setFillStyle</span><span class="signature"><span class="signature-params">(style)</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Set the CSS color style background of the shape</p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -192,16 +117,15 @@
                   <tbody>
                     <tr>
                       <td>
-                        <p>layer</p>
+                        <p>style</p>
                       </td>
                       <td>
-                        <p><a href="CanvasLayer.html">CanvasLayer</a></p>
+                        <p>string</p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>The layer to add.</p>
                       </td>
                     </tr>
                   </tbody>
@@ -210,76 +134,11 @@
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code> </p>
+                  <p><code>undefined</code> </p>
                 </dd>
               </dl>
-              <h3 id="getLayerOrSubLayerAt"><span class="symbol-name">getLayerOrSubLayerAt</span><span class="signature"><span class="signature-params">(canvas, x, y)</span>&nbsp;&rarr; <span class="signature-returns"> (layer or null)</span></span></h3>
-              <p>Get the layer on the given canvas at the given position. If this group is selected it will return the layer in this group at the given position, if applicatble.</p>
-              <section>
-                <h4>Parameters</h4>
-                <table class="jsdoc-details-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Type</th>
-                      <th>Optional</th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <p>canvas</p>
-                      </td>
-                      <td>
-                        <p><a href="Canvas.html">Canvas</a></p>
-                      </td>
-                      <td>
-                        <p>&nbsp;</p>
-                      </td>
-                      <td>
-                        <p>The Canvas element that owns the layers.</p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <p>x</p>
-                      </td>
-                      <td>
-                        <p>Number</p>
-                      </td>
-                      <td>
-                        <p>&nbsp;</p>
-                      </td>
-                      <td>
-                        <p>The x position of the mouseclick relative to the canvas.</p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <p>y</p>
-                      </td>
-                      <td>
-                        <p>Number</p>
-                      </td>
-                      <td>
-                        <p>&nbsp;</p>
-                      </td>
-                      <td>
-                        <p>The y position of the mouseclick relative to the canvas.</p>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </section>
-              <dl class="dl-compact">
-                <dt>Returns</dt>
-                <dd>
-                  <p><code>(layer or null)</code> </p>
-                </dd>
-              </dl>
-              <h3 id="removeLayer"><span class="symbol-name">removeLayer</span><span class="signature"><span class="signature-params">(layer)</span>&nbsp;&rarr; <span class="signature-returns"> Promise</span></span></h3>
-              <p>Remove the provided layer from the group.</p>
+              <h3 id="setLineWidth"><span class="symbol-name">setLineWidth</span><span class="signature"><span class="signature-params">(width)</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Set the border or line width;</p>
               <section>
                 <h4>Parameter</h4>
                 <table class="jsdoc-details-table">
@@ -294,16 +153,15 @@
                   <tbody>
                     <tr>
                       <td>
-                        <p>layer</p>
+                        <p>width</p>
                       </td>
                       <td>
-                        <p><a href="CanvasLayer.html">CanvasLayer</a></p>
+                        <p>Number</p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
                       </td>
                       <td>
-                        <p>The layer to remove.</p>
                       </td>
                     </tr>
                   </tbody>
@@ -312,7 +170,43 @@
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Promise</code> </p>
+                  <p><code>undefined</code> </p>
+                </dd>
+              </dl>
+              <h3 id="setStrokeStyle"><span class="symbol-name">setStrokeStyle</span><span class="signature"><span class="signature-params">(style)</span>&nbsp;&rarr; <span class="signature-returns"> undefined</span></span></h3>
+              <p>Set the CSS color style of the border or line</p>
+              <section>
+                <h4>Parameter</h4>
+                <table class="jsdoc-details-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Optional</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <p>style</p>
+                      </td>
+                      <td>
+                        <p>string</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <dl class="dl-compact">
+                <dt>Returns</dt>
+                <dd>
+                  <p><code>undefined</code> </p>
                 </dd>
               </dl>
             </section>

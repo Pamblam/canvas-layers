@@ -30,7 +30,7 @@
           </header>
           <article>
             <pre class="prettyprint linenums"><code>/**
- * canvas-layers - v1.2.33
+ * canvas-layers - v2.0.0
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -41,7 +41,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 1.2.33
+ * @version 2.0.0
  */
 class Canvas{
 	
@@ -1146,7 +1146,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version &#x3D; &#x27;1.2.33&#x27;;
+Canvas.version &#x3D; &#x27;2.0.0&#x27;;
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -1571,6 +1571,228 @@ class CanvasLayerGroup extends CanvasLayer{
 		return pos;
 	}
 
+}
+
+/**
+ * Extention class that provides drawing abilities
+ */
+class DrawingCanvas extends Canvas{
+	
+	/**
+	 * Construct a new instance of the Canvas class
+	 * @param {HTMLElement} canvas - The canvas to instantiate the class upon.
+	 * @param {Number} [opts.anchorRadius&#x3D;Canvas.anchorRadius] - The radius of the anchor points shown on selected elements.
+	 * @param {String} [opts.strokeStyle&#x3D;Canvas.strokeStyle] - The color of the outlines drawn on selceted elements. May be any valid CSS color string.
+	 * @param {String} [opts.fillStyle&#x3D;Canvas.fillStyle] - The color of the anchor points shown on selected elements. May be any valid CSS color string.
+	 * @param {Number} [opts.lineWidth&#x3D;Canvas.lineWidth] - The width of the outlines shown on selected elements.
+	 * @param {String} [opts.cursors.default&#x3D;Canvas.cursors.default] - The default cursor to use when hovering over the canvas. May be any valid css cursor value.
+	 * @param {String} [opts.cursors.grab&#x3D;Canvas.cursors.grab] - The grab cursor to use when hovering over a movable layer. May be any valid css cursor value.
+	 * @param {String} [opts.cursors.grabbing&#x3D;Canvas.cursors.grabbing] - The grabbing cursor to use when dragging a layer. May be any valid css cursor value.
+	 * @param {String} [opts.cursors.move&#x3D;Canvas.cursors.move] - The default cursor to use when hovering over a resize anchor. May be any valid css cursor value.
+	 * @param {String} [opts.cursors.rotate&#x3D;Canvas.cursors.rotate] - The default cursor to use when hovering a rotate anchor point. May be any valid css cursor value.
+	 * @param {String} [opts.cursors.rotating&#x3D;Canvas.cursors.rotating] - The default cursor to use when rotating an active layer. May be any valid css cursor value.
+	 * @returns {Canvas}
+	 */
+	constructor(canvas, opts&#x3D;{}){
+		super(canvas, opts);
+		this.drawing_mode &#x3D; null;
+		this.line_color &#x3D; &#x27;#000000&#x27;;
+		this.fill_color &#x3D; &#x27;#0000FF&#x27;;
+		this.shape_start_pos &#x3D; null;
+		this.is_mouse_down &#x3D; false;
+		this.freehand_coords &#x3D; [];
+		this.rcanvas &#x3D; document.createElement(&#x27;canvas&#x27;);
+		this.rcanvas.height &#x3D; this.height;
+		this.rcanvas.width &#x3D; this.width;
+		this.rctx &#x3D; this.rcanvas.getContext(&#x27;2d&#x27;);
+		this.ccanvas &#x3D; document.createElement(&#x27;canvas&#x27;);
+		this.cctx &#x3D; this.ccanvas.getContext(&#x27;2d&#x27;);
+		this.drawing_layer &#x3D; null;
+		this.layer_dimensions &#x3D; null;
+	}
+	
+	/**
+	 * Set the border or line width;
+	 * @param {Number} width
+	 * @returns {undefined}
+	 */
+	setLineWidth(width){
+		this.rctx.lineWidth &#x3D; +width;
+	}
+	
+	/**
+	 * Set the CSS color style of the border or line
+	 * @param {string} style
+	 * @returns {undefined}
+	 */
+	setStrokeStyle(style){
+		this.rctx.strokeStyle &#x3D; style;
+	}
+	
+	/**
+	 * Set the CSS color style background of the shape
+	 * @param {string} style
+	 * @returns {undefined}
+	 */
+	setFillStyle(style){
+		this.rctx.fillStyle &#x3D; style;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////
+	// Helpers /////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * @ignore
+	 */
+	drawEllipse(ctx, x, y, w, h) {
+		var kappa &#x3D; .5522848,
+			ox &#x3D; (w / 2) * kappa, // control point offset horizontal
+			oy &#x3D; (h / 2) * kappa, // control point offset vertical
+			xe &#x3D; x + w, // x-end
+			ye &#x3D; y + h, // y-end
+			xm &#x3D; x + w / 2, // x-middle
+			ym &#x3D; y + h / 2; // y-middle
+
+		ctx.save();
+		ctx.beginPath();
+		ctx.moveTo(x, ym);
+		ctx.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
+		ctx.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
+		ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
+		ctx.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
+		ctx.fill();
+		ctx.stroke();
+		ctx.restore();
+	}
+	
+	/**
+	 * @ignore
+	 */
+	renderLayer(){
+		const {x, y, width, height} &#x3D; this.layer_dimensions;
+		this.ccanvas.width &#x3D; width;
+		this.ccanvas.height &#x3D; height;
+		this.cctx.clearRect(0, 0, width, height);
+		this.cctx.drawImage(this.rcanvas, x, y, width, height, 0, 0, width, height);
+		var duri &#x3D; this.ccanvas.toDataURL();
+		
+		const xpos &#x3D; x + (width/2);
+		const ypos &#x3D; y + (height/2);
+		
+		if(!this.drawing_layer){
+			this.drawing_layer &#x3D; this.addLayer(duri, {xpos, ypos});
+		}else{
+			this.drawing_layer.x &#x3D; xpos;
+			this.drawing_layer.y &#x3D; ypos;
+			this.drawing_layer.width &#x3D; width;
+			this.drawing_layer.height &#x3D; height;
+			this.drawing_layer.url &#x3D; duri;
+			this.drawing_layer.ready &#x3D; false;
+			this.drawing_layer.image &#x3D; null;
+			this.drawing_layer.load().then(()&#x3D;&gt;this.draw());
+		}
+	}
+	
+	/**
+	 * @ignore
+	 */
+	recalculateLayerDimensions(newMousePos){
+		var x, y, width, height;
+		if(this.drawing_mode &#x3D;&#x3D;&#x3D; &#x27;freehand&#x27;){
+			this.freehand_coords.push(newMousePos);
+			var all_x &#x3D; this.freehand_coords.map(c&#x3D;&gt;c.x);
+			var all_y &#x3D; this.freehand_coords.map(c&#x3D;&gt;c.y);
+			x &#x3D; Math.min(...all_x);
+			y &#x3D; Math.min(...all_y);
+			var max_x &#x3D; Math.max(...all_x);
+			var max_y &#x3D; Math.max(...all_y);
+			width &#x3D; Math.max(0.1, Math.abs(x - max_x));
+			height &#x3D; Math.max(0.1, Math.abs(y - max_y));
+		}else{
+			x &#x3D; Math.min(this.shape_start_pos.x, newMousePos.x);
+			y &#x3D; Math.min(this.shape_start_pos.y, newMousePos.y);
+			width &#x3D; Math.max(0.1, Math.abs(this.shape_start_pos.x - newMousePos.x));
+			height &#x3D; Math.max(0.1, Math.abs(this.shape_start_pos.y - newMousePos.y));
+		}
+		this.layer_dimensions &#x3D; {x, y, width, height};
+	}
+	
+	/**
+	 * @ignore
+	 */
+	onmousemove(e){
+		if(!this.drawing_mode) return super.onmousemove(e);
+		if(!this.is_mouse_down) return;
+		this.rctx.clearRect(0, 0, this.width, this.height);
+		const pos &#x3D; this.canvasMousePos(e);
+		this.recalculateLayerDimensions(pos);
+		switch(this.drawing_mode){
+			case &quot;rectangle&quot;:
+				var {x, y, width, height} &#x3D; this.layer_dimensions;
+				
+				this.rctx.beginPath();
+				this.rctx.rect(x, y, width, height);
+				this.rctx.fill();
+				this.rctx.stroke();
+				
+				this.renderLayer();
+				
+				break;
+			case &quot;ellipse&quot;:
+				var {x, y, width, height} &#x3D; this.layer_dimensions;
+				this.drawEllipse(this.rctx, x, y, width, height);
+				this.renderLayer();
+				break;
+			case &quot;line&quot;:
+				var x1 &#x3D; this.shape_start_pos.x, 
+					y1 &#x3D; this.shape_start_pos.y, 
+					x2 &#x3D; pos.x, 
+					y2 &#x3D; pos.y;
+				this.rctx.beginPath();
+				this.rctx.moveTo(x1, y1);
+				this.rctx.lineTo(x2, y2);
+				this.rctx.fill();
+				this.rctx.stroke(); 
+				this.renderLayer();
+				break;
+			case &quot;freehand&quot;:
+				if(this.freehand_coords &amp;lt; 2) break;
+				var a &#x3D; this.freehand_coords[0];
+				for(var i&#x3D;1; i&amp;lt;this.freehand_coords.length; i++){
+					this.rctx.beginPath();
+					this.rctx.moveTo(a.x, a.y);
+					this.rctx.lineTo(this.freehand_coords[i].x, this.freehand_coords[i].y);
+					this.rctx.fill();
+					this.rctx.stroke(); 
+					a &#x3D; this.freehand_coords[i];
+				}
+				this.renderLayer();
+				break;
+		}
+	}
+	
+	/**
+	 * @ignore
+	 */
+	onmousedown(e){
+		if(!this.drawing_mode) return super.onmousedown(e);
+		this.is_mouse_down &#x3D; true;
+		this.shape_start_pos &#x3D; this.canvasMousePos(e);
+	}
+	
+	/**
+	 * @ignore
+	 */
+	onmousereset(e){
+		if(!this.drawing_mode) return super.onmousereset(e);
+		this.is_mouse_down &#x3D; false;
+		this.shape_start_pos &#x3D; null;
+		this.drawing_layer &#x3D; null;
+		this.layer_dimensions &#x3D; null;
+		this.freehand_coords &#x3D; [];
+	}
+	
 }</code></pre>
           </article>
         </div>
@@ -1581,7 +1803,7 @@ class CanvasLayerGroup extends CanvasLayer{
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on October 29, 2019.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on November 11, 2019.
       </p>
     </div>
   </footer>
