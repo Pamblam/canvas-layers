@@ -122,6 +122,7 @@ class DrawingCanvas extends Canvas{
 	
 	/**
 	 * @ignore
+	 * Update layer dimesions based on the user input of the active layer
 	 */
 	recalculateLayerDimensions(newMousePos){
 		var x, y, width, height;
@@ -202,6 +203,7 @@ class DrawingCanvas extends Canvas{
 	 * @ignore
 	 */
 	onmousedown(e){
+		console.log('mousedown', this.drawing_mode);
 		if(!this.drawing_mode) return super.onmousedown(e);
 		this.is_mouse_down = true;
 		this.shape_start_pos = this.canvasMousePos(e);

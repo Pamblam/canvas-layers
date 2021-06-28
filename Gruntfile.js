@@ -151,8 +151,10 @@ module.exports = function(grunt) {
 			});
 
 			rd.on('close', function(){
-				writer.write("];\n");
-				done();
+				writer.write("];\n", "utf8", function(){
+					console.log("closed...");
+					done();
+				});
 			});
 			
 		});

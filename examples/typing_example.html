@@ -47,7 +47,14 @@
 				<label>Rectangle Tool <input type="radio" name="tool" value='rectangle'></label> | 
 				<label>Ellipse Tool <input type="radio" name="tool" value='ellipse'></label> | 
 				<label>Line Tool <input type="radio" name="tool" value='line'></label> | 
-				<label>Freehand Tool <input type="radio" name="tool" value='freehand'></label>
+				<label>Freehand Tool <input type="radio" name="tool" value='freehand'></label> | 
+				<label>Text Tool <input type="radio" name="tool" value='text'></label>
+				
+				<div id="text-input-settings" style="display:none;">
+					<label>Font Face: <select id="font-face-select"></select></label>
+					<label>Font Size: <input type="number" id="font-size-input" value="12" min="1"></label>
+					<label>Font Color: <input type="color" id="font-color-input" value="#000000"></label>
+				</div>
 				
 			</center>
 			
@@ -63,7 +70,7 @@
 			
 			var canvasEle = document.getElementById("canvas");
 			
-			var canvas = new DrawingCanvas(canvasEle, {
+			var canvas = new TypingCanvas(canvasEle, {
 				anchorRadius: 4,
 				strokeStyle: '#ce2500',
 				fillStyle: '#ce2500',
@@ -73,6 +80,28 @@
 			var fill_input = document.getElementById('fill');
 			var stroke_input = document.getElementById('stroke');
 			var width_input = document.getElementById('width');
+			var font_input = document.getElementById('font-face-select');
+			var text_settings = document.getElementById('text-input-settings');
+			var font_size_input = document.getElementById('font-size-input');
+			var font_color_input = document.getElementById('font-color-input');
+			
+			font_input.addEventListener('change', function(){
+				canvas.font_face = this.value;
+			});
+			
+			font_size_input.addEventListener('change', function(){
+				canvas.font_size = this.value;
+			});
+			
+			font_color_input.addEventListener('change', function(){
+				canvas.font_color = this.value;
+			});
+			
+			CanvasFonts.getAvailable().then(fonts=>{
+				font_input.innerHTML = '<option>choose...</option>'+fonts.map(f=>{
+					return `<option value="${f}">${f}</option>`
+				}).join('');
+			});
 			
 			fill_input.addEventListener('input', updateStyles);
 			stroke_input.addEventListener('input', updateStyles);
@@ -81,6 +110,12 @@
 			document.querySelectorAll("input[name=tool]").forEach(ele=>{
 				ele.addEventListener('change', function(){
 					var value = document.querySelector("input[type=radio]:checked").value;
+					console.log(value);
+					if(value === 'text'){
+						text_settings.style.display = 'block';
+					}else{
+						text_settings.style.display = 'none';
+					}
 					if(value === 'select') value = null;
 					canvas.drawing_mode = value;
 				});

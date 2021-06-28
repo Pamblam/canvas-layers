@@ -1,44 +1,38 @@
 
 class TypingCanvas extends DrawingCanvas{
 	
-	constructor(canvas, options){
-		this.active = false;
-		this.text = '';
-		this.canvas = canvas;
+	constructor(canvas, opts={}){
+		super(canvas, opts);
 		
-		this.type_area = {};
-		this.type_area.width = options.type_area.width || canvas.width;
-		this.type_area.height = options.type_area.height || canvas.height;
-		this.type_area.x = options.type_area.x || 0;
-		this.type_area.y = options.type_area.y || 0;
-		
-		this._render_canvas = document.createElement('canvas');
-		this._render_canvas.width = this.type_area.width;
-		this._render_canvas.height = this.type_area.height;
-		
-		this.last_render_background = null;
-		
-		this._keydownHandler = this.keydownHandler.bind(this);
-		this.attachEventHandlers();
+		this.font_face = null;
+		this.font_color = null;
+		this.font_size = null;
 	}
 	
-	setTypeArea(x, y, w, h){
-		this.type_area.width = w;
-		this.type_area.height = h;
-		this.type_area.x = x;
-		this.type_area.y = y;
-	}
-	
-	keydownHandler(){
+	/**
+	 * @ignore
+	 */
+	onmousemove(e){
+		if(this.drawing_mode !== 'text') return super.onmousemove(e);
+		if(!this.is_mouse_down) return;
 		
-	}
-	
-	attachEventHandlers(){
-		this.canvas.addEventListener(this._keydownHandler);
-	}
-	
-	removeEventHandlers(){
-		this.canvas.removeEventListener(this._keydownHandler);
+		this.rctx.clearRect(0, 0, this.width, this.height);
+		const pos = this.canvasMousePos(e);
+		this.recalculateLayerDimensions(pos);
+		
+		var {x, y, width, height} = this.layer_dimensions;
+		
+		this.rctx.save();
+		this.rctx.lineWidth = 3;
+		this.rctx.strokeStyle = '#000 dashed';
+		this.rctx.fillStyle = null;
+		this.rctx.setLineDash([5, 15]);
+		this.rctx.beginPath();
+		this.rctx.rect(x, y, width, height);
+		this.rctx.fill();
+		this.rctx.stroke();
+		this.rctx.restore();
+		this.renderLayer();
 	}
 	
 }
