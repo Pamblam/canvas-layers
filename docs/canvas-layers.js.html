@@ -30,7 +30,7 @@
           </header>
           <article>
             <pre class="prettyprint linenums"><code>/**
- * canvas-layers - v2.0.0
+ * canvas-layers - v2.0.1
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -41,7 +41,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 2.0.0
+ * @version 2.0.1
  */
 class Canvas{
 	
@@ -1146,7 +1146,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version &#x3D; &#x27;2.0.0&#x27;;
+Canvas.version &#x3D; &#x27;2.0.1&#x27;;
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -1793,6 +1793,618 @@ class DrawingCanvas extends Canvas{
 		this.freehand_coords &#x3D; [];
 	}
 	
+}
+
+class CanvasFonts{}
+
+CanvasFonts.getNative &#x3D; async (force_recheck &#x3D; false) &#x3D;&gt; {
+	
+	if(CanvasFonts._native_available.length &amp;amp;&amp;amp; !force_recheck){
+		return CanvasFonts._native_available;
+	}
+
+	var _native_available &#x3D; [];
+	await document.fonts.ready;
+	CanvasFonts._native_fontlist.forEach(font &#x3D;&gt; {
+		if (document.fonts.check(&#x60;12px &quot;${font}&quot;&#x60;)) {
+			_native_available.push(font);
+		}
+	})
+
+	CanvasFonts._native_available &#x3D; [...new Set(_native_available)].sort();
+	return CanvasFonts._native_available;
+};
+
+CanvasFonts.getDownloaded &#x3D; async (force_recheck &#x3D; false) &#x3D;&gt; {
+	if(CanvasFonts._downloaded_available.length &amp;amp;&amp;amp; !force_recheck){
+		return CanvasFonts._downloaded_available;
+	}
+	
+	let {fonts} &#x3D; document;
+	const it &#x3D; fonts.entries();
+
+	let arr &#x3D; [];
+	let done &#x3D; false;
+
+	while (!done) {
+		const font &#x3D; it.next();
+		if (!font.done) {
+			
+			var family;
+			try{
+				family &#x3D; JSON.parse(font.value[0].family);
+			}catch(e){
+				family &#x3D; font.value[0].family;
+			}
+			
+			arr.push(family);
+		} else {
+			done &#x3D; font.done;
+		}
+	}
+	
+	CanvasFonts._downloaded_available &#x3D; [...new Set(arr)].sort();
+	return CanvasFonts._downloaded_available;
+};
+
+CanvasFonts.getAvailable &#x3D; async () &#x3D;&gt; {
+	var native &#x3D; await CanvasFonts.getNative();
+	var downloaded &#x3D; await CanvasFonts.getDownloaded();
+	return [...new Set([...native, ...downloaded])].sort();
+};
+
+CanvasFonts._native_available &#x3D; [];
+CanvasFonts._downloaded_available &#x3D; [];
+CanvasFonts._native_fontlist &#x3D; [
+	&#x27;Arial&#x27;,
+	&#x27;Arial Unicode MS&#x27;,
+	&#x27;Bitstream Cyberbit&#x27;,
+	&#x27;BitstreamCyberCJK&#x27;,
+	&#x27;Brampton&#x27;,
+	&#x27;Cardo&#x27;,
+	&#x27;Caslon Roman&#x27;,
+	&#x27;Charis SIL&#x27;,
+	&#x27;Chrysanthi Unicode&#x27;,
+	&#x27;Chryſanþi Unicode&#x27;,
+	&#x27;ClearlyU&#x27;,
+	&#x27;Code2000&#x27;,
+	&#x27;DejaVu Sans&#x27;,
+	&#x27;Doulos SIL&#x27;,
+	&#x27;Everson Mono&#x27;,
+	&#x27;Gentium Regular&#x27;,
+	&#x27;Gentium Plus&#x27;,
+	&#x27;GNU FreeFont&#x27;,
+	&#x27;Unifont&#x27;,
+	&#x27;GNU Unifont&#x27;,
+	&#x27;HAN NOM A&#x27;,
+	&#x27;HAN NOM B&#x27;,
+	&#x27;Horta&#x27;,
+	&#x27;Junicode&#x27;,
+	&#x27;Kelvinch&#x27;,
+	&#x27;Linux Libertine&#x27;,
+	&#x27;Lucida Grande&#x27;,
+	&#x27;Lucida Sans Unicode&#x27;,
+	&#x27;Microsoft JhengHei&#x27;,
+	&#x27;Microsoft Sans Serif&#x27;,
+	&#x27;New Gulim&#x27;,
+	&#x27;Noto&#x27;,
+	&#x27;PragmataPro&#x27;,
+	&#x27;Quivira&#x27;,
+	&#x27;Segoe UI Regular&#x27;,
+	&#x27;Squarish Sans CT&#x27;,
+	&#x27;STIX&#x27;,
+	&#x27;Sun-ExtA&#x27;,
+	&#x27;Sun-ExtB&#x27;,
+	&#x27;Tahoma&#x27;,
+	&#x27;Times New Roman&#x27;,
+	&#x27;TITUS Cyberbit Basic&#x27;,
+	&#x27;WenQuanYi Bitmap Song&#x27;,
+	&#x27;WenQuanYi Micro Hei&#x27;,
+	&#x27;WenQuanYi Zen Hei&#x27;,
+	&#x27;Y.OzFontN&#x27;,
+	&#x27;XITS&#x27;,
+	&#x27;Aharoni&#x27;,
+	&#x27;Aldhabi&#x27;,
+	&#x27;Andalus&#x27;,
+	&#x27;Angsana New&#x27;,
+	&#x27;AngsanaUPC&#x27;,
+	&#x27;Aparajita&#x27;,
+	&#x27;Arabic Typesetting&#x27;,
+	&#x27;Bahnschrift&#x27;,
+	&#x27;Batang&#x27;,
+	&#x27;BatangChe&#x27;,
+	&#x27;BIZ UDGothic&#x27;,
+	&#x27;BIZ UDPGothic&#x27;,
+	&#x27;BIZ UDMincho&#x27;,
+	&#x27;BIZ UDPMincho&#x27;,
+	&#x27;Book Antiqua&#x27;,
+	&#x27;Browallia New&#x27;,
+	&#x27;BrowalliaUPC&#x27;,
+	&#x27;Calibri&#x27;,
+	&#x27;Calisto MT&#x27;,
+	&#x27;Cambria&#x27;,
+	&#x27;Cambria Math&#x27;,
+	&#x27;Candara&#x27;,
+	&#x27;Century Gothic&#x27;,
+	&#x27;Comic Sans MS&#x27;,
+	&#x27;Consolas&#x27;,
+	&#x27;Constantia&#x27;,
+	&#x27;Copperplate Gothic&#x27;,
+	&#x27;Corbel&#x27;,
+	&#x27;Cordia New&#x27;,
+	&#x27;CordiaUPC&#x27;,
+	&#x27;Courier New&#x27;,
+	&#x27;DaunPenh&#x27;,
+	&#x27;David&#x27;,
+	&#x27;DengXian&#x27;,
+	&#x27;DilleniaUPC&#x27;,
+	&#x27;DFKai-SB&#x27;,
+	&#x27;DokChampa&#x27;,
+	&#x27;Dotum&#x27;,
+	&#x27;DotumChe&#x27;,
+	&#x27;Ebrima&#x27;,
+	&#x27;Estrangelo Edessa&#x27;,
+	&#x27;EucrosiaUPC&#x27;,
+	&#x27;Euphemia&#x27;,
+	&#x27;FangSong&#x27;,
+	&#x27;Franklin Gothic&#x27;,
+	&#x27;FrankRuehl&#x27;,
+	&#x27;FreesiaUPC&#x27;,
+	&#x27;Gabriola&#x27;,
+	&#x27;Gadugi&#x27;,
+	&#x27;Gautami&#x27;,
+	&#x27;Georgia&#x27;,
+	&#x27;Gisha&#x27;,
+	&#x27;Gulim&#x27;,
+	&#x27;GulimChe&#x27;,
+	&#x27;Gungsuh&#x27;,
+	&#x27;GungsuhChe&#x27;,
+	&#x27;HoloLens MDL2 Assets&#x27;,
+	&#x27;Impact&#x27;,
+	&#x27;Ink Free&#x27;,
+	&#x27;IrisUPC&#x27;,
+	&#x27;Iskoola Pota&#x27;,
+	&#x27;JasmineUPC&#x27;,
+	&#x27;Javanese Text&#x27;,
+	&#x27;SimKai&#x27;,
+	&#x27;KaiTi&#x27;,
+	&#x27;Kalinga&#x27;,
+	&#x27;Kartika&#x27;,
+	&#x27;Khmer UI&#x27;,
+	&#x27;KodchiangUPC&#x27;,
+	&#x27;Kokila&#x27;,
+	&#x27;Lao UI&#x27;,
+	&#x27;Latha&#x27;,
+	&#x27;Leelawadee&#x27;,
+	&#x27;Leelawadee UI&#x27;,
+	&#x27;Levenim MT&#x27;,
+	&#x27;LilyUPC&#x27;,
+	&#x27;Lucida Console&#x27;,
+	&#x27;Lucida Handwriting&#x27;,
+	&#x27;Malgun Gothic&#x27;,
+	&#x27;Mangal&#x27;,
+	&#x27;Marlett&#x27;,
+	&#x27;Meiryo&#x27;,
+	&#x27;Meiryo UI&#x27;,
+	&#x27;Microsoft Himalaya&#x27;,
+	&#x27;Microsoft JhengHei UI&#x27;,
+	&#x27;Microsoft New Tai Lue&#x27;,
+	&#x27;Microsoft PhagsPa&#x27;,
+	&#x27;Microsoft Tai Le&#x27;,
+	&#x27;Microsoft Uighur&#x27;,
+	&#x27;Microsoft YaHei&#x27;,
+	&#x27;Microsoft YaHei UI&#x27;,
+	&#x27;Microsoft Yi Baiti&#x27;,
+	&#x27;MingLiU&#x27;,
+	&#x27;PMingLiU&#x27;,
+	&#x27;MingLiU-ExtB&#x27;,
+	&#x27;PMingLiU-ExtB&#x27;,
+	&#x27;MingLiU_HKSCS&#x27;,
+	&#x27;MingLiU_HKSCS-ExtB&#x27;,
+	&#x27;Miriam&#x27;,
+	&#x27;Miriam Fixed&#x27;,
+	&#x27;Mongolian Baiti&#x27;,
+	&#x27;MoolBoran&#x27;,
+	&#x27;MS Gothic&#x27;,
+	&#x27;MS PGothic&#x27;,
+	&#x27;MS Mincho&#x27;,
+	&#x27;MS PMincho&#x27;,
+	&#x27;MS UI Gothic&#x27;,
+	&#x27;MV Boli&#x27;,
+	&#x27;Myanmar Text&#x27;,
+	&#x27;Narkisim&#x27;,
+	&#x27;Nirmala UI&#x27;,
+	&#x27;NSimSun&#x27;,
+	&#x27;Nyala&#x27;,
+	&#x27;Palatino Linotype&#x27;,
+	&#x27;Plantagenet Cherokee&#x27;,
+	&#x27;Raavi&#x27;,
+	&#x27;Rod&#x27;,
+	&#x27;Sakkal Majalla&#x27;,
+	&#x27;Sanskrit Text&#x27;,
+	&#x27;Segoe MDL2 Assets&#x27;,
+	&#x27;Segoe Print&#x27;,
+	&#x27;Segoe Script&#x27;,
+	&#x27;Segoe SD&#x27;,
+	&#x27;Segoe UI&#x27;,
+	&#x27;Segoe UI Emoji&#x27;,
+	&#x27;Segoe UI Historic&#x27;,
+	&#x27;Segoe UI Symbol&#x27;,
+	&#x27;Shonar Bangla&#x27;,
+	&#x27;Shruti&#x27;,
+	&#x27;SimHei&#x27;,
+	&#x27;Simplified Arabic&#x27;,
+	&#x27;SimSun&#x27;,
+	&#x27;SimSun-ExtB&#x27;,
+	&#x27;Sitka Banner&#x27;,
+	&#x27;Sitka Display&#x27;,
+	&#x27;Sitka Heading&#x27;,
+	&#x27;Sitka Small&#x27;,
+	&#x27;Sitka Subheading&#x27;,
+	&#x27;Sitka Text&#x27;,
+	&#x27;Sylfaen&#x27;,
+	&#x27;Symbol&#x27;,
+	&#x27;Traditional Arabic&#x27;,
+	&#x27;Trebuchet MS&#x27;,
+	&#x27;Tunga&#x27;,
+	&#x27;UD Digi Kyokasho&#x27;,
+	&#x27;Urdu Typesetting&#x27;,
+	&#x27;Utsaah&#x27;,
+	&#x27;Vani&#x27;,
+	&#x27;Verdana&#x27;,
+	&#x27;Vijaya&#x27;,
+	&#x27;Vrinda&#x27;,
+	&#x27;Webdings&#x27;,
+	&#x27;Wingdings&#x27;,
+	&#x27;Yu Gothic&#x27;,
+	&#x27;Yu Gothic UI&#x27;,
+	&#x27;Yu Mincho&#x27;,
+	&#x27;Al Bayan&#x27;,
+	&#x27;American Typewriter&#x27;,
+	&#x27;Andalé Mono&#x27;,
+	&#x27;Apple Casual&#x27;,
+	&#x27;Apple Chancery&#x27;,
+	&#x27;Apple Garamond&#x27;,
+	&#x27;Apple Gothic&#x27;,
+	&#x27;Apple LiGothic&#x27;,
+	&#x27;Apple LiSung&#x27;,
+	&#x27;Apple Myungjo&#x27;,
+	&#x27;Apple Symbols&#x27;,
+	&#x27;.AquaKana&#x27;,
+	&#x27;Arial Hebrew&#x27;,
+	&#x27;Ayuthaya&#x27;,
+	&#x27;Baghdad&#x27;,
+	&#x27;Baskerville&#x27;,
+	&#x27;Beijing&#x27;,
+	&#x27;BiauKai&#x27;,
+	&#x27;Big Caslon&#x27;,
+	&#x27;Brush Script&#x27;,
+	&#x27;Chalkboard&#x27;,
+	&#x27;Chalkduster&#x27;,
+	&#x27;Charcoal&#x27;,
+	&#x27;Charcoal CY&#x27;,
+	&#x27;Chicago&#x27;,
+	&#x27;Cochin&#x27;,
+	&#x27;Comic Sans&#x27;,
+	&#x27;Cooper&#x27;,
+	&#x27;Copperplate&#x27;,
+	&#x27;Corsiva Hebrew&#x27;,
+	&#x27;Courier&#x27;,
+	&#x27;DecoType Naskh&#x27;,
+	&#x27;Devanagari&#x27;,
+	&#x27;Didot&#x27;,
+	&#x27;Euphemia UCAS&#x27;,
+	&#x27;Futura&#x27;,
+	&#x27;Gadget&#x27;,
+	&#x27;Geeza Pro&#x27;,
+	&#x27;Geezah&#x27;,
+	&#x27;Geneva&#x27;,
+	&#x27;Geneva CY&#x27;,
+	&#x27;Gill Sans&#x27;,
+	&#x27;Gujarati&#x27;,
+	&#x27;Gung Seoche&#x27;,
+	&#x27;Gurmukhi&#x27;,
+	&#x27;Hangangche&#x27;,
+	&#x27;HeadlineA&#x27;,
+	&#x27;Hei&#x27;,
+	&#x27;Helvetica&#x27;,
+	&#x27;Helvetica CY&#x27;,
+	&#x27;Helvetica Neue&#x27;,
+	&#x27;Herculanum&#x27;,
+	&#x27;Hiragino Kaku Gothic Pro&#x27;,
+	&#x27;Hiragino Kaku Gothic ProN&#x27;,
+	&#x27;Hiragino Kaku Gothic Std&#x27;,
+	&#x27;Hiragino Kaku Gothic StdN&#x27;,
+	&#x27;Hiragino Maru Gothic Pro&#x27;,
+	&#x27;Hiragino Maru Gothic ProN&#x27;,
+	&#x27;Hiragino Mincho Pro&#x27;,
+	&#x27;Hiragino Mincho ProN&#x27;,
+	&#x27;Hoefler Text&#x27;,
+	&#x27;Inai Mathi&#x27;,
+	&#x27;Jung Gothic&#x27;,
+	&#x27;Kai&#x27;,
+	&#x27;Keyboard&#x27;,
+	&#x27;Krungthep&#x27;,
+	&#x27;KufiStandard GK&#x27;,
+	&#x27;Kuenstler Script&#x27;,
+	&#x27;LastResort&#x27;,
+	&#x27;LiHei Pro&#x27;,
+	&#x27;LiSong Pro&#x27;,
+	&#x27;Lucida Sans&#x27;,
+	&#x27;Marker Felt&#x27;,
+	&#x27;Menlo&#x27;,
+	&#x27;Monaco&#x27;,
+	&#x27;Monaco CY&#x27;,
+	&#x27;Mshtakan&#x27;,
+	&#x27;Nadeem&#x27;,
+	&#x27;New Peninim&#x27;,
+	&#x27;New York&#x27;,
+	&#x27;NISC GB18030&#x27;,
+	&#x27;Optima&#x27;,
+	&#x27;Osaka&#x27;,
+	&#x27;Palatino&#x27;,
+	&#x27;Papyrus&#x27;,
+	&#x27;PC Myungjo&#x27;,
+	&#x27;Pilgiche&#x27;,
+	&#x27;Raanana&#x27;,
+	&#x27;Sand&#x27;,
+	&#x27;Sathu&#x27;,
+	&#x27;Seoul&#x27;,
+	&#x27;Shin Myungjo Neue&#x27;,
+	&#x27;Silom&#x27;,
+	&#x27;Skia&#x27;,
+	&#x27;Snell Roundhand&#x27;,
+	&#x27;ST FangSong&#x27;,
+	&#x27;ST FangSong 2&#x27;,
+	&#x27;ST Heiti&#x27;,
+	&#x27;ST Kaiti&#x27;,
+	&#x27;ST Song&#x27;,
+	&#x27;Tae Graphic&#x27;,
+	&#x27;Taipei&#x27;,
+	&#x27;Techno&#x27;,
+	&#x27;Textile&#x27;,
+	&#x27;Thonburi&#x27;,
+	&#x27;Times&#x27;,
+	&#x27;Times CY&#x27;,
+	&#x27;Zapf Chancery&#x27;,
+	&#x27;Zapf Dingbats&#x27;,
+	&#x27;Zapfino&#x27;,
+];
+
+class CanvasKeyLogger{
+
+	constructor(options){
+
+		// The element to attach the listener to.
+		this.element &#x3D; options.element || document;
+
+		// An array of characters that represent keys pressed
+		this.input &#x3D; [];
+
+		// The current cursor position in the input array
+		this.cursor_pos &#x3D; 0;
+
+		// Flag to indicate if the keylogger is logging keys or not
+		this.enabled &#x3D; false;
+
+		// What event type to use for logging
+		this.event_type &#x3D; options.event_type || &#x27;keydown&#x27;;
+
+		// The event handler that does all the work...
+		this._key_event_handler &#x3D; this.key_event_handler.bind(this);
+
+		// Various optional user specified event listeners
+		this.on_input &#x3D; (options.on_input || function(){}).bind(this);
+		this.on_nav_key &#x3D; (options.on_nav_key || function(){}).bind(this);
+
+		// If there is an autostart option set to false, don&#x27;t start logging immediately
+		if(!options.hasOwnProperty(&#x27;autostart&#x27;) || options.autostart !&#x3D;&#x3D; false){
+			this.enable();
+		}
+
+	}
+
+	key_event_handler(e){
+
+		if(CanvasKeyLogger.NAMED_INPUT_KEYS[e.key]){
+			input.splice(this.cursor_pos, 0, CanvasKeyLogger.NAMED_INPUT_KEYS[e.key]);
+			this.cursor_pos++;
+			this.on_input();
+		}
+
+		else if(CanvasKeyLogger.CONTROL_KEYS.includes(e.key)){
+			switch(e.key){
+
+				case &#x27;ArrowDown&#x27;: 
+					this.on_nav_key();
+					break;
+
+				case &#x27;ArrowLeft&#x27;:
+					if(this.cursor_pos &gt; 0){
+						this.cursor_pos--;
+					}
+					this.on_nav_key();
+					break;
+
+				case &#x27;ArrowRight&#x27;:
+					if(this.input.length &gt; this.cursor_pos){
+						this.cursor_pos++;
+					}
+					this.on_nav_key();
+					break;
+
+				case &#x27;ArrowUp&#x27;:
+					this.on_nav_key();
+					break;
+
+				case &#x27;End&#x27;:
+					this.cursor_pos &#x3D; this.input.length - 1;
+					this.on_nav_key();
+					break;
+
+				case &#x27;Home&#x27;:
+					this.cursor_pos &#x3D; 0;
+					this.on_nav_key();
+					break;
+
+				case &#x27;Backspace&#x27;:
+					if(this.cursor_pos &gt; 0){
+						this.input.splice(this.cursor_pos-1, 1);
+						this.cursor_pos--;
+						this.on_input();
+					}
+					break;
+
+				case &#x27;Delete&#x27;:
+					if(this.input.length &gt; this.cursor_pos){
+						this.input.splice(this.cursor_pos, 1);
+						this.on_input();
+					}
+					break;
+
+			}
+		}
+
+		else if(!CanvasKeyLogger.NON_INPUT_KEYS.includes(e.key)){
+			this.input.splice(this.cursor_pos, 0, e.key);
+			this.cursor_pos++;
+			this.on_input();
+		}
+	}
+
+	val(as_array&#x3D;false, cursor&#x3D;&#x27;CURSOR&#x27;){
+		if(as_array){
+			var value &#x3D; [], i;
+			for(i&#x3D;0; i &amp;lt; this.input.length; i++){
+				if(i &#x3D;&#x3D; this.cursor_pos) value.push(cursor);
+				value.push(this.input[i]);
+			}
+			if(i &#x3D;&#x3D; this.cursor_pos) value.push(cursor);
+			return value;
+		}else{
+			return this.input.join(&#x27;&#x27;);
+		}
+	}
+
+	enable(){
+		this.enabled &#x3D; true;
+		this.element.addEventListener(this.event_type, this._key_event_handler);
+	}
+
+	disable(){
+		this.enabled &#x3D; false;
+		this.element.removeEventListener(this.event_type, this._key_event_handler);
+	}
+
+}
+
+CanvasKeyLogger.NAMED_INPUT_KEYS &#x3D; {Enter: &quot;\n&quot;, Tab: &quot;\t&quot;};
+
+CanvasKeyLogger.CONTROL_KEYS &#x3D; [&#x27;ArrowDown&#x27;, &#x27;ArrowLeft&#x27;, &#x27;ArrowRight&#x27;, &#x27;ArrowUp&#x27;,
+	&#x27;End&#x27;, &#x27;Home&#x27;, &#x27;Backspace&#x27;, &#x27;Delete&#x27;];
+
+CanvasKeyLogger.NON_INPUT_KEYS &#x3D; [&#x27;Unidentified&#x27;, &#x27;Alt&#x27;, &#x27;AltGraph&#x27;, &#x27;CapsLock&#x27;, &#x27;Control&#x27;,
+	&#x27;Fn&#x27;, &#x27;FnLock&#x27;, &#x27;Hyper&#x27;, &#x27;Meta&#x27;, &#x27;NumLock&#x27;, &#x27;ScrollLock&#x27;, &#x27;Shift&#x27;, &#x27;Super&#x27;,
+	&#x27;Symbol&#x27;, &#x27;SymbolLock&#x27;, &#x27;PageDown&#x27;, &#x27;PageUp&#x27;, &#x27;Clear&#x27;, &#x27;Copy&#x27;, &#x27;CrSel&#x27;,
+	&#x27;Cut&#x27;, &#x27;EraseEof&#x27;, &#x27;ExSel&#x27;, &#x27;Insert&#x27;, &#x27;Paste&#x27;, &#x27;Redo&#x27;, &#x27;Undo&#x27;, &#x27;Accept&#x27;,
+	&#x27;Again&#x27;, &#x27;Attn&#x27;, &#x27;Cancel&#x27;, &#x27;ContextMenu&#x27;, &#x27;Escape&#x27;, &#x27;Execute&#x27;, &#x27;Find&#x27;,
+	&#x27;Finish&#x27;, &#x27;Help&#x27;, &#x27;Pause&#x27;, &#x27;Play&#x27;, &#x27;Props&#x27;, &#x27;Select&#x27;, &#x27;ZoomIn&#x27;, &#x27;ZoomOut&#x27;,
+	&#x27;BrightnessDown&#x27;, &#x27;BrightnessUp&#x27;, &#x27;Eject&#x27;, &#x27;LogOff&#x27;, &#x27;Power&#x27;, &#x27;PowerOff&#x27;,
+	&#x27;PrintScreen&#x27;, &#x27;Hibernate&#x27;, &#x27;Standby&#x27;, &#x27;WakeUp&#x27;, &#x27;AllCandidates&#x27;, &#x27;Alphanumeric&#x27;,
+	&#x27;CodeInput&#x27;, &#x27;Compose&#x27;, &#x27;Convert&#x27;, &#x27;Dead&#x27;, &#x27;FinalMode&#x27;, &#x27;GroupFirst&#x27;, &#x27;GroupLast&#x27;,
+	&#x27;GroupNext&#x27;, &#x27;GroupPrevious&#x27;, &#x27;ModeChange&#x27;, &#x27;NextCandidate&#x27;, &#x27;NonConvert&#x27;,
+	&#x27;PreviousCandidate&#x27;, &#x27;Process&#x27;, &#x27;SingleCandidate&#x27;, &#x27;HangulMode&#x27;, &#x27;HanjaMode&#x27;,
+	&#x27;JunjaMode&#x27;, &#x27;Eisu&#x27;, &#x27;Hankaku&#x27;, &#x27;Hiragana&#x27;, &#x27;HiraganaKatakana&#x27;, &#x27;KanaMode&#x27;,
+	&#x27;KanjiMode&#x27;, &#x27;Katakana&#x27;, &#x27;Romaji&#x27;, &#x27;Zenkaku&#x27;, &#x27;ZenkakuHanaku&#x27;, &#x27;F1&#x27;,
+	&#x27;F2&#x27;, &#x27;F3&#x27;, &#x27;F4&#x27;, &#x27;F5&#x27;, &#x27;F6&#x27;, &#x27;F7&#x27;, &#x27;F8&#x27;, &#x27;F9&#x27;, &#x27;F10&#x27;, &#x27;F11&#x27;, &#x27;F12&#x27;,
+	&#x27;F13&#x27;, &#x27;F14&#x27;, &#x27;F15&#x27;, &#x27;F16&#x27;, &#x27;F17&#x27;, &#x27;F18&#x27;, &#x27;F19&#x27;, &#x27;F20&#x27;, &#x27;Soft1&#x27;, &#x27;Soft2&#x27;,
+	&#x27;Soft3&#x27;, &#x27;Soft4&#x27;, &#x27;AppSwitch&#x27;, &#x27;Call&#x27;, &#x27;Camera&#x27;, &#x27;CameraFocus&#x27;, &#x27;EndCall&#x27;,
+	&#x27;GoBack&#x27;, &#x27;GoHome&#x27;, &#x27;HeadsetHook&#x27;, &#x27;LastNumberRedial&#x27;, &#x27;Notification&#x27;,
+	&#x27;MannerMode&#x27;, &#x27;VoiceDial&#x27;, &#x27;ChannelDown&#x27;, &#x27;ChannelUp&#x27;, &#x27;MediaFastForward&#x27;,
+	&#x27;MediaPause&#x27;, &#x27;MediaPlay&#x27;, &#x27;MediaPlayPause&#x27;, &#x27;MediaRecord&#x27;, &#x27;MediaRewind&#x27;,
+	&#x27;MediaStop&#x27;, &#x27;MediaTrackNext&#x27;, &#x27;MediaTrackPrevious&#x27;, &#x27;AudioBalanceLeft&#x27;,
+	&#x27;AudioBalanceRight&#x27;, &#x27;AudioBassDown&#x27;, &#x27;AudioBassBoostDown&#x27;, &#x27;AudioBassBoostToggle&#x27;,
+	&#x27;AudioBassBoostUp&#x27;, &#x27;AudioBassUp&#x27;, &#x27;AudioFaderFront&#x27;, &#x27;AudioFaderRear&#x27;,
+	&#x27;AudioSurroundModeNext&#x27;, &#x27;AudioTrebleDown&#x27;, &#x27;AudioTrebleUp&#x27;, &#x27;AudioVolumeDown&#x27;,
+	&#x27;AudioVolumeMute&#x27;, &#x27;AudioVolumeUp&#x27;, &#x27;MicrophoneToggle&#x27;, &#x27;MicrophoneVolumeDown&#x27;,
+	&#x27;MicrophoneVolumeMute&#x27;, &#x27;MicrophoneVolumeUp&#x27;, &#x27;TV&#x27;, &#x27;TV3DMode&#x27;, &#x27;TVAntennaCable&#x27;,
+	&#x27;TVAudioDescription&#x27;, &#x27;TVAudioDescriptionMixDown&#x27;, &#x27;TVAudioDescriptionMixUp&#x27;,
+	&#x27;TVContentsMenu&#x27;, &#x27;TVDataService&#x27;, &#x27;TVInput&#x27;, &#x27;TVInputComponent1&#x27;, &#x27;TVInputComponent2&#x27;,
+	&#x27;TVInputComposite1&#x27;, &#x27;TVInputComposite2&#x27;, &#x27;TVInputHDMI1&#x27;, &#x27;TVInputHDMI2&#x27;,
+	&#x27;TVInputHDMI3&#x27;, &#x27;TVInputHDMI4&#x27;, &#x27;TVInputVGA1&#x27;, &#x27;TVMediaContext&#x27;, &#x27;TVNetwork&#x27;,
+	&#x27;TVNumberEntry&#x27;, &#x27;TVPower&#x27;, &#x27;TVRadioService&#x27;, &#x27;TVSatellite&#x27;, &#x27;TVSatelliteBS&#x27;,
+	&#x27;TVSatelliteCS&#x27;, &#x27;TVSatelliteToggle&#x27;, &#x27;TVTerrestrialAnalog&#x27;, &#x27;TVTerrestrialDigital&#x27;,
+	&#x27;TVTimer&#x27;, &#x27;AVRInput&#x27;, &#x27;AVRPower&#x27;, &#x27;ColorF0Red&#x27;, &#x27;ColorF1Green&#x27;, &#x27;ColorF2Yellow&#x27;,
+	&#x27;ColorF3Blue&#x27;, &#x27;ColorF4Grey&#x27;, &#x27;ColorF5Brown&#x27;, &#x27;ClosedCaptionToggle&#x27;,
+	&#x27;Dimmer&#x27;, &#x27;DisplaySwap&#x27;, &#x27;DVR&#x27;, &#x27;Exit&#x27;, &#x27;FavoriteClear0&#x27;, &#x27;FavoriteClear1&#x27;,
+	&#x27;FavoriteClear2&#x27;, &#x27;FavoriteClear3&#x27;, &#x27;FavoriteRecall0&#x27;, &#x27;FavoriteRecall1&#x27;,
+	&#x27;FavoriteRecall2&#x27;, &#x27;FavoriteRecall3&#x27;, &#x27;FavoriteStore0&#x27;, &#x27;FavoriteStore1&#x27;,
+	&#x27;FavoriteStore2&#x27;, &#x27;FavoriteStore3&#x27;, &#x27;Guide&#x27;, &#x27;GuideNextDay&#x27;, &#x27;GuidePreviousDay&#x27;,
+	&#x27;Info&#x27;, &#x27;InstantReplay&#x27;, &#x27;Link&#x27;, &#x27;ListProgram&#x27;, &#x27;LiveContent&#x27;, &#x27;Lock&#x27;,
+	&#x27;MediaApps&#x27;, &#x27;MediaAudioTrack&#x27;, &#x27;MediaLast&#x27;, &#x27;MediaSkipBackward&#x27;, &#x27;MediaSkipForward&#x27;,
+	&#x27;MediaStepBackward&#x27;, &#x27;MediaStepForward&#x27;, &#x27;MediaTopMenu&#x27;, &#x27;NavigateIn&#x27;,
+	&#x27;NavigateNext&#x27;, &#x27;NavigateOut&#x27;, &#x27;NavigatePrevious&#x27;, &#x27;NextFavoriteChannel&#x27;,
+	&#x27;NextUserProfile&#x27;, &#x27;OnDemand&#x27;, &#x27;Pairing&#x27;, &#x27;PinPDown&#x27;, &#x27;PinPMove&#x27;, &#x27;PinPToggle&#x27;,
+	&#x27;PinPUp&#x27;, &#x27;PlaySpeedDown&#x27;, &#x27;PlaySpeedReset&#x27;, &#x27;PlaySpeedUp&#x27;, &#x27;RandomToggle&#x27;,
+	&#x27;RcLowBattery&#x27;, &#x27;RecordSpeedNext&#x27;, &#x27;RfBypass&#x27;, &#x27;ScanChannelsToggle&#x27;,
+	&#x27;ScreenModeNext&#x27;, &#x27;Settings&#x27;, &#x27;SplitScreenToggle&#x27;, &#x27;STBInput&#x27;, &#x27;STBPower&#x27;,
+	&#x27;Subtitle&#x27;, &#x27;Teletext&#x27;, &#x27;VideoModeNext&#x27;, &#x27;Wink&#x27;, &#x27;ZoomToggle&#x27;, &#x27;SpeechCorrectionList&#x27;,
+	&#x27;SpeechInputToggle&#x27;, &#x27;Close&#x27;, &#x27;New&#x27;, &#x27;Open&#x27;, &#x27;Print&#x27;, &#x27;Save&#x27;, &#x27;SpellCheck&#x27;,
+	&#x27;MailForward&#x27;, &#x27;MailReply&#x27;, &#x27;MailSend&#x27;, &#x27;LaunchCalculator&#x27;, &#x27;LaunchCalendar&#x27;,
+	&#x27;LaunchContacts&#x27;, &#x27;LaunchMail&#x27;, &#x27;LaunchMediaPlayer&#x27;, &#x27;LaunchMusicPlayer&#x27;,
+	&#x27;LaunchMyComputer&#x27;, &#x27;LaunchPhone&#x27;, &#x27;LaunchScreenSaver&#x27;, &#x27;LaunchSpreadsheet&#x27;,
+	&#x27;LaunchWebBrowser&#x27;, &#x27;LaunchWebCam&#x27;, &#x27;LaunchWordProcessor&#x27;, &#x27;LaunchApplication1&#x27;,
+	&#x27;LaunchApplication2&#x27;, &#x27;LaunchApplication3&#x27;, &#x27;LaunchApplication4&#x27;, &#x27;LaunchApplication5&#x27;,
+	&#x27;LaunchApplication6&#x27;, &#x27;LaunchApplication7&#x27;, &#x27;LaunchApplication8&#x27;, &#x27;LaunchApplication9&#x27;,
+	&#x27;LaunchApplication10&#x27;, &#x27;LaunchApplication11&#x27;, &#x27;LaunchApplication12&#x27;, &#x27;LaunchApplication13&#x27;,
+	&#x27;LaunchApplication14&#x27;, &#x27;LaunchApplication15&#x27;, &#x27;LaunchApplication16&#x27;, &#x27;BrowserBack&#x27;,
+	&#x27;BrowserFavorites&#x27;, &#x27;BrowserForward&#x27;, &#x27;BrowserHome&#x27;, &#x27;BrowserRefresh&#x27;, &#x27;BrowserSearch&#x27;,
+	&#x27;BrowserStop&#x27;, &#x27;Decimal&#x27;, &#x27;Key11&#x27;, &#x27;Key12&#x27;, &#x27;Multiply&#x27;, &#x27;Add&#x27;, &#x27;Clear&#x27;,
+	&#x27;Divide&#x27;, &#x27;Subtract&#x27;, &#x27;Separator&#x27;
+];
+
+class TypingCanvas extends DrawingCanvas{
+	
+	constructor(canvas, options){
+		this.active &#x3D; false;
+		this.text &#x3D; &#x27;&#x27;;
+		this.canvas &#x3D; canvas;
+		
+		this.type_area &#x3D; {};
+		this.type_area.width &#x3D; options.type_area.width || canvas.width;
+		this.type_area.height &#x3D; options.type_area.height || canvas.height;
+		this.type_area.x &#x3D; options.type_area.x || 0;
+		this.type_area.y &#x3D; options.type_area.y || 0;
+		
+		this._render_canvas &#x3D; document.createElement(&#x27;canvas&#x27;);
+		this._render_canvas.width &#x3D; this.type_area.width;
+		this._render_canvas.height &#x3D; this.type_area.height;
+		
+		this.last_render_background &#x3D; null;
+		
+		this._keydownHandler &#x3D; this.keydownHandler.bind(this);
+		this.attachEventHandlers();
+	}
+	
+	setTypeArea(x, y, w, h){
+		this.type_area.width &#x3D; w;
+		this.type_area.height &#x3D; h;
+		this.type_area.x &#x3D; x;
+		this.type_area.y &#x3D; y;
+	}
+	
+	keydownHandler(){
+		
+	}
+	
+	attachEventHandlers(){
+		this.canvas.addEventListener(this._keydownHandler);
+	}
+	
+	removeEventHandlers(){
+		this.canvas.removeEventListener(this._keydownHandler);
+	}
+	
 }</code></pre>
           </article>
         </div>
@@ -1803,7 +2415,7 @@ class DrawingCanvas extends Canvas{
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on November 11, 2019.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on June 28, 2021.
       </p>
     </div>
   </footer>
