@@ -25,12 +25,6 @@ class TypingCanvas extends DrawingCanvas{
 		
 		// We need a mouseup event listener to know when the boundary is drawn...
 		this.canvas.addEventListener('mouseup', this.onmouseup.bind(this));
-		
-		
-		this.rcanvas.style.border = "1px solid black";
-		this.ccanvas.style.border = "1px solid black";
-		document.body.appendChild(this.rcanvas);
-		document.body.appendChild(this.ccanvas);
 	}
 	
 	/**
@@ -46,6 +40,10 @@ class TypingCanvas extends DrawingCanvas{
 		this.drawBoundary();
 	}
 	
+	/**
+	 * Draws the text boundary rectangle
+	 * @returns {undefined}
+	 */
 	drawBoundary(){
 		var {x, y, width, height} = this.layer_dimensions;
 		
@@ -179,6 +177,7 @@ class TypingCanvas extends DrawingCanvas{
 		this.flashing_cursor_visible = false;
 		if(this.flashing_cursor_timer){
 			clearInterval(this.flashing_cursor_timer);
+			this.flashing_cursor_timer = null;
 		}
 		this.keylogger.disable();
 		this.keylogger = null;

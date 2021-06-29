@@ -123,8 +123,6 @@ class DrawingCanvas extends Canvas{
 	 */
 	renderLayer(){
 		
-		
-		
 		// Copy the rcavnas image to the canvas, crop it and render it to a dataURL
 		var {x, y, width, height} = this.layer_dimensions;
 		
