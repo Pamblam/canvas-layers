@@ -45,7 +45,10 @@ class CanvasLayer{
 		this.owidth = 0;
 		this.oheight = 0;
 		
+		this.properties = {};
+		
 		this.load();
+		
 	}
 	
 	/**
@@ -67,7 +70,8 @@ class CanvasLayer{
 				rotatable: this.rotateable,
 				resizable: this.resizable,
 				selectable: this.selectable,
-				forceBoundary: this.forceBoundary
+				forceBoundary: this.forceBoundary,
+				properties: this.properties
 			}
 		};
 	}

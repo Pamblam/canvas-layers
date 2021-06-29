@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v2.1.32
+ * canvas-layers - v2.1.34
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 2.1.32
+ * @version 2.1.34
  */
 class Canvas{
 	
@@ -1115,7 +1115,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '2.1.32';
+Canvas.version = '2.1.34';
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -1278,7 +1278,10 @@ class CanvasLayer{
 		this.owidth = 0;
 		this.oheight = 0;
 		
+		this.properties = {};
+		
 		this.load();
+		
 	}
 	
 	/**
@@ -1300,7 +1303,8 @@ class CanvasLayer{
 				rotatable: this.rotateable,
 				resizable: this.resizable,
 				selectable: this.selectable,
-				forceBoundary: this.forceBoundary
+				forceBoundary: this.forceBoundary,
+				properties: this.properties
 			}
 		};
 	}
@@ -2492,14 +2496,21 @@ class TypingCanvas extends DrawingCanvas{
 		}
 	}
 	
+	renderLayer(){
+		super.renderLayer();
+		this.drawing_layer.properties.font_face = this.font_face;
+		this.drawing_layer.properties.font_size = this.font_size;
+		this.drawing_layer.properties.font_color = this.font_color;
+	}
+	
 	/**
 	 * Draw the active type area
 	 * @returns {undefined}
 	 */
-	renderTypeArea(){
+	renderTypeArea(active=true){
 		
 		this.rctx.clearRect(0, 0, this.width, this.height);
-		this.drawBoundary();
+		if(active) this.drawBoundary();
 		
 		this.rctx.save();
 		var style = [];
@@ -2507,7 +2518,7 @@ class TypingCanvas extends DrawingCanvas{
 		if(this.font_face) style.push(this.font_face);
 		if(style.length) this.rctx.font = style.join(' ');
 		if(this.font_color) this.rctx.fillStyle = this.font_color;
-		var text = this.keylogger.val(true, this.flashing_cursor_visible ? "|" : '').join('');
+		var text = this.keylogger.val(true, active && this.flashing_cursor_visible ? "|" : '').join('');
 		this.rctx.textBaseline = "top";
 		
 		console.log("Rendering: ", text, style.join(' '));
@@ -2525,7 +2536,12 @@ class TypingCanvas extends DrawingCanvas{
 	activateTypeArea(){
 		if(this.flashing_cursor_timer !== null) return;
 		this.keylogger = new CanvasKeyLogger({
-			on_input: () => this.renderTypeArea()
+			on_input: () => {
+				if(this.drawing_layer){
+					this.drawing_layer.properties.text = this.keylogger.val();
+				}
+				this.renderTypeArea();
+			}
 		});
 		this.flashing_cursor_timer = setInterval(()=>{
 			this.flashing_cursor_visible = !this.flashing_cursor_visible;
@@ -2539,6 +2555,10 @@ class TypingCanvas extends DrawingCanvas{
 	 * @returns {undefined}
 	 */
 	resetTextEditor(){
+		
+		this.renderTypeArea(false);
+		this.renderLayer();
+		
 		this.drawing_layer = null;
 		this.layer_dimensions = null;
 		this.boundry_defined = false;
@@ -2552,9 +2572,7 @@ class TypingCanvas extends DrawingCanvas{
 	}
 	
 	onmouseup(){
-		console.log("moseup",this.drawing_mode, this.boundry_defined );
 		if(this.drawing_mode !== 'text' || this.boundry_defined) return;
-		console.log("boundary defined....");
 		this.boundry_defined = true;
 		this.activateTypeArea();
 	}
