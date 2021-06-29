@@ -21,20 +21,43 @@ class DrawingCanvas extends Canvas{
 	 */
 	constructor(canvas, opts={}){
 		super(canvas, opts);
+		
+		// The current action....
+		// one of... "rectangle", "ellipse", "line", "freehand"
 		this.drawing_mode = null;
+		
+		// Styling options
 		this.line_color = '#000000';
 		this.fill_color = '#0000FF';
+		
+		// The x, y coords of the starting position of the current shape
 		this.shape_start_pos = null;
+		
+		// Is the mouse button pressed?
 		this.is_mouse_down = false;
+		
+		// An array of points that represents the current 
+		// shape if the drawing mode is "freehand"
 		this.freehand_coords = [];
+		
+		// An invisible canvas on which the user's input is rendered
+		// This canvas is the same height and width as the original canvas
 		this.rcanvas = document.createElement('canvas');
 		this.rcanvas.height = this.height;
 		this.rcanvas.width = this.width;
 		this.rctx = this.rcanvas.getContext('2d');
+		
+		// As images are rendered on the rcanvas, they are copied to this canvas
+		// and this canvas is resized and used to update the current active layer
 		this.ccanvas = document.createElement('canvas');
 		this.cctx = this.ccanvas.getContext('2d');
+		
+		// The layer that is being drawn via the above ccanvas
 		this.drawing_layer = null;
+		
+		// dimensions of the current active layer as it's being created
 		this.layer_dimensions = null;
+		
 	}
 	
 	/**
@@ -70,6 +93,7 @@ class DrawingCanvas extends Canvas{
 	
 	/**
 	 * @ignore
+	 * Helper function to draw a circle on a canvas
 	 */
 	drawEllipse(ctx, x, y, w, h) {
 		var kappa = .5522848,
@@ -94,8 +118,11 @@ class DrawingCanvas extends Canvas{
 	
 	/**
 	 * @ignore
+	 * Copy the rcanvas image to the ccanvas and resize the ccanvas, then 
+	 * create or update the current active layer
 	 */
 	renderLayer(){
+		// Copy the rcavnas image to the canvas, crop it and render it to a dataURL
 		const {x, y, width, height} = this.layer_dimensions;
 		this.ccanvas.width = width;
 		this.ccanvas.height = height;
@@ -103,12 +130,16 @@ class DrawingCanvas extends Canvas{
 		this.cctx.drawImage(this.rcanvas, x, y, width, height, 0, 0, width, height);
 		var duri = this.ccanvas.toDataURL();
 		
+		// Get new layer center position
 		const xpos = x + (width/2);
 		const ypos = y + (height/2);
 		
 		if(!this.drawing_layer){
+			// If there is not currently an active drawing layer, create it
 			this.drawing_layer = this.addLayer(duri, {xpos, ypos});
 		}else{
+			// If there is an active layer, update the image and the 
+			// dimensions and reload
 			this.drawing_layer.x = xpos;
 			this.drawing_layer.y = ypos;
 			this.drawing_layer.width = width;
@@ -122,14 +153,20 @@ class DrawingCanvas extends Canvas{
 	
 	/**
 	 * @ignore
-	 * Update layer dimesions based on the user input of the active layer
+	 * Update layer dimesions property (this.layer_dimensions) 
+	 * of the active layer based on the user input 
 	 */
 	recalculateLayerDimensions(newMousePos){
 		var x, y, width, height;
 		if(this.drawing_mode === 'freehand'){
+			
+			// If user is drawing freehand, add the next coordinates
+			// to the freehand_coords array
 			this.freehand_coords.push(newMousePos);
 			var all_x = this.freehand_coords.map(c=>c.x);
 			var all_y = this.freehand_coords.map(c=>c.y);
+			
+			// Get minimum and maximum x and y points in the freehand drawing
 			x = Math.min(...all_x);
 			y = Math.min(...all_y);
 			var max_x = Math.max(...all_x);
@@ -147,30 +184,41 @@ class DrawingCanvas extends Canvas{
 	
 	/**
 	 * @ignore
+	 * How to handle mouse input
 	 */
 	onmousemove(e){
+		
+		// If there isn't a drawing mode set let the parent class handle it
 		if(!this.drawing_mode) return super.onmousemove(e);
 		if(!this.is_mouse_down) return;
+		
+		// Clear the rendering canvas		
 		this.rctx.clearRect(0, 0, this.width, this.height);
+		
+		// Get the current mouse position relative to the canvas
 		const pos = this.canvasMousePos(e);
+		
+		// Update the layer_dimensions property
 		this.recalculateLayerDimensions(pos);
+		
+		// Handle the mouse movement based on the active drawing mode...
 		switch(this.drawing_mode){
+			
 			case "rectangle":
 				var {x, y, width, height} = this.layer_dimensions;
-				
 				this.rctx.beginPath();
 				this.rctx.rect(x, y, width, height);
 				this.rctx.fill();
 				this.rctx.stroke();
-				
 				this.renderLayer();
-				
 				break;
+				
 			case "ellipse":
 				var {x, y, width, height} = this.layer_dimensions;
 				this.drawEllipse(this.rctx, x, y, width, height);
 				this.renderLayer();
 				break;
+				
 			case "line":
 				var x1 = this.shape_start_pos.x, 
 					y1 = this.shape_start_pos.y, 
@@ -183,6 +231,7 @@ class DrawingCanvas extends Canvas{
 				this.rctx.stroke(); 
 				this.renderLayer();
 				break;
+				
 			case "freehand":
 				if(this.freehand_coords < 2) break;
 				var a = this.freehand_coords[0];
@@ -196,14 +245,15 @@ class DrawingCanvas extends Canvas{
 				}
 				this.renderLayer();
 				break;
+				
 		}
 	}
 	
 	/**
 	 * @ignore
+	 * On mousedown we set flags to render a new layer on mouse move
 	 */
 	onmousedown(e){
-		console.log('mousedown', this.drawing_mode);
 		if(!this.drawing_mode) return super.onmousedown(e);
 		this.is_mouse_down = true;
 		this.shape_start_pos = this.canvasMousePos(e);
@@ -211,6 +261,7 @@ class DrawingCanvas extends Canvas{
 	
 	/**
 	 * @ignore
+	 * on mouse up and when mouse runs out of the canvas reset everything
 	 */
 	onmousereset(e){
 		if(!this.drawing_mode) return super.onmousereset(e);

@@ -30,7 +30,7 @@
           </header>
           <article>
             <pre class="prettyprint linenums"><code>/**
- * canvas-layers - v2.1.7
+ * canvas-layers - v2.1.16
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -41,7 +41,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 2.1.7
+ * @version 2.1.16
  */
 class Canvas{
 	
@@ -1146,7 +1146,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version &#x3D; &#x27;2.1.7&#x27;;
+Canvas.version &#x3D; &#x27;2.1.16&#x27;;
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -1595,19 +1595,41 @@ class DrawingCanvas extends Canvas{
 	 */
 	constructor(canvas, opts&#x3D;{}){
 		super(canvas, opts);
+		
+		// The current action....
+		// one of... &quot;rectangle&quot;, &quot;ellipse&quot;, &quot;line&quot;, &quot;freehand&quot;
 		this.drawing_mode &#x3D; null;
+		
+		// Styling options
 		this.line_color &#x3D; &#x27;#000000&#x27;;
 		this.fill_color &#x3D; &#x27;#0000FF&#x27;;
+		
+		// The x, y coords of the starting position of the current shape
 		this.shape_start_pos &#x3D; null;
+		
+		// Is the mouse button pressed?
 		this.is_mouse_down &#x3D; false;
+		
+		// An array of points that represents the current 
+		// shape if the drawing mode is &quot;freehand&quot;
 		this.freehand_coords &#x3D; [];
+		
+		// An invisible canvas on which the user&#x27;s input is rendered
+		// This canvas is the same height and width as the original canvas
 		this.rcanvas &#x3D; document.createElement(&#x27;canvas&#x27;);
 		this.rcanvas.height &#x3D; this.height;
 		this.rcanvas.width &#x3D; this.width;
 		this.rctx &#x3D; this.rcanvas.getContext(&#x27;2d&#x27;);
+		
+		// As images are rendered on the rcanvas, they are copied to this canvas
+		// and this canvas is resized and used to update the current active layer
 		this.ccanvas &#x3D; document.createElement(&#x27;canvas&#x27;);
 		this.cctx &#x3D; this.ccanvas.getContext(&#x27;2d&#x27;);
+		
+		// The layer that is being drawn via the above ccanvas
 		this.drawing_layer &#x3D; null;
+		
+		// dimensions of the current active layer as it&#x27;s being created
 		this.layer_dimensions &#x3D; null;
 	}
 	
@@ -1644,6 +1666,7 @@ class DrawingCanvas extends Canvas{
 	
 	/**
 	 * @ignore
+	 * Helper function to draw a circle on a canvas
 	 */
 	drawEllipse(ctx, x, y, w, h) {
 		var kappa &#x3D; .5522848,
@@ -1668,8 +1691,11 @@ class DrawingCanvas extends Canvas{
 	
 	/**
 	 * @ignore
+	 * Copy the rcanvas image to the ccanvas and resize the ccanvas, then 
+	 * create or update the current active layer
 	 */
 	renderLayer(){
+		// Copy the rcavnas image to the canvas, crop it and render it to a dataURL
 		const {x, y, width, height} &#x3D; this.layer_dimensions;
 		this.ccanvas.width &#x3D; width;
 		this.ccanvas.height &#x3D; height;
@@ -1677,12 +1703,16 @@ class DrawingCanvas extends Canvas{
 		this.cctx.drawImage(this.rcanvas, x, y, width, height, 0, 0, width, height);
 		var duri &#x3D; this.ccanvas.toDataURL();
 		
+		// Get new layer center position
 		const xpos &#x3D; x + (width/2);
 		const ypos &#x3D; y + (height/2);
 		
 		if(!this.drawing_layer){
+			// If there is not currently an active drawing layer, create it
 			this.drawing_layer &#x3D; this.addLayer(duri, {xpos, ypos});
 		}else{
+			// If there is an active layer, update the image and the 
+			// dimensions and reload
 			this.drawing_layer.x &#x3D; xpos;
 			this.drawing_layer.y &#x3D; ypos;
 			this.drawing_layer.width &#x3D; width;
@@ -1696,14 +1726,20 @@ class DrawingCanvas extends Canvas{
 	
 	/**
 	 * @ignore
-	 * Update layer dimesions based on the user input of the active layer
+	 * Update layer dimesions property (this.layer_dimensions) 
+	 * of the active layer based on the user input 
 	 */
 	recalculateLayerDimensions(newMousePos){
 		var x, y, width, height;
 		if(this.drawing_mode &#x3D;&#x3D;&#x3D; &#x27;freehand&#x27;){
+			
+			// If user is drawing freehand, add the next coordinates
+			// to the freehand_coords array
 			this.freehand_coords.push(newMousePos);
 			var all_x &#x3D; this.freehand_coords.map(c&#x3D;&gt;c.x);
 			var all_y &#x3D; this.freehand_coords.map(c&#x3D;&gt;c.y);
+			
+			// Get minimum and maximum x and y points in the freehand drawing
 			x &#x3D; Math.min(...all_x);
 			y &#x3D; Math.min(...all_y);
 			var max_x &#x3D; Math.max(...all_x);
@@ -1721,30 +1757,41 @@ class DrawingCanvas extends Canvas{
 	
 	/**
 	 * @ignore
+	 * How to handle mouse input
 	 */
 	onmousemove(e){
+		
+		// If there isn&#x27;t a drawing mode set let the parent class handle it
 		if(!this.drawing_mode) return super.onmousemove(e);
 		if(!this.is_mouse_down) return;
+		
+		// Clear the rendering canvas		
 		this.rctx.clearRect(0, 0, this.width, this.height);
+		
+		// Get the current mouse position relative to the canvas
 		const pos &#x3D; this.canvasMousePos(e);
+		
+		// Update the layer_dimensions property
 		this.recalculateLayerDimensions(pos);
+		
+		// Handle the mouse movement based on the active drawing mode...
 		switch(this.drawing_mode){
+			
 			case &quot;rectangle&quot;:
 				var {x, y, width, height} &#x3D; this.layer_dimensions;
-				
 				this.rctx.beginPath();
 				this.rctx.rect(x, y, width, height);
 				this.rctx.fill();
 				this.rctx.stroke();
-				
 				this.renderLayer();
-				
 				break;
+				
 			case &quot;ellipse&quot;:
 				var {x, y, width, height} &#x3D; this.layer_dimensions;
 				this.drawEllipse(this.rctx, x, y, width, height);
 				this.renderLayer();
 				break;
+				
 			case &quot;line&quot;:
 				var x1 &#x3D; this.shape_start_pos.x, 
 					y1 &#x3D; this.shape_start_pos.y, 
@@ -1757,6 +1804,7 @@ class DrawingCanvas extends Canvas{
 				this.rctx.stroke(); 
 				this.renderLayer();
 				break;
+				
 			case &quot;freehand&quot;:
 				if(this.freehand_coords &amp;lt; 2) break;
 				var a &#x3D; this.freehand_coords[0];
@@ -1770,14 +1818,15 @@ class DrawingCanvas extends Canvas{
 				}
 				this.renderLayer();
 				break;
+				
 		}
 	}
 	
 	/**
 	 * @ignore
+	 * On mousedown we set flags to render a new layer on mouse move
 	 */
 	onmousedown(e){
-		console.log(&#x27;mousedown&#x27;, this.drawing_mode);
 		if(!this.drawing_mode) return super.onmousedown(e);
 		this.is_mouse_down &#x3D; true;
 		this.shape_start_pos &#x3D; this.canvasMousePos(e);
@@ -1785,6 +1834,7 @@ class DrawingCanvas extends Canvas{
 	
 	/**
 	 * @ignore
+	 * on mouse up and when mouse runs out of the canvas reset everything
 	 */
 	onmousereset(e){
 		if(!this.drawing_mode) return super.onmousereset(e);
@@ -2370,9 +2420,24 @@ class TypingCanvas extends DrawingCanvas{
 	constructor(canvas, opts&#x3D;{}){
 		super(canvas, opts);
 		
+		// Font style options
 		this.font_face &#x3D; null;
 		this.font_color &#x3D; null;
 		this.font_size &#x3D; null;
+		
+		// Flag to indicate if the user has finished defining the boundary box
+		this.boundry_defined &#x3D; false;
+		
+		// The keylogger utlity that captures keyboard input
+		this.keylogger &#x3D; null;
+		
+		// Flag that updates every fraction of a second to indicate 
+		// if the flashing cursor is currently visible, 
+		// when the textarea is active
+		this.flashing_cursor_visible &#x3D; false;
+		
+		// The timer that changes the state of this.flashing_cursor_visible
+		this.flashing_cursor_timer &#x3D; null;
 	}
 	
 	/**
@@ -2401,6 +2466,125 @@ class TypingCanvas extends DrawingCanvas{
 		this.renderLayer();
 	}
 	
+	/**
+	 * Set the cursor appropriately when over an editable text layer...
+	 * @todo
+	 */
+	setCursor(){
+		return super.setCursor();
+	}
+	
+	/**
+	 * @ignore
+	 * On mousedown we set flags to render a new layer on mouse move
+	 */
+	onmousedown(e){
+		if(this.drawing_mode !&#x3D;&#x3D; &#x27;text&#x27;) return super.onmousedown(e);
+		
+		console.log(&#x27;this.drawing_layer&#x27;, this.drawing_layer);
+		
+		// If there is NOT an active drawing layer, start one
+		if(!this.drawing_layer){
+			
+			this.is_mouse_down &#x3D; true;
+			this.shape_start_pos &#x3D; this.canvasMousePos(e);
+			
+			console.log(&#x27;this.shape_start_pos&#x27;, this.shape_start_pos);
+			
+			this.renderLayer();
+			
+		}else{
+			
+			var {x, y} &#x3D; this.canvasMousePos(e);
+			this.setCursor(x, y);
+			if(this.isNearActiveRotatePoint(x, y)){
+				if(this.fireEvent(&#x27;layer-rotate-start&#x27;)){
+					this.activeLayerRotateStartPos &#x3D; {x, y};
+					this.rotatingActiveLayer &#x3D; true;
+				}
+			}else if(this.isNearActiveCorner(x, y)){
+				if(this.fireEvent(&#x27;layer-resize-start&#x27;)){
+					this.resizingActiveLayer &#x3D; true;
+				}
+			}else{
+				
+				var layer &#x3D; this.getLayerAt(x, y);
+				if(layer !&#x3D;&#x3D; this.drawing_layer){
+					// User clicked outside the text layer, reset the drawing mode
+					this.resetTextEditor();
+				}
+				
+			}
+			
+		}
+	}
+	
+	/**
+	 * Draw the active type area
+	 * @returns {undefined}
+	 */
+	renderTypeArea(){
+		
+		console.log(&#x27;rendering type area...&#x27;);
+		
+		this.rctx.save();
+		var style &#x3D; [];
+		if(this.font_size) style.push(this.font_size+&quot;px&quot;)
+		if(this.font_face) style.push(this.font_face);
+		if(style.length) this.rctx.font &#x3D; style.join(&#x27; &#x27;);
+		if(this.font_color) this.rctx.fillStyle &#x3D; this.font_color;
+		
+		this.rctx.fillText(this.keylogger.val(), this.shape_start_pos.x, this.shape_start_pos.y);
+		
+		this.rctx.restore();
+		this.renderLayer();
+	}
+	
+	/**
+	 * Begin rendeing the typing area...
+	 * @returns {undefined}
+	 */
+	activateTypeArea(){
+		console.log(&#x27;activating type area...&#x27;);
+		
+		this.keylogger &#x3D; new CanvasKeyLogger({
+			element: this.canvas
+		});
+		this.flashing_cursor_timer &#x3D; setInterval(()&#x3D;&gt;{
+			this.flashing_cursor_visible &#x3D; !this.flashing_cursor_visible;
+			this.renderTypeArea();
+		}, 333);
+	}
+	
+	/**
+	 * User clicked outside the active text layer, 
+	 * reset all the flags and drawing_mode
+	 * @returns {undefined}
+	 */
+	resetTextEditor(){
+		this.drawing_layer &#x3D; null;
+		this.layer_dimensions &#x3D; null;
+		this.boundry_defined &#x3D; false;
+		this.flashing_cursor_visible &#x3D; false;
+		if(this.flashing_cursor_timer){
+			clearInterval(this.flashing_cursor_timer);
+		}
+		this.keylogger.disable();
+		this.keylogger &#x3D; null;
+		this.shape_start_pos &#x3D; null;
+	}
+	
+	/**
+	 * @ignore
+	 * on mouse up and when mouse runs out of the canvas reset everything
+	 */
+	onmousereset(e){
+		if(this.drawing_mode !&#x3D;&#x3D; &#x27;text&#x27;) return super.onmousereset(e);
+		this.is_mouse_down &#x3D; false;
+		this.boundry_defined &#x3D; true;
+		this.activateTypeArea();
+	}
+	
 }</code></pre>
           </article>
         </div>
@@ -2411,7 +2595,7 @@ class TypingCanvas extends DrawingCanvas{
   <footer id="jsdoc-footer" class="jsdoc-footer">
     <div id="jsdoc-footer-container">
       <p>
-        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on June 28, 2021.
+        Generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc</a> 3.6.2 on June 29, 2021.
       </p>
     </div>
   </footer>

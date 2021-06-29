@@ -168,7 +168,7 @@ module.exports = function(grunt) {
 		'string-replace:source',
 		'string-replace:readme',
 		'uglify',
-		'jsdoc',
+		// 'jsdoc',
 		'string-replace:docs'
 	]);
 	

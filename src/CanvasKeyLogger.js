@@ -1,7 +1,6 @@
 class CanvasKeyLogger{
 
 	constructor(options){
-
 		// The element to attach the listener to.
 		this.element = options.element || document;
 
@@ -32,7 +31,7 @@ class CanvasKeyLogger{
 	}
 
 	key_event_handler(e){
-
+		
 		if(CanvasKeyLogger.NAMED_INPUT_KEYS[e.key]){
 			input.splice(this.cursor_pos, 0, CanvasKeyLogger.NAMED_INPUT_KEYS[e.key]);
 			this.cursor_pos++;
