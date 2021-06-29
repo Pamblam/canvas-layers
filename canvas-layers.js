@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v2.1.34
+ * canvas-layers - v2.1.48
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 2.1.34
+ * @version 2.1.48
  */
 class Canvas{
 	
@@ -1115,7 +1115,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '2.1.34';
+Canvas.version = '2.1.48';
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -1669,8 +1669,18 @@ class DrawingCanvas extends Canvas{
 	 * create or update the current active layer
 	 */
 	renderLayer(){
+		
+		
+		
 		// Copy the rcavnas image to the canvas, crop it and render it to a dataURL
-		const {x, y, width, height} = this.layer_dimensions;
+		var {x, y, width, height} = this.layer_dimensions;
+		
+		width += this.rctx.lineWidth * 2;
+		height += this.rctx.lineWidth * 2;
+		x -= this.rctx.lineWidth;
+		y -= this.rctx.lineWidth;
+		
+		
 		this.ccanvas.width = width;
 		this.ccanvas.height = height;
 		this.cctx.clearRect(0, 0, width, height);
@@ -2416,7 +2426,10 @@ class TypingCanvas extends DrawingCanvas{
 		this.canvas.addEventListener('mouseup', this.onmouseup.bind(this));
 		
 		
+		this.rcanvas.style.border = "1px solid black";
+		this.ccanvas.style.border = "1px solid black";
 		document.body.appendChild(this.rcanvas);
+		document.body.appendChild(this.ccanvas);
 	}
 	
 	/**

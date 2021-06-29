@@ -122,8 +122,18 @@ class DrawingCanvas extends Canvas{
 	 * create or update the current active layer
 	 */
 	renderLayer(){
+		
+		
+		
 		// Copy the rcavnas image to the canvas, crop it and render it to a dataURL
-		const {x, y, width, height} = this.layer_dimensions;
+		var {x, y, width, height} = this.layer_dimensions;
+		
+		width += this.rctx.lineWidth * 2;
+		height += this.rctx.lineWidth * 2;
+		x -= this.rctx.lineWidth;
+		y -= this.rctx.lineWidth;
+		
+		
 		this.ccanvas.width = width;
 		this.ccanvas.height = height;
 		this.cctx.clearRect(0, 0, width, height);

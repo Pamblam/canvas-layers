@@ -27,7 +27,10 @@ class TypingCanvas extends DrawingCanvas{
 		this.canvas.addEventListener('mouseup', this.onmouseup.bind(this));
 		
 		
+		this.rcanvas.style.border = "1px solid black";
+		this.ccanvas.style.border = "1px solid black";
 		document.body.appendChild(this.rcanvas);
+		document.body.appendChild(this.ccanvas);
 	}
 	
 	/**
