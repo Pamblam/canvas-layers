@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v2.1.70
+ * canvas-layers - v2.1.77
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 2.1.70
+ * @version 2.1.77
  */
 class Canvas{
 	
@@ -1115,7 +1115,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '2.1.70';
+Canvas.version = '2.1.77';
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -1670,7 +1670,6 @@ class DrawingCanvas extends Canvas{
 	 * create or update the current active layer
 	 */
 	renderLayer(){
-		
 		// Copy the rcavnas image to the canvas, crop it and render it to a dataURL
 		var {x, y, width, height} = this.layer_dimensions;
 		
@@ -1678,7 +1677,6 @@ class DrawingCanvas extends Canvas{
 		height += this.rctx.lineWidth * 2;
 		x -= this.rctx.lineWidth;
 		y -= this.rctx.lineWidth;
-		
 		
 		this.ccanvas.width = width;
 		this.ccanvas.height = height;
@@ -2423,6 +2421,9 @@ class TypingCanvas extends DrawingCanvas{
 		
 		// We need a mouseup event listener to know when the boundary is drawn...
 		this.canvas.addEventListener('mouseup', this.onmouseup.bind(this));
+		
+		document.body.appendChild(this.ccanvas);
+		document.body.appendChild(this.rcanvas);
 	}
 	
 	/**
@@ -2511,19 +2512,23 @@ class TypingCanvas extends DrawingCanvas{
 	 */
 	editTextLayer(layer){
 		this.drawing_layer = layer;
-		this.shape_start_pos = layer.properties.shape_start_pos;
 		this.boundry_defined = true;
 		
-		
+		var x_diff = layer.properties.last_position.x - layer.x;
+		var y_diff = layer.properties.last_position.y - layer.y;
 		
 		this.layer_dimensions = layer.properties.layer_dimensions;
-		this.layer_dimensions.x = this.drawing_layer.x - (this.drawing_layer.width / 2);
-		this.layer_dimensions.y = this.drawing_layer.y - (this.drawing_layer.height / 2);
+		this.layer_dimensions.x -= x_diff;
+		this.layer_dimensions.y -= y_diff;
 		
+		this.shape_start_pos = layer.properties.shape_start_pos;
+		this.shape_start_pos.x -= x_diff;
+		this.shape_start_pos.y -= y_diff;
 		
 		this.font_face = layer.properties.font_face;
 		this.font_size = layer.properties.font_size;
 		this.font_color = layer.properties.font_color;
+		
 		this.activateTypeArea();
 		this.keylogger.input = layer.properties.keylogger_input;
 		this.keylogger.cursor_pos = this.keylogger.input.length;
@@ -2548,6 +2553,10 @@ class TypingCanvas extends DrawingCanvas{
 		this.drawing_layer.properties.shape_start_pos = this.shape_start_pos;
 		this.drawing_layer.properties.layer_dimensions = this.layer_dimensions;
 		this.drawing_layer.properties.keylogger_input = this.keylogger ? this.keylogger.input : [];
+		this.drawing_layer.properties.last_position = {
+			x: this.drawing_layer.x,
+			y: this.drawing_layer.y
+		};
 	}
 	
 	/**

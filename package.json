@@ -1,6 +1,6 @@
 {
   "name": "canvas-layers",
-  "version": "2.1.71",
+  "version": "2.1.78",
   "description": "Allow user to position and re-arrange images on a canvas.",
   "main": "canvas-layers.js",
   "scripts": {

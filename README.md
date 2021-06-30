@@ -1,6 +1,6 @@
 ![Canvas Layers Logo](logo.png)
 
-v. 2.1.70
+v. 2.1.77
 
 Canvas Layers is a Javascript library that makes it easy for users to position images on a canvas, or to crop images.
 
