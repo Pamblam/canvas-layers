@@ -39,6 +39,7 @@ class CanvasLayer{
 		this.allowOverlap = allowOverlap;
 		this.load_cb_stack = [];
 		
+		// Offset if in a for layer groups
 		this.xoffset = 0;
 		this.yoffset = 0;
 		this.roffset = 0;

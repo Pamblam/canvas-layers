@@ -50,7 +50,7 @@
 				<label>Freehand Tool <input type="radio" name="tool" value='freehand'></label> | 
 				<label>Text Tool <input type="radio" name="tool" value='text'></label>
 				
-				<div id="text-input-settings" style="display:none;">
+				<div id="text-input-settings">
 					<label>Font Face: <select id="font-face-select"></select></label>
 					<label>Font Size: <input type="number" id="font-size-input" value="12" min="1"></label>
 					<label>Font Color: <input type="color" id="font-color-input" value="#000000"></label>
@@ -113,13 +113,9 @@
 			document.querySelectorAll("input[name=tool]").forEach(ele=>{
 				ele.addEventListener('change', function(){
 					var value = document.querySelector("input[type=radio]:checked").value;
-					if(value === 'text'){
-						text_settings.style.display = 'block';
-					}else{
-						text_settings.style.display = 'none';
-					}
 					if(value === 'select') value = null;
 					canvas.drawing_mode = value;
+					canvas.deSelectLayer();
 				});
 			});
 			

@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v2.1.48
+ * canvas-layers - v2.1.70
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 2.1.48
+ * @version 2.1.70
  */
 class Canvas{
 	
@@ -1115,7 +1115,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '2.1.48';
+Canvas.version = '2.1.70';
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -1272,6 +1272,7 @@ class CanvasLayer{
 		this.allowOverlap = allowOverlap;
 		this.load_cb_stack = [];
 		
+		// Offset if in a for layer groups
 		this.xoffset = 0;
 		this.yoffset = 0;
 		this.roffset = 0;
@@ -1669,8 +1670,6 @@ class DrawingCanvas extends Canvas{
 	 * create or update the current active layer
 	 */
 	renderLayer(){
-		
-		
 		
 		// Copy the rcavnas image to the canvas, crop it and render it to a dataURL
 		var {x, y, width, height} = this.layer_dimensions;
@@ -2424,12 +2423,6 @@ class TypingCanvas extends DrawingCanvas{
 		
 		// We need a mouseup event listener to know when the boundary is drawn...
 		this.canvas.addEventListener('mouseup', this.onmouseup.bind(this));
-		
-		
-		this.rcanvas.style.border = "1px solid black";
-		this.ccanvas.style.border = "1px solid black";
-		document.body.appendChild(this.rcanvas);
-		document.body.appendChild(this.ccanvas);
 	}
 	
 	/**
@@ -2445,6 +2438,10 @@ class TypingCanvas extends DrawingCanvas{
 		this.drawBoundary();
 	}
 	
+	/**
+	 * Draws the text boundary rectangle
+	 * @returns {undefined}
+	 */
 	drawBoundary(){
 		var {x, y, width, height} = this.layer_dimensions;
 		
@@ -2462,14 +2459,6 @@ class TypingCanvas extends DrawingCanvas{
 	}
 	
 	/**
-	 * Set the cursor appropriately when over an editable text layer...
-	 * @todo
-	 */
-	setCursor(){
-		return super.setCursor();
-	}
-	
-	/**
 	 * @ignore
 	 * On mousedown we set flags to render a new layer on mouse move
 	 */
@@ -2479,9 +2468,16 @@ class TypingCanvas extends DrawingCanvas{
 		// If there is NOT an active drawing layer, start one
 		if(!this.drawing_layer){
 			
-			this.is_mouse_down = true;
-			this.shape_start_pos = this.canvasMousePos(e);
-			this.renderLayer();
+			var {x, y} = this.canvasMousePos(e);
+			var layer = this.getLayerAt(x, y);
+			if(layer && layer.properties.is_text_layer){
+				// selecting the clicked on text layer
+				this.editTextLayer(layer);
+			}else{
+				// starting a new boundary box
+				this.is_mouse_down = true;
+				this.shape_start_pos = this.canvasMousePos(e);
+			}
 			
 		}else{
 			
@@ -2509,11 +2505,49 @@ class TypingCanvas extends DrawingCanvas{
 		}
 	}
 	
+	/**
+	 * Edit the provided text layer
+	 * @ignore
+	 */
+	editTextLayer(layer){
+		this.drawing_layer = layer;
+		this.shape_start_pos = layer.properties.shape_start_pos;
+		this.boundry_defined = true;
+		
+		
+		
+		this.layer_dimensions = layer.properties.layer_dimensions;
+		this.layer_dimensions.x = this.drawing_layer.x - (this.drawing_layer.width / 2);
+		this.layer_dimensions.y = this.drawing_layer.y - (this.drawing_layer.height / 2);
+		
+		
+		this.font_face = layer.properties.font_face;
+		this.font_size = layer.properties.font_size;
+		this.font_color = layer.properties.font_color;
+		this.activateTypeArea();
+		this.keylogger.input = layer.properties.keylogger_input;
+		this.keylogger.cursor_pos = this.keylogger.input.length;
+		this.renderTypeArea();
+	}
+	
+	/**
+	 * Deselect any active layers and disable any editable textareas on the canvas.
+	 * @returns {undefined}
+	 */
+	deSelectLayer(){
+		super.deSelectLayer();
+		this.resetTextEditor();
+	}
+	
 	renderLayer(){
 		super.renderLayer();
+		this.drawing_layer.properties.is_text_layer = true;
 		this.drawing_layer.properties.font_face = this.font_face;
 		this.drawing_layer.properties.font_size = this.font_size;
 		this.drawing_layer.properties.font_color = this.font_color;
+		this.drawing_layer.properties.shape_start_pos = this.shape_start_pos;
+		this.drawing_layer.properties.layer_dimensions = this.layer_dimensions;
+		this.drawing_layer.properties.keylogger_input = this.keylogger ? this.keylogger.input : [];
 	}
 	
 	/**
@@ -2521,25 +2555,29 @@ class TypingCanvas extends DrawingCanvas{
 	 * @returns {undefined}
 	 */
 	renderTypeArea(active=true){
+		var is_text_layer_active = this.drawing_layer && this.drawing_layer.properties.is_text_layer;
 		
 		this.rctx.clearRect(0, 0, this.width, this.height);
-		if(active) this.drawBoundary();
+		if(active && is_text_layer_active){
+			this.drawBoundary();
+		}
 		
-		this.rctx.save();
-		var style = [];
-		if(this.font_size) style.push(this.font_size+"px")
-		if(this.font_face) style.push(this.font_face);
-		if(style.length) this.rctx.font = style.join(' ');
-		if(this.font_color) this.rctx.fillStyle = this.font_color;
-		var text = this.keylogger.val(true, active && this.flashing_cursor_visible ? "|" : '').join('');
-		this.rctx.textBaseline = "top";
+		if(is_text_layer_active){
+			this.rctx.save();
+			var style = [];
+			if(this.font_size) style.push(this.font_size+"px")
+			if(this.font_face) style.push(this.font_face);
+			if(style.length) this.rctx.font = style.join(' ');
+			if(this.font_color) this.rctx.fillStyle = this.font_color;
+			var text = this.keylogger.val(true, active && this.flashing_cursor_visible ? "|" : '').join('');
+			this.rctx.textBaseline = "top";
+
+			this.rctx.fillText(text, this.shape_start_pos.x, this.shape_start_pos.y);
+			this.rctx.restore();
+			this.renderLayer();
+		}
 		
-		console.log("Rendering: ", text, style.join(' '));
 		
-		this.rctx.fillText(text, this.shape_start_pos.x, this.shape_start_pos.y);
-		this.rctx.restore();
-		
-		this.renderLayer();
 	}
 	
 	/**
@@ -2568,26 +2606,28 @@ class TypingCanvas extends DrawingCanvas{
 	 * @returns {undefined}
 	 */
 	resetTextEditor(){
-		
 		this.renderTypeArea(false);
-		this.renderLayer();
-		
 		this.drawing_layer = null;
 		this.layer_dimensions = null;
 		this.boundry_defined = false;
 		this.flashing_cursor_visible = false;
 		if(this.flashing_cursor_timer){
 			clearInterval(this.flashing_cursor_timer);
+			this.flashing_cursor_timer = null;
 		}
-		this.keylogger.disable();
-		this.keylogger = null;
+		if(this.keylogger){
+			this.keylogger.disable();
+			this.keylogger = null;
+		}
 		this.shape_start_pos = null;
 	}
 	
 	onmouseup(){
 		if(this.drawing_mode !== 'text' || this.boundry_defined) return;
-		this.boundry_defined = true;
-		this.activateTypeArea();
+		if(this.shape_start_pos !== null){
+			this.boundry_defined = true;
+			this.activateTypeArea();
+		}
 	}
 	
 	/**
