@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Test...</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<style>
+			canvas{
+				border: 1px solid black;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>
+		<script src="../src/CanvasTextStyle.js"></script>
+		<script src="../src/CanvasTextLine.js"></script>
+		<script src="../src/CanvasTextChar.js"></script>
+		<script>
+			//------------------------------------------------------------------
+			//-- Config options ------------------------------------------------
+			//------------------------------------------------------------------
+			
+			var boundary_width = 750;
+			var boundary_height = 500;
+			var text_spacing = -3;
+			var line_spacing = 5;
+			var font = '50px Apple Chancery';
+			var text = 'Two driven jocks help fax my big quiz. The jay, pig, fox, zebra and my wolves quack! Sympathizing would fix Quaker objectives. A wizard\'s job is to vex chumps quickly in fog.';
+			
+			//------------------------------------------------------------------
+			//-- Setup Canvas --------------------------------------------------
+			//------------------------------------------------------------------
+			
+			var canvas = document.getElementById('canvas');
+			var ctx = canvas.getContext('2d');
+			canvas.width = boundary_width;
+			canvas.height = boundary_height;
+			
+			var textStyle = new CanvasTextStyle({
+				font: font,
+				fill_style: 'black',
+				text_align: 'left',
+				base_line: 'top'
+			});
+			
+			textStyle.setContext(ctx);
+			
+			//------------------------------------------------------------------
+			//-- Calculate coordinates of characters ---------------------------
+			//------------------------------------------------------------------
+			
+			function generateCanvasTextLines(ctx, text, boundary_width, text_spacing, line_spacing){
+				// Array of objects that represent lines of text
+				var text_lines = [];
+
+				// Current x/y coords
+				var current_x = 0;
+				var current_y = 0;
+
+				// The line we are currently building
+				var current_line = new CanvasTextLine(ctx, {y: current_y});
+
+				// The most recent state of the line 
+				// when it did not exceed the available width
+				// or null when there wasn't one
+				var last_safe_line = null;
+
+				// Array of characters in the text
+				var characters = text.split('');
+
+				for(let i=0; i<characters.length; i++){
+
+					// The current char
+					let character = characters[i];
+
+					let char_obj = new CanvasTextChar(ctx, {
+						char: character,
+						text_spacing
+					});
+
+					current_line.chars.push(char_obj);				
+
+					char_obj.x = current_x;
+					current_line.width += char_obj.width;
+
+					// If we're on the first character of the line, increase the 
+					// current x position by the width of the character, else shift 
+					// the current character to the left to line up with the 
+					// text alignment line
+					if(current_x > 0){
+						char_obj.x = current_x - char_obj.bounding_left;
+						current_line.width -= char_obj.bounding_left;
+						current_x += char_obj.width-char_obj.bounding_left;
+					}else{
+						current_x += char_obj.width;
+					}
+
+					// If it's whitespace, mark it as a potential break point
+					if(character.match(/\s/)){
+						last_safe_line = current_line.clone();
+						last_safe_line.index_break_pos = i;
+					}
+
+					// If the current line exceeds available width, 
+					// push the last safe line onto the list and reset the
+					// current line
+					if(boundary_width && current_line.width > boundary_width && last_safe_line){
+
+						// Push the last safe line onto the lines array
+						text_lines.push(last_safe_line);
+
+						// Reset the loop position
+						i = last_safe_line.index_break_pos;
+
+						// Reset the x and y positions for the new line
+						current_x = 0;
+						current_y += last_safe_line.getHeight(ctx) + line_spacing;
+
+						// Reset the last safe line
+						last_safe_line = null;
+
+						// Set the current line to a new position
+						current_line = new CanvasTextLine(ctx, {y: current_y});
+					}
+
+					// If we're on the last iteration and still have partial lines,
+					// push the partial line onto the lines array
+					if(i == characters.length-1 && current_line.chars.length){
+						text_lines.push(current_line);
+					}
+
+				}
+				
+				return text_lines;
+			}
+			
+			
+			//------------------------------------------------------------------
+			// --- Print Text on canvas ----------------------------------------
+			//------------------------------------------------------------------
+			
+			
+			var text_lines = generateCanvasTextLines(ctx, text, boundary_width, text_spacing, line_spacing);
+			for(let i=0; i<text_lines.length; i++){
+				let chars = text_lines[i].getChars(ctx);
+				for(let n=0; n<chars.length; n++){
+					let char = chars[n];
+					
+					ctx.fillText(char.char, char.x, char.y);
+					
+//					ctx.save();
+//					ctx.beginPath();
+//					ctx.strokeStyle = 'blue';
+//					let {x, y, width, height} = char.getBoundingBox();
+//					ctx.rect(x, y, width, height);
+//					ctx.stroke();
+//					ctx.restore();
+				}
+			}
+			
+
+		</script>
+	</body>
+</html>

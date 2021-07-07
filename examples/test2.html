@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Test...</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<style>
+			canvas{
+				border: 1px solid black;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>
+		<script src="../src/CanvasTextStyle.js"></script>
+		<script>
+			//-- Config options ------------------------------------------------
+			
+			var boundary_width = 750;
+			var boundary_height = 500;
+			var text_spacing = 0;
+			var line_spacing = 2;
+			var font = '50px Apple Chancery';
+			var text = 'This is a little test testing line wrap and stuff on canvas because i heart to fart and such and things and what not';
+			
+			//------------------------------------------------------------------
+			
+			var canvas = document.getElementById('canvas');
+			var ctx = canvas.getContext('2d');
+			canvas.width = boundary_width;
+			canvas.height = boundary_height;
+			
+			var textStyle = new CanvasTextStyle({
+				font: font,
+				fill_style: 'black',
+				text_align: 'left',
+				base_line: 'top'
+			});
+			
+			textStyle.setContext(ctx);
+			
+			class TextLine{
+				constructor(opts={}){
+					this.width = opts.width || 0;
+					this.index_break_pos = opts.index_break_pos || 0;
+					this.chars = opts.chars ? opts.chars.map(char=>new TextChar(char)) : [];
+				}
+				clone(){ 
+					return new TextLine({
+						width: this.width,
+						index_break_pos: this.index_break_pos,
+						chars: this.chars.map(char=>char.serialize())
+					}); 
+				}
+			}
+			
+			class TextChar{
+				constructor(opts){
+					this.char = opts.char || '';
+					this.width = opts.width || 0;
+					this.height = opts.height || 0;
+					this.x = opts.x || 0;
+					this.ascent = opts.ascent || 0;
+					this.bounding_left = opts.bounding_left || 0;
+				}
+				serialize(){
+					return {
+						char: this.char,
+						width: this.width,
+						height: this.height,
+						x: this.x,
+						ascent: this.ascent,
+						bounding_left: this.bounding_left
+					}
+				}
+			}
+			
+			// Array of objects that represent lines of text
+			var text_lines = [];
+			
+			// Current x/y coords
+			var current_x = 0;
+			
+			// The line we are currently building
+			var current_line = new TextLine({});
+			
+			// The most recent state of the line 
+			// when it did not exceed the available width
+			// or null when there wasn't one
+			var last_safe_line = null;
+			
+			// Array of characters in the text
+			var characters = text.split('');
+			
+			for(let i=0; i<characters.length; i++){
+				
+				// The current char
+				let character = characters[i];
+				
+				let metrics = ctx.measureText(character===' '?'_':character);
+				let width = (Math.abs(metrics.actualBoundingBoxLeft) + Math.abs(metrics.actualBoundingBoxRight));
+				let height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+				let ascent = metrics.actualBoundingBoxAscent;
+				let bounding_left = metrics.actualBoundingBoxLeft;
+						
+				if(character === 'f'){
+					console.log(metrics.actualBoundingBoxLeft);
+				}
+						
+				if(current_x > 0){
+					//width -= bounding_left;
+					current_x -= bounding_left;
+				}
+						
+				width += text_spacing;
+				let char_obj = new TextChar({
+					width, 
+					height, 
+					ascent,
+					char: character,
+					x: current_x,
+					bounding_left
+				});
+				current_line.chars.push(char_obj);
+				current_line.width += width;
+				
+				current_x += width;
+				
+				// Rolling line dimensions
+				let line_width = 0;
+				
+				// If it's whitespace, mark it as a potential break point
+				if(character.match(/\s/)){
+					last_safe_line = current_line.clone();
+					last_safe_line.index_break_pos = i;
+				}
+				
+				// If the current line exceeds available width, 
+				// push the last safe line onto the list and reset the
+				// current line
+				if(current_line.width > boundary_width && last_safe_line){
+					
+					// Push the last safe line onto the lines array
+					text_lines.push(last_safe_line);
+					
+					// Reset the loop position
+					i = last_safe_line.index_break_pos;
+					
+					// Reset the last safe line
+					last_safe_line = null;
+					
+					// Set the current line to a new position
+					current_line = new TextLine({});
+					
+					// Reset the x position for the new line
+					current_x = 0;
+				}
+				
+				// If we're on the last iteration and still have partial lines,
+				// push the partial line onto the lines array
+				if(i == characters.length-1 && current_line.chars.length){
+					text_lines.push(current_line);
+				}
+				
+			}
+			
+			console.log(text_lines);
+			
+			// --- Print Text on canvas ----------------------------------------
+			var y_pos = 0, x_pos = 0;
+			for(let i=0; i<text_lines.length; i++){
+				x_pos = 0;
+				let line = text_lines[i];
+				let line_text = line.chars.map(c=>c.char).join('');
+				let line_metrics = ctx.measureText(line_text);
+				let line_ascent = line_metrics.actualBoundingBoxAscent;
+				let line_height = getLineHeight(ctx, line_text);
+				
+				for(let n=0; n<line.chars.length; n++){
+					let char = line.chars[n];
+					var baseline_offset = line_ascent - char.ascent;
+					
+					var actual_x = x_pos > 0 ? x_pos-char.bounding_left : x_pos;
+					console.log(char.char, char.bounding_left);
+					
+					fillTextCorrected(ctx, char.char, actual_x, y_pos+baseline_offset);
+					
+//					ctx.save();
+//					ctx.beginPath();
+//					ctx.strokeStyle = 'red';
+//					ctx.rect(x_pos+char.bounding_left, y_pos+baseline_offset, char.width-char.bounding_left, char.height);
+//					ctx.stroke();
+//					ctx.restore();
+					
+					ctx.save();
+					ctx.beginPath();
+					ctx.strokeStyle = 'blue';
+					ctx.rect(actual_x, y_pos+baseline_offset, char.width, char.height);
+					ctx.stroke();
+					ctx.restore();
+					
+					x_pos += x_pos > 0 ? char.width-char.bounding_left : char.width;
+				}
+				
+				y_pos += line_height + line_spacing;
+			}
+			
+			// Get text width and height
+			function getTextSize(ctx, text){
+				let metrics = ctx.measureText(text);
+				return {
+					width: metrics.width,
+					height: metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
+				}
+			}
+			
+			function getLineHeight(ctx, text){
+				ctx.save();
+				ctx.textBaseline = 'top';
+				var top = ctx.measureText(text).actualBoundingBoxAscent;
+				ctx.textBaseline = 'bottom';
+				var bottom = ctx.measureText(text).actualBoundingBoxAscent;
+				ctx.restore();
+				return bottom - top;
+			}
+			
+			function fillTextCorrected(ctx, text, x, y){
+				let metrics = ctx.measureText(text);
+				x += metrics.actualBoundingBoxLeft;
+				y += metrics.actualBoundingBoxAscent;
+				ctx.fillText(text, x, y);
+			}
+
+		</script>
+	</body>
+</html>

@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v2.1.77
+ * canvas-layers - v2.1.112
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 2.1.77
+ * @version 2.1.112
  */
 class Canvas{
 	
@@ -1115,7 +1115,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '2.1.77';
+Canvas.version = '2.1.112';
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -2239,9 +2239,9 @@ class CanvasKeyLogger{
 	key_event_handler(e){
 		
 		if(CanvasKeyLogger.NAMED_INPUT_KEYS[e.key]){
-			input.splice(this.cursor_pos, 0, CanvasKeyLogger.NAMED_INPUT_KEYS[e.key]);
+			this.input.splice(this.cursor_pos, 0, CanvasKeyLogger.NAMED_INPUT_KEYS[e.key]);
 			this.cursor_pos++;
-			this.on_input();
+			this.on_input(e);
 		}
 
 		else if(CanvasKeyLogger.CONTROL_KEYS.includes(e.key)){
@@ -2283,14 +2283,14 @@ class CanvasKeyLogger{
 					if(this.cursor_pos > 0){
 						this.input.splice(this.cursor_pos-1, 1);
 						this.cursor_pos--;
-						this.on_input();
+						this.on_input(e);
 					}
 					break;
 
 				case 'Delete':
 					if(this.input.length > this.cursor_pos){
 						this.input.splice(this.cursor_pos, 1);
-						this.on_input();
+						this.on_input(e);
 					}
 					break;
 
@@ -2300,7 +2300,7 @@ class CanvasKeyLogger{
 		else if(!CanvasKeyLogger.NON_INPUT_KEYS.includes(e.key)){
 			this.input.splice(this.cursor_pos, 0, e.key);
 			this.cursor_pos++;
-			this.on_input();
+			this.on_input(e);
 		}
 	}
 
@@ -2403,7 +2403,7 @@ class TypingCanvas extends DrawingCanvas{
 		// Font style options
 		this.font_face = opts.font_face || null;
 		this.font_color = opts.font_color || null;
-		this.font_size = opts.font_size || null;
+		this.font_size = opts.font_size || 12;
 		
 		// Flag to indicate if the user has finished defining the boundary box
 		this.boundry_defined = false;
@@ -2457,6 +2457,35 @@ class TypingCanvas extends DrawingCanvas{
 		this.rctx.stroke();
 		this.rctx.restore();
 		this.renderLayer();
+	}
+	
+	/**
+	 * Given a context and some text it returns the width and height of the text
+	 * @param {type} ctx
+	 * @param {type} text
+	 * @returns {TypingCanvas.getTextSize.TypingCanvasAnonym$2}
+	 */
+	getTextSize(ctx, text){
+		let metrics = ctx.measureText(text);
+		return {
+			width: metrics.width,
+			height: metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
+		}
+	}
+
+	/**
+	 * Draw text using the actual top left corner as a reference point
+	 * @param {type} ctx
+	 * @param {type} text
+	 * @param {type} x
+	 * @param {type} y
+	 * @returns {undefined}
+	 */
+	fillTextCorrected(ctx, text, x, y){
+		let metrics = ctx.measureText(text);
+		x += metrics.actualBoundingBoxLeft;
+		y += metrics.actualBoundingBoxAscent;
+		ctx.fillText(message, x, y);
 	}
 	
 	/**
@@ -2572,21 +2601,163 @@ class TypingCanvas extends DrawingCanvas{
 		}
 		
 		if(is_text_layer_active){
+			
 			this.rctx.save();
-			var style = [];
-			if(this.font_size) style.push(this.font_size+"px")
-			if(this.font_face) style.push(this.font_face);
-			if(style.length) this.rctx.font = style.join(' ');
-			if(this.font_color) this.rctx.fillStyle = this.font_color;
-			var text = this.keylogger.val(true, active && this.flashing_cursor_visible ? "|" : '').join('');
-			this.rctx.textBaseline = "top";
 
-			this.rctx.fillText(text, this.shape_start_pos.x, this.shape_start_pos.y);
+			var textStyle = new CanvasTextStyle({base_line: 'top'});
+			if(this.font_size) textStyle.setFontSize(this.font_size+"px");
+			if(this.font_face) textStyle.setFontFamily(this.font_face);
+			if(this.font_color) textStyle.setFillStyle(this.font_color);
+			textStyle.setFillStyle(this.font_color);
+			textStyle.setContext(this.rctx);
+
+			var {x, y, width, height} = this.layer_dimensions;
+			var text_spacing = 0; // add this to the class later...
+			var line_spacing = 0; // add to class later
+			var text_lines = this.generateCanvasTextLines(this.rctx, this.keylogger.val(), width, text_spacing, line_spacing);
+			
+			var char_before_cursor = null;
+			var char_idx = 0;
+			for(let i=0; i<text_lines.length; i++){
+				let chars = text_lines[i].getChars(this.rctx);
+				for(let n=0; n<chars.length; n++){
+					char_idx++;
+					if(this.keylogger.cursor_pos === char_idx) char_before_cursor = chars[n];
+					this.rctx.fillText(chars[n].char, x+chars[n].x, y+chars[n].y);
+					
+				}
+			}
+			
+			if(char_before_cursor && char_before_cursor.char === "\n"){
+				console.log("Found line break...",text_lines);
+			}
+			
+			if(this.flashing_cursor_visible){
+				let cursor_x = char_before_cursor ? x+char_before_cursor.x+char_before_cursor.width : x;
+				let cursor_start_y = char_before_cursor ? y+char_before_cursor.y : y;
+				let cursor_end_y = char_before_cursor ? y+char_before_cursor.y+this.font_size : y+this.font_size;
+				
+				this.rctx.strokeStyle = '#000000';
+				this.rctx.lineWidth = 2;
+				
+				this.rctx.beginPath();
+				this.rctx.moveTo(cursor_x, cursor_start_y);
+				this.rctx.lineTo(cursor_x, cursor_end_y);
+				this.rctx.stroke();
+			}
+			
 			this.rctx.restore();
 			this.renderLayer();
 		}
 		
 		
+	}
+	
+	generateCanvasTextLines(ctx, text, boundary_width, text_spacing, line_spacing){
+		// Array of objects that represent lines of text
+		var text_lines = [];
+
+		// Current x/y coords
+		var current_x = 0;
+		var current_y = 0;
+
+		// The line we are currently building
+		var current_line = new CanvasTextLine(ctx, {y: current_y});
+
+		// The most recent state of the line 
+		// when it did not exceed the available width
+		// or null when there wasn't one
+		var last_safe_line = null;
+
+		// Array of characters in the text
+		var characters = text.split('');
+
+		for(let i=0; i<characters.length; i++){
+
+			// The current char
+			let character = characters[i];
+
+			let char_obj = new CanvasTextChar(ctx, {
+				char: character,
+				text_spacing
+			});
+
+							
+
+			// If the current char is a line break, force new line
+			if(character === "\n"){
+
+				// Reset the last safe line
+				last_safe_line = null;
+
+				// Set the current line to a new position
+				current_line = new CanvasTextLine(ctx, {y: current_y});
+				// Push the current line onto the lines array
+				text_lines.push(current_line);
+				
+				// Reset the x and y positions for the new line
+				current_x = 0;
+				current_y += current_line.getHeight(ctx) + line_spacing;
+			}
+			
+			current_line.chars.push(char_obj);
+
+
+			char_obj.x = current_x;
+			current_line.width += char_obj.width;
+
+			// If we're on the first character of the line, increase the 
+			// current x position by the width of the character, else shift 
+			// the current character to the left to line up with the 
+			// text alignment line
+			if(current_x > 0){
+				char_obj.x = current_x - char_obj.bounding_left;
+				current_line.width -= char_obj.bounding_left;
+				current_x += char_obj.width-char_obj.bounding_left;
+			}else{
+				current_x += char_obj.width;
+			} 
+			
+			// If it's whitespace, mark it as a potential break point
+			if(character.match(/\s/) && character !== "\n"){
+				
+				last_safe_line = current_line.clone();
+				last_safe_line.index_break_pos = i;
+			
+			}
+
+			// If the current line exceeds available width, 
+			// push the last safe line onto the list and reset the
+			// current line
+			if(boundary_width && current_line.width > boundary_width && last_safe_line){
+
+				// Push the last safe line onto the lines array
+				text_lines.push(last_safe_line);
+
+				// Reset the loop position
+				i = last_safe_line.index_break_pos;
+
+				// Reset the x and y positions for the new line
+				current_x = 0;
+				current_y += last_safe_line.getHeight(ctx) + line_spacing;
+
+				// Reset the last safe line
+				last_safe_line = null;
+
+				// Set the current line to a new position
+				current_line = new CanvasTextLine(ctx, {y: current_y});
+			}
+
+			// If we're on the last iteration and still have partial lines,
+			// push the partial line onto the lines array
+			if(i == characters.length-1 && current_line.chars.length){
+				text_lines.push(current_line);
+			}
+
+		}
+
+		console.log(text_lines);
+		return text_lines;
 	}
 	
 	/**
@@ -2596,11 +2767,15 @@ class TypingCanvas extends DrawingCanvas{
 	activateTypeArea(){
 		if(this.flashing_cursor_timer !== null) return;
 		this.keylogger = new CanvasKeyLogger({
-			on_input: () => {
+			on_input: (e) => {
 				if(this.drawing_layer){
+					e.preventDefault();
 					this.drawing_layer.properties.text = this.keylogger.val();
+					this.flashing_cursor_visible = true;
+					this.renderTypeArea();
+					
+					console.log(this.keylogger.val(true, '|').join(''));
 				}
-				this.renderTypeArea();
 			}
 		});
 		this.flashing_cursor_timer = setInterval(()=>{
@@ -2646,6 +2821,295 @@ class TypingCanvas extends DrawingCanvas{
 	onmousereset(e){
 		if(this.drawing_mode !== 'text') return super.onmousereset(e);
 		this.is_mouse_down = false;
+	}
+	
+}
+
+/**
+ * A class for managing text related properties for canvas rendering contexts
+ */
+class CanvasTextStyle{
+
+	constructor(opts){
+		this._fill_style = opts.fill_style || null;
+		this._text_align = opts.text_align || null;
+		this._base_line = opts.base_line || null;
+
+		this._font_families = opts.font_family ? this.parseFamiliesString(opts.font_family) : [];
+		this._font_size = opts.font_size || null;
+		this._font_style = opts.font_style || null;
+		this._font_variant = opts.font_variant || null;
+		this._font_weight = opts.font_weight || null;
+		
+		if(opts.font) this.setFontShorthand(opts.font);
+	}
+
+	/**
+	 * Set the style properties on the provided canvas rending context
+	 * @param {type} ctx
+	 * @returns {CanvasTextStyle}
+	 */
+	setContext(ctx){
+		var font = this.getFontShorthand();
+		ctx.font = font || undefined;
+		ctx.fillStyle = this._fill_style || undefined;
+		ctx.textAlign = this._text_align || undefined;
+		ctx.textBaseline = this._base_line || undefined;
+		return this;
+	}
+
+	/**
+	 * Set the baseline
+	 * @param {type} base_line
+	 * @returns {CanvasTextStyle}
+	 */
+	setBaseLine(base_line){this._base_line=base_line; return this; }
+	
+	/**
+	 * Get the baseline
+	 * @returns {type}
+	 */
+	getBaseLine(){return this._base_line;}
+	
+	/**
+	 * Set the text alignment property
+	 * @param {type} fill_style
+	 * @returns {CanvasTextStyle}
+	 */
+	setTextAlign(fill_style){this._text_align=fill_style; return this; }
+	
+	/**
+	 * Get the text align proerty
+	 * @returns {type}
+	 */
+	getTextAlign(){return this._text_align;}
+
+	/**
+	 * Set the fill style
+	 * @param {type} fill_style
+	 * @returns {CanvasTextStyle}
+	 */
+	setFillStyle(fill_style){this._fill_style=fill_style; return this;}
+	
+	/**
+	 * Get the fill style
+	 * @returns {type}
+	 */
+	getFillStyle(){return this._fill_style;}
+	
+	/**
+	 * Set the font size
+	 * @param {type} size
+	 * @returns {CanvasTextStyle}
+	 */
+	setFontSize(size){ this._font_size = size; return this; }
+	
+	/**
+	 * Get the font size
+	 * @param {type} size
+	 * @returns {font_family|type}
+	 */
+	getFontSize(size){ return this._font_size; }
+	
+	/**
+	 * Set the font style
+	 * @param {type} style
+	 * @returns {CanvasTextStyle}
+	 */
+	setFontStyle(style){ this._font_style = style; return this; }
+	
+	/**
+	 * Get the font style
+	 * @returns {font_family|type}
+	 */
+	getFontStyle(){ return this._font_style; }
+	
+	/**
+	 * Set the font variant
+	 * @param {type} variant
+	 * @returns {CanvasTextStyle}
+	 */
+	setFontVariant(variant){ this._font_variant = variant; return this; }
+	
+	/**
+	 * Get the font variant
+	 * @returns {type|font_family}
+	 */
+	getFontVariant(){ return this._font_variant; }
+	
+	/**
+	 * Set the font family
+	 * @param {type} font
+	 * @returns {CanvasTextStyle}
+	 */
+	setFontFamily(font){this._font_families = this.parseFamiliesString(font); return this; }
+	
+	/**
+	 * Get the font fmaily
+	 * @returns {unresolved}
+	 */
+	getFontFamily(){return this._font_families.length ? this._font_families.map(f=>`"${f}"`).join(", ") : null;}
+
+	/**
+	 * Set the font shorthand property
+	 * @param {type} font
+	 * @returns {CanvasTextStyle}
+	 */
+	setFontShorthand(font){
+		var regex = /^(normal|italic|oblique|initial|inherit)?\s*(normal|small-caps|initial|inherit)?\s*(normal|bold|bolder|lighter|number|initial|inherit)?\s*(medium|xx-small|x-small|small|large|x-large|xx-large|smaller|larger|(\d*)(cm|mm|in|px|pt|pc|em|ex|ch|rem|vw|vh|vmin|vmax|%)|initial|inherit)?\s*(.*)?$/;
+		var [full, font_style, font_variant, font_weight, font_size, font_size_length, font_size_unit, font_family] = font.match(regex);
+		this._font_families = font_family ? this.parseFamiliesString(font_family) : [];
+		this._font_size = font_size || null;
+		this._font_style = font_style || null;
+		this._font_variant = font_variant || null;
+		this._font_weight = font_weight || null;
+		return this;
+	}
+	
+	/**
+	 * Get the font shorthand property
+	 * @returns {String}
+	 */
+	getFontShorthand(){
+		var buffer = [];
+		if(this._font_style) buffer.push(this._font_style);
+		if(this._font_variant) buffer.push(this._font_variant);
+		if(this._font_weight) buffer.push(this._font_weight);
+		if(this._font_size) buffer.push(this._font_size);
+		var fam = this.getFontFamily();
+		if(fam) buffer.push(fam);
+		return buffer.join(' ');
+	}
+
+	/**
+	 * Parses a string with possibly quoted font names into an array of unquoted strings.
+	 * @param {type} family
+	 * @returns {unresolved}
+	 */
+	parseFamiliesString(family){
+		return family.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(fam=>{
+			fam = fam.trim();
+			if([`'`, `"`].includes(fam[0]) && fam[fam.length-1] == fam[0]){
+				fam = fam.substr(1, fam.length-2);
+			}
+			return fam;
+		}).filter(m=>!!m.trim());
+	}
+}
+
+/**
+ * A representation of a line of text to be drawn on a canvas
+ * @type type
+ */
+class CanvasTextLine{
+	
+	constructor(ctx, opts={}){
+		this.ctx = ctx;
+		this.y = opts.y || 0;
+		this.width = opts.width || 0;
+		this.index_break_pos = opts.index_break_pos || 0;
+		this.chars = opts.chars ? opts.chars.map(char=>new CanvasTextChar(ctx, char)) : [];
+	}
+	
+	/**
+	 * Create a copy of the current object
+	 * @returns {CanvasTextLine}
+	 */
+	clone(){ 
+		return new CanvasTextLine(this.ctx, {
+			width: this.width,
+			index_break_pos: this.index_break_pos,
+			chars: this.chars.map(char=>char.serialize()),
+			y: this.y
+		}); 
+	}
+	
+	/**
+	 * Return a copy of all the characters in this line with 
+	 * corrected y coordinates to be relative to the line's ascent
+	 * @param {type} ctx
+	 * @returns {undefined}
+	 */
+	getChars(ctx){
+		let line_ascent = this.getAscent(ctx);
+		var chars = [];
+		for(let n=0; n<this.chars.length; n++){
+			let char = new CanvasTextChar(this.ctx, this.chars[n].serialize());
+			var baseline_offset = line_ascent - char.ascent;
+			char.y = this.y + baseline_offset + char.ascent;;
+			char.x += char.bounding_left;
+			chars.push(char);
+		}
+		return chars;
+	}
+	
+	/**
+	 * Calculate the line ascent
+	 * @returns {undefined}
+	 */
+	getAscent(ctx){
+		let line_text = this.chars.map(c=>c.char).join('');
+		let line_metrics = ctx.measureText(line_text);
+		return line_metrics.actualBoundingBoxAscent;
+	}
+	
+	/**
+	 * Calculate the line height as the vertical distance between lines, 
+	 * not including any line spacing
+	 * @param {type} ctx
+	 * @returns {Number}
+	 */
+	getHeight(ctx){
+		let line_text = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+		ctx.save();
+		ctx.textBaseline = 'top';
+		var top = ctx.measureText(line_text).actualBoundingBoxAscent;
+		ctx.textBaseline = 'bottom';
+		var bottom = ctx.measureText(line_text).actualBoundingBoxAscent;
+		ctx.restore();
+		return bottom - top;
+	}
+	
+}
+
+/**
+ * A representation of a character of text to be drawn to canvas
+ * @type type
+ */
+class CanvasTextChar{
+	
+	constructor(ctx, opts){
+		this.ctx = ctx;
+		this.char = opts.char || '';
+		this.x = opts.x || 0;
+		this.text_spacing = opts.text_spacing || 0;
+		
+		var measure_char = this.char;
+		if(this.char === ' ') measure_char = '_';
+		if(this.char === "\n") measure_char = '|'
+		
+		let metrics = ctx.measureText(measure_char);
+		this.width = (Math.abs(metrics.actualBoundingBoxLeft) + Math.abs(metrics.actualBoundingBoxRight)) + this.text_spacing;
+		this.height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+		this.ascent = metrics.actualBoundingBoxAscent;
+		this.bounding_left = metrics.actualBoundingBoxLeft;
+	}
+	
+	getBoundingBox(){
+		return {
+			x: this.x - this.bounding_left,
+			y: this.y - this.ascent, 
+			width: this.width, 
+			height: this.height
+		};
+	}
+	
+	serialize(){
+		return {
+			char: this.char,
+			x: this.x,
+			text_spacing: this.text_spacing
+		}
 	}
 	
 }

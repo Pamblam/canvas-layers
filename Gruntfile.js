@@ -21,7 +21,11 @@ module.exports = function(grunt) {
 					'src/CanvasFonts.js',
 					'src/fonts-array.js',
 					'src/CanvasKeyLogger.js',
-					'src/TypingCanvas.js'
+					'src/TypingCanvas.js',
+					
+					'src/CanvasTextStyle.js',
+					'src/CanvasTextLine.js',
+					'src/CanvasTextChar.js'
 				],
 				dest: 'canvas-layers.js',
 			},

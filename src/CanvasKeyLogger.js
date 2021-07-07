@@ -33,9 +33,9 @@ class CanvasKeyLogger{
 	key_event_handler(e){
 		
 		if(CanvasKeyLogger.NAMED_INPUT_KEYS[e.key]){
-			input.splice(this.cursor_pos, 0, CanvasKeyLogger.NAMED_INPUT_KEYS[e.key]);
+			this.input.splice(this.cursor_pos, 0, CanvasKeyLogger.NAMED_INPUT_KEYS[e.key]);
 			this.cursor_pos++;
-			this.on_input();
+			this.on_input(e);
 		}
 
 		else if(CanvasKeyLogger.CONTROL_KEYS.includes(e.key)){
@@ -77,14 +77,14 @@ class CanvasKeyLogger{
 					if(this.cursor_pos > 0){
 						this.input.splice(this.cursor_pos-1, 1);
 						this.cursor_pos--;
-						this.on_input();
+						this.on_input(e);
 					}
 					break;
 
 				case 'Delete':
 					if(this.input.length > this.cursor_pos){
 						this.input.splice(this.cursor_pos, 1);
-						this.on_input();
+						this.on_input(e);
 					}
 					break;
 
@@ -94,7 +94,7 @@ class CanvasKeyLogger{
 		else if(!CanvasKeyLogger.NON_INPUT_KEYS.includes(e.key)){
 			this.input.splice(this.cursor_pos, 0, e.key);
 			this.cursor_pos++;
-			this.on_input();
+			this.on_input(e);
 		}
 	}
 

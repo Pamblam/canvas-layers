@@ -115,7 +115,6 @@
 					var value = document.querySelector("input[type=radio]:checked").value;
 					if(value === 'select') value = null;
 					canvas.drawing_mode = value;
-					canvas.deSelectLayer();
 				});
 			});
 			
@@ -132,6 +131,21 @@
 			width_input.value = 2;
 			canvas.setLineWidth(2);
 			document.querySelector("input[type=radio][value=select]").checked=true
+			
+			// deselct if not clicked on layer
+			document.addEventListener('click', function(e){
+				const {x, y} = canvas.canvasMousePos(e);
+				if(!canvas.getLayerAt(x, y)){
+					canvas.deSelectLayer();
+				}
+			});
+			
+			// deselct if not clicked on layer
+			document.addEventListener('focus', function(e){
+				if(e.target !== canvas.canvas){
+					canvas.deSelectLayer();
+				}
+			});
 			
 		</script>
 	</body>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Test...</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<style>
+			canvas{
+				border: 1px solid black;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>
+		<script src="../src/CanvasTextStyle.js"></script>
+		<script>
+			
+			
+			
+			
+			
+			var canvas = document.getElementById('canvas');
+			canvas.width = 500;
+			canvas.height = 1000;
+			var ctx = canvas.getContext('2d');
+			
+			var font = '100px Apple Chancery';
+			var message = 'This is a little test'.split('');
+			var x = 0, y = 0;
+			
+			var text_spacing = 0;
+			var line_spacing = 0;
+			
+			var cursorIndex = 3;
+			var wrap_width = 500;
+			
+			var textStyle = new CanvasTextStyle({
+				font: font,
+				fillStyle: 'black',
+				textAlign: 'left',
+				textBaseline: 'top'
+			});
+			
+			textStyle.setContext(ctx);
+			
+			var w =0, h=0;
+			var lines = [];
+			var line = "";
+			var last_break_pos = 0;
+			var last_break_height = 0;
+			var last_break_width = 0;
+			
+			for(var i=0; i<message.length; i++){
+				let char = message[i];
+				
+				line += char;
+				let {width, height} = getTextSize(ctx, line);
+				
+				if(char.match(/\s/)){
+					last_break_pos = i;
+					last_break_text = line;
+					last_break_height = height;
+					last_break_width = width;
+				}
+		
+				if((width > wrap_width && last_break_pos)){
+					lines.push({line, height:last_break_height, width:last_break_width});
+					i = last_break_pos;
+					last_break_pos = 0;
+					line = "";
+					w = Math.max(w, width);
+					h += height;
+				}else if(i==message.length-1){
+					lines.push({line, width, height});
+					w = Math.max(w, width);
+					h += height;
+				}
+			}
+			
+			fillTextCorrected(ctx, lines, x, y);
+
+			function getTextSize(ctx, text){
+				let metrics = ctx.measureText(text);
+				return {
+					width: metrics.width,
+					height: metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
+				}
+			}
+			
+			function fillTextCorrected(ctx, lines, x, y){
+				for(var line_no = 0; line_no < lines.length; line_no++){
+					let line = lines[line_no];
+					
+					let metrics = ctx.measureText(line.line);
+					x += metrics.actualBoundingBoxLeft;
+					y += metrics.actualBoundingBoxAscent;
+					
+					y += line.height;
+					ctx.fillText(line.line, x, y);
+					
+					console.log(line.line, x, y);
+				}
+			}
+
+		</script>
+	</body>
+</html>

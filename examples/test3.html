@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Test...</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<style>
+			canvas{
+				border: 1px solid black;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>
+		<canvas id="canvas2"></canvas>
+		<script src="../src/CanvasTextStyle.js"></script>
+		<script>
+			//-- Config options ------------------------------------------------
+			
+			var font = '50px Apple Chancery';
+			var text = 'This is a little test testing line wrap and stuff on canvas because i heart to fart and such and things and what not';
+			
+			//------------------------------------------------------------------
+			
+			var canvas = document.getElementById('canvas');
+			var ctx = canvas.getContext('2d');
+			
+			
+			var textStyle = new CanvasTextStyle({
+				font: font,
+				fill_style: 'black',
+				text_align: 'left',
+				base_line: 'top'
+			});
+			
+			textStyle.setContext(ctx);
+			
+			var metr = ctx.measureText(text);
+			
+			canvas.width = metr.width;
+			canvas.height = metr.actualBoundingBoxAscent + metr.actualBoundingBoxDescent
+			
+			textStyle.setContext(ctx);
+			fillTextCorrected(ctx, text, 0, 0);
+			
+			drawBaseline(ctx, font, "top", "green");
+			drawBaseline(ctx, font, "hanging", "red");
+			drawBaseline(ctx, font, "middle", "blue");
+			drawBaseline(ctx, font, "alphabetic", "pink");
+			drawBaseline(ctx, font, "ideographic", "orange");
+			drawBaseline(ctx, font, "bottom", "purple");
+			
+			function getLineHeight(ctx, text){
+				ctx.save();
+				ctx.textBaseline = 'top';
+				var top = ctx.measureText(text).actualBoundingBoxAscent;
+				ctx.textBaseline = 'bottom';
+				var bottom = ctx.measureText(text).actualBoundingBoxAscent;
+				ctx.restore();
+				return bottom - top;
+			}
+			
+			console.log(getLineHeight(ctx, text));
+			
+			function drawBaseline(ctx, font, baseline, color){
+				new CanvasTextStyle({
+					font: font,
+					fill_style: 'black',
+					text_align: 'left',
+					base_line: baseline
+				}).setContext(ctx);
+				var metr = ctx.measureText(text);
+				var asc = metr.actualBoundingBoxAscent;
+				drawLine(ctx, [0, asc], [metr.width, asc], color);
+			}
+			
+			function drawLine(ctx, start, stop, color){
+				ctx.strokeStyle = color;
+				ctx.beginPath();
+				ctx.moveTo(...start);
+				ctx.lineTo(...stop);
+				ctx.stroke();
+			}
+			
+			// Get text width and height
+			function getTextSize(ctx, text){
+				let metrics = ctx.measureText(text);
+				return {
+					width: metrics.width,
+					height: metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
+				}
+			}
+			
+			function fillTextCorrected(ctx, text, x, y){
+				let metrics = ctx.measureText(text);
+				x += metrics.actualBoundingBoxLeft;
+				y += metrics.actualBoundingBoxAscent;
+				ctx.fillText(text, x, y);
+			}
+
+		</script>
+	</body>
+</html>
