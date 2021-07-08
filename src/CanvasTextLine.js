@@ -11,6 +11,24 @@ class CanvasTextLine{
 		this.width = opts.width || 0;
 		this.index_break_pos = opts.index_break_pos || 0;
 		this.chars = opts.chars ? opts.chars.map(char=>new CanvasTextChar(ctx, char)) : [];
+		this.text_spacing = opts.text_spacing || 0;
+	}
+	
+	calculateWidth(){
+		
+	}
+	
+	/**
+	 * Add a character to the end of a line
+	 * @param {type} char
+	 * @returns {undefined}
+	 */
+	addCharacter(char){
+		this.chars.push(new CanvasTextChar(ctx, {
+			char: char,
+			text_spacing: this.text_spacing,
+			x: this.chars.length ? this.chars[this.chars.length-1].x + this.chars[this.chars.length-1].width : 0
+		}));
 	}
 	
 	/**

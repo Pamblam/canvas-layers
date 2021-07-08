@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v2.1.112
+ * canvas-layers - v2.1.113
  * Allow user to position and re-arrange images on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 2.1.112
+ * @version 2.1.113
  */
 class Canvas{
 	
@@ -1115,7 +1115,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '2.1.112';
+Canvas.version = '2.1.113';
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -2687,6 +2687,10 @@ class TypingCanvas extends DrawingCanvas{
 			// If the current char is a line break, force new line
 			if(character === "\n"){
 
+				// Reset the x and y positions for the new line
+				current_x = 0;
+				current_y += current_line.getHeight(ctx) + line_spacing;
+
 				// Reset the last safe line
 				last_safe_line = null;
 
@@ -2694,10 +2698,6 @@ class TypingCanvas extends DrawingCanvas{
 				current_line = new CanvasTextLine(ctx, {y: current_y});
 				// Push the current line onto the lines array
 				text_lines.push(current_line);
-				
-				// Reset the x and y positions for the new line
-				current_x = 0;
-				current_y += current_line.getHeight(ctx) + line_spacing;
 			}
 			
 			current_line.chars.push(char_obj);

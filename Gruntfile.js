@@ -24,6 +24,7 @@ module.exports = function(grunt) {
 					'src/TypingCanvas.js',
 					
 					'src/CanvasTextStyle.js',
+					'src/CanvasTextBody.js',
 					'src/CanvasTextLine.js',
 					'src/CanvasTextChar.js'
 				],

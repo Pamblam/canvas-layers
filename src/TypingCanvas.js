@@ -258,6 +258,25 @@ class TypingCanvas extends DrawingCanvas{
 	}
 	
 	generateCanvasTextLines(ctx, text, boundary_width, text_spacing, line_spacing){
+		
+		var textBody = new CanvasTextBody(ctx, {line_spacing, text_spacing, boundary_width});
+		
+		var characters = text.split('');
+
+		for(let i=0; i<characters.length; i++){
+
+			// The current char
+			let character = characters[i];
+			textBody.addCharacter(character);
+			
+			
+		}
+		
+	}
+	
+	
+	_generateCanvasTextLines(ctx, text, boundary_width, text_spacing, line_spacing){
+		
 		// Array of objects that represent lines of text
 		var text_lines = [];
 
@@ -355,6 +374,9 @@ class TypingCanvas extends DrawingCanvas{
 			// If we're on the last iteration and still have partial lines,
 			// push the partial line onto the lines array
 			if(i == characters.length-1 && current_line.chars.length){
+				current_x = 0;
+				current_y += (last_safe_line || current_line).getHeight(ctx) + line_spacing;
+				
 				text_lines.push(current_line);
 			}
 
