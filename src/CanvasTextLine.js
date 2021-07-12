@@ -15,7 +15,7 @@ class CanvasTextLine{
 	}
 	
 	calculateWidth(){
-		
+		return this.chars.reduce();
 	}
 	
 	/**
