@@ -275,116 +275,116 @@ class TypingCanvas extends DrawingCanvas{
 	}
 	
 	
-	_generateCanvasTextLines(ctx, text, boundary_width, text_spacing, line_spacing){
-		
-		// Array of objects that represent lines of text
-		var text_lines = [];
+			_generateCanvasTextLines(ctx, text, boundary_width, text_spacing, line_spacing){
 
-		// Current x/y coords
-		var current_x = 0;
-		var current_y = 0;
+				// Array of objects that represent lines of text
+				var text_lines = [];
 
-		// The line we are currently building
-		var current_line = new CanvasTextLine(ctx, {y: current_y});
+				// Current x/y coords
+				var current_x = 0;
+				var current_y = 0;
 
-		// The most recent state of the line 
-		// when it did not exceed the available width
-		// or null when there wasn't one
-		var last_safe_line = null;
+				// The line we are currently building
+				var current_line = new CanvasTextLine(ctx, {y: current_y});
 
-		// Array of characters in the text
-		var characters = text.split('');
+				// The most recent state of the line 
+				// when it did not exceed the available width
+				// or null when there wasn't one
+				var last_safe_line = null;
 
-		for(let i=0; i<characters.length; i++){
+				// Array of characters in the text
+				var characters = text.split('');
 
-			// The current char
-			let character = characters[i];
+				for(let i=0; i<characters.length; i++){
 
-			let char_obj = new CanvasTextChar(ctx, {
-				char: character,
-				text_spacing
-			});
+					// The current char
+					let character = characters[i];
 
-							
+					let char_obj = new CanvasTextChar(ctx, {
+						char: character,
+						text_spacing
+					});
 
-			// If the current char is a line break, force new line
-			if(character === "\n"){
 
-				// Reset the x and y positions for the new line
-				current_x = 0;
-				current_y += current_line.getHeight(ctx) + line_spacing;
 
-				// Reset the last safe line
-				last_safe_line = null;
+					// If the current char is a line break, force new line
+					if(character === "\n"){
 
-				// Set the current line to a new position
-				current_line = new CanvasTextLine(ctx, {y: current_y});
-				// Push the current line onto the lines array
-				text_lines.push(current_line);
+						// Reset the x and y positions for the new line
+						current_x = 0;
+						current_y += current_line.getHeight(ctx) + line_spacing;
+
+						// Reset the last safe line
+						last_safe_line = null;
+
+						// Set the current line to a new position
+						current_line = new CanvasTextLine(ctx, {y: current_y});
+						// Push the current line onto the lines array
+						text_lines.push(current_line);
+					}
+
+					current_line.chars.push(char_obj);
+
+
+					char_obj.x = current_x;
+					current_line.width += char_obj.width;
+
+					// If we're on the first character of the line, increase the 
+					// current x position by the width of the character, else shift 
+					// the current character to the left to line up with the 
+					// text alignment line
+					if(current_x > 0){
+						char_obj.x = current_x - char_obj.bounding_left;
+						current_line.width -= char_obj.bounding_left;
+						current_x += char_obj.width-char_obj.bounding_left;
+					}else{
+						current_x += char_obj.width;
+					} 
+
+					// If it's whitespace, mark it as a potential break point
+					if(character.match(/\s/) && character !== "\n"){
+
+						last_safe_line = current_line.clone();
+						last_safe_line.index_break_pos = i;
+
+					}
+
+					// If the current line exceeds available width, 
+					// push the last safe line onto the list and reset the
+					// current line
+					if(boundary_width && current_line.width > boundary_width && last_safe_line){
+
+						// Push the last safe line onto the lines array
+						text_lines.push(last_safe_line);
+
+						// Reset the loop position
+						i = last_safe_line.index_break_pos;
+
+						// Reset the x and y positions for the new line
+						current_x = 0;
+						current_y += last_safe_line.getHeight(ctx) + line_spacing;
+
+						// Reset the last safe line
+						last_safe_line = null;
+
+						// Set the current line to a new position
+						current_line = new CanvasTextLine(ctx, {y: current_y});
+					}
+
+					// If we're on the last iteration and still have partial lines,
+					// push the partial line onto the lines array
+					if(i == characters.length-1 && current_line.chars.length){
+						current_x = 0;
+						current_y += (last_safe_line || current_line).getHeight(ctx) + line_spacing;
+
+						text_lines.push(current_line);
+					}
+
+				}
+
+				console.log(text_lines);
+				return text_lines;
 			}
-			
-			current_line.chars.push(char_obj);
-
-
-			char_obj.x = current_x;
-			current_line.width += char_obj.width;
-
-			// If we're on the first character of the line, increase the 
-			// current x position by the width of the character, else shift 
-			// the current character to the left to line up with the 
-			// text alignment line
-			if(current_x > 0){
-				char_obj.x = current_x - char_obj.bounding_left;
-				current_line.width -= char_obj.bounding_left;
-				current_x += char_obj.width-char_obj.bounding_left;
-			}else{
-				current_x += char_obj.width;
-			} 
-			
-			// If it's whitespace, mark it as a potential break point
-			if(character.match(/\s/) && character !== "\n"){
-				
-				last_safe_line = current_line.clone();
-				last_safe_line.index_break_pos = i;
-			
-			}
-
-			// If the current line exceeds available width, 
-			// push the last safe line onto the list and reset the
-			// current line
-			if(boundary_width && current_line.width > boundary_width && last_safe_line){
-
-				// Push the last safe line onto the lines array
-				text_lines.push(last_safe_line);
-
-				// Reset the loop position
-				i = last_safe_line.index_break_pos;
-
-				// Reset the x and y positions for the new line
-				current_x = 0;
-				current_y += last_safe_line.getHeight(ctx) + line_spacing;
-
-				// Reset the last safe line
-				last_safe_line = null;
-
-				// Set the current line to a new position
-				current_line = new CanvasTextLine(ctx, {y: current_y});
-			}
-
-			// If we're on the last iteration and still have partial lines,
-			// push the partial line onto the lines array
-			if(i == characters.length-1 && current_line.chars.length){
-				current_x = 0;
-				current_y += (last_safe_line || current_line).getHeight(ctx) + line_spacing;
-				
-				text_lines.push(current_line);
-			}
-
-		}
-
-		console.log(text_lines);
-		return text_lines;
-	}
 	
 	/**
 	 * Begin rendeing the typing area...

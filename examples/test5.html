@@ -13,8 +13,8 @@
 	<body>
 		<canvas id="canvas"></canvas>
 		<script src="../src/CanvasTextStyle.js"></script>
-		<script src="../src/CanvasTextLine.js"></script>
-		<script src="../src/CanvasTextChar_bkp.js"></script>
+		<script src="../src/CanvasTextBody.js"></script>
+		<script src="../src/CanvasTextChar.js"></script>
 		<script>
 			//------------------------------------------------------------------
 			//-- Config options ------------------------------------------------
@@ -49,7 +49,27 @@
 			//-- Calculate coordinates of characters ---------------------------
 			//------------------------------------------------------------------
 			
-			function generateCanvasTextLines(ctx, text, boundary_width, text_spacing, line_spacing){
+			function generateTextBody(ctx, text, boundary_width, text_spacing, line_spacing){
+				
+				var textBody = new CanvasTextBody(ctx, {
+					line_spacing,
+					text_spacing,
+					boundary_width
+				});
+				
+				// Array of characters in the text
+				var characters = text.split('');
+				
+				for(var i=0; i<characters.length; i++){
+					textBody.appendChar(characters[i]);
+				}
+				
+				return textBody;
+				
+				//--------------------------------------------------------------
+				//-- OLD FUNCTION BODY -----------------------------------------
+				//--------------------------------------------------------------
+				
 				// Array of objects that represent lines of text
 				var text_lines = [];
 
@@ -139,24 +159,43 @@
 			// --- Print Text on canvas ----------------------------------------
 			//------------------------------------------------------------------
 			
+			var textBody = generateTextBody(ctx, text, boundary_width, text_spacing, line_spacing);
 			
-			var text_lines = generateCanvasTextLines(ctx, text, boundary_width, text_spacing, line_spacing);
-			for(let i=0; i<text_lines.length; i++){
-				let chars = text_lines[i].getChars(ctx);
-				for(let n=0; n<chars.length; n++){
-					let char = chars[n];
-					
-					ctx.fillText(char.char, char.x, char.y);
-					
-//					ctx.save();
-//					ctx.beginPath();
-//					ctx.strokeStyle = 'blue';
-//					let {x, y, width, height} = char.getBoundingBox();
-//					ctx.rect(x, y, width, height);
-//					ctx.stroke();
-//					ctx.restore();
-				}
+			console.log(textBody);
+			
+			for(let i=0; i<textBody.chars.length; i++){
+				let char = textBody.chars[i];
+				ctx.fillText(char.char, char.x, char.y);
+				
+				
+				
+				ctx.save();
+				ctx.beginPath();
+				ctx.strokeStyle = 'blue';
+				let x = char.x - char.bounding_left;
+				let y = char.y - char.ascent;
+				ctx.rect(x, y, char.width, char.height);
+				ctx.stroke();
+				ctx.restore();
 			}
+			
+//			var text_lines = generateCanvasTextLines(ctx, text, boundary_width, text_spacing, line_spacing);
+//			for(let i=0; i<text_lines.length; i++){
+//				let chars = text_lines[i].getChars(ctx);
+//				for(let n=0; n<chars.length; n++){
+//					let char = chars[n];
+//					
+//					ctx.fillText(char.char, char.x, char.y);
+//					
+////					ctx.save();
+////					ctx.beginPath();
+////					ctx.strokeStyle = 'blue';
+////					let {x, y, width, height} = char.getBoundingBox();
+////					ctx.rect(x, y, width, height);
+////					ctx.stroke();
+////					ctx.restore();
+//				}
+//			}
 			
 
 		</script>
