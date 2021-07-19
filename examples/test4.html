@@ -141,6 +141,9 @@
 			
 			
 			var text_lines = generateCanvasTextLines(ctx, text, boundary_width, text_spacing, line_spacing);
+			
+			console.log(text_lines[0].chars[0]);
+			
 			for(let i=0; i<text_lines.length; i++){
 				let chars = text_lines[i].getChars(ctx);
 				for(let n=0; n<chars.length; n++){
@@ -148,13 +151,13 @@
 					
 					ctx.fillText(char.char, char.x, char.y);
 					
-//					ctx.save();
-//					ctx.beginPath();
-//					ctx.strokeStyle = 'blue';
-//					let {x, y, width, height} = char.getBoundingBox();
-//					ctx.rect(x, y, width, height);
-//					ctx.stroke();
-//					ctx.restore();
+					ctx.save();
+					ctx.beginPath();
+					ctx.strokeStyle = 'blue';
+					let {x, y, width, height} = char.getBoundingBox();
+					ctx.rect(x, y, width, height);
+					ctx.stroke();
+					ctx.restore();
 				}
 			}
 			

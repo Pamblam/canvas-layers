@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Test...</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<style>
+			canvas{
+				border: 1px solid black;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>
+		<script src="../src/CanvasTextStyle.js"></script>
+		<script src="../src/CanvasTextBody.js"></script>
+		<script src="../src/CanvasTextChar.js"></script>
+		<script>
+			
+			var padding = 100;
+			var font = '200px Apple Chancery';
+			var text = "Groovy, dawg!";
+			
+			var canvas = document.getElementById('canvas');
+			var ctx = canvas.getContext('2d');
+			
+			// Resize canvas to whatever space 
+			// is required for the given text and font
+			ctx.font = font;
+			ctx.textBaseline = 'top';
+			var metrics = ctx.measureText(text);
+			canvas.width = metrics.width + (padding * 2);
+			canvas.height = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + (padding * 2);
+			
+			// Set initial styles
+			ctx.font = font;
+			ctx.textBaseline = 'top';
+			ctx.fillStyle = 'gray';
+			ctx.lineWidth = 1;
+			ctx.textAlign = "left";
+			
+			// Draw the full text in grey
+			ctx.fillText(text, 0+padding, 0+padding);
+			
+			
+			var current_x = padding;
+			var current_y = padding; 
+			
+			for(let i=0, m; i<text.length; i++){
+				m = getCharMetrics(ctx, text.charAt(i));
+				illustrateMetrics(ctx, m, text.charAt(i), current_x, current_y);
+				current_x += m.char_width;
+			}
+			
+			
+			
+			
+			
+			function illustrateMetrics(ctx, m, char, x, y){
+				ctx.save();
+				ctx.strokeStyle = 'rgba(0, 0, 0, .5)';
+				
+
+				// Draw text boundary area
+				ctx.fillStyle = 'rgba(250, 0, 0, .5)';
+				ctx.fillRect(x+m.left_boundary, y+m.top_boundary, m.right_boundary-m.left_boundary, m.bottom_boundary-m.top_boundary);
+				ctx.strokeRect(x+m.left_boundary, y+m.top_boundary, m.right_boundary-m.left_boundary, m.bottom_boundary-m.top_boundary);
+
+				ctx.fillStyle = 'rgba(0, 250, 0, .5)';
+				ctx.fillRect(x, y, m.char_width, m.alphabetic_baseline);
+				ctx.strokeRect(x, y, m.char_width, m.alphabetic_baseline);
+				
+				['top', 'hanging', 'middle', 'alphabetic', 'ideographic', 'bottom'].forEach(baseline=>{
+					var baseline_y = y+m[baseline+"_baseline"];
+					ctx.beginPath();
+					ctx.moveTo(x, baseline_y);
+					ctx.lineTo(x+m.right_boundary, baseline_y);
+					ctx.stroke();
+				});
+				
+				ctx.fillStyle = 'black';
+				ctx.fillText(char, x, y);
+			
+				ctx.restore();
+			}
+			
+			
+			function getCharMetrics(ctx, char){
+				var metrics = {};
+				
+				ctx.save();
+				ctx.textAlign = 'left';
+				
+				// first establish line height
+				for(var i=32, s=[]; i<=126; i++) s.push(String.fromCharCode(i));
+				var m = ctx.measureText(s);
+				metrics.top_boundary = -m.actualBoundingBoxAscent;
+				metrics.bottom_boundary = m.actualBoundingBoxDescent;
+				
+				// then get baselines
+				['top', 'hanging', 'middle', 'alphabetic', 'ideographic', 'bottom'].forEach(baseline=>{
+					ctx.textBaseline = baseline;
+					let m = ctx.measureText(s);
+					metrics[baseline+'_baseline'] = m.actualBoundingBoxAscent;
+				});
+				
+				var c = ctx.measureText(char);
+				
+				// left bounding 
+				metrics.left_boundary = -c.actualBoundingBoxLeft;
+				metrics.right_boundary = c.actualBoundingBoxRight;
+
+				// right width boundary
+				metrics.char_width = c.width
+				
+				ctx.restore();
+				
+				return metrics;
+			}
+			
+			
+//			// try to draw the r in the correct position
+//			var char_2_metrics = ctx.measureText(text.charAt(1)); 
+//			console.log(char_2_metrics);
+//			
+//			var char_2_x = padding+char_metrics.width;
+//			
+//			ctx.textBaseline = 'top';
+//			ctx.fillStyle = 'green';
+//			ctx.fillText(text.charAt(1), char_2_x, 0+padding);
+//			
+//			// show left position
+//			ctx.strokeStyle = 'blue';
+//			ctx.beginPath();
+//			ctx.moveTo(char_2_x, 0);
+//			ctx.lineTo(char_2_x, canvas.height);
+//			ctx.stroke();
+//			
+//			// left bounding 
+//			// show left position
+//			ctx.strokeStyle = 'blue';
+//			ctx.beginPath();
+//			ctx.moveTo(char_2_x-char_2_metrics.actualBoundingBoxLeft, 0);
+//			ctx.lineTo(char_2_x-char_2_metrics.actualBoundingBoxLeft, canvas.height);
+//			ctx.stroke();
+//			
+//			// right bounding
+//			ctx.beginPath();
+//			ctx.moveTo(char_2_x+char_2_metrics.actualBoundingBoxRight, 0);
+//			ctx.lineTo(char_2_x+char_2_metrics.actualBoundingBoxRight, canvas.height);
+//			ctx.stroke();
+//			
+//			// right width boundary
+//			ctx.beginPath();
+//			ctx.moveTo(char_2_x+char_2_metrics.width, 0);
+//			ctx.lineTo(char_2_x+char_2_metrics.width, canvas.height);
+//			ctx.stroke();
+//			
+//			var char_3_x = char_2_x+char_2_metrics.width;
+//			
+//			ctx.textBaseline = 'top';
+//			ctx.fillStyle = 'orange';
+//			ctx.fillText(text.charAt(2), char_3_x, 0+padding);
+		</script>
+	</body>
+</html>
