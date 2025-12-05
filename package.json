@@ -1,7 +1,7 @@
 {
   "name": "canvas-layers",
-  "version": "2.0.1",
-  "description": "Allow user to position and re-arrange images on a canvas.",
+  "version": "2.1.2",
+  "description": "A toolbox that makes it easier to allow users to manipulate items on a canvas.",
   "main": "canvas-layers.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

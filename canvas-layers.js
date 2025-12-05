@@ -1,6 +1,6 @@
 /**
- * canvas-layers - v2.0.0
- * Allow user to position and re-arrange images on a canvas.
+ * canvas-layers - v2.1.1
+ * A toolbox that makes it easier to allow users to manipulate items on a canvas.
  * @author Pamblam
  * @website 
  * @license MIT
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 2.0.0
+ * @version 2.1.1
  */
 class Canvas{
 	
@@ -51,14 +51,23 @@ class Canvas{
 		this.snapToGrid = false;
 		this.gridDistancePixels = 10;
 		
-		canvas.addEventListener('mousemove', this.onmousemove.bind(this));
-		canvas.addEventListener('mousedown', this.onmousedown.bind(this));
-		canvas.addEventListener('mouseout', this.onmousereset.bind(this));
-		canvas.addEventListener('mouseup', this.onmousereset.bind(this));
-		canvas.addEventListener('click', this.onclick.bind(this));
-		canvas.addEventListener('dblclick', this.ondblclick.bind(this));
-		document.addEventListener('keydown', this.onkeyevent.bind(this));
-		document.addEventListener('keyup', this.onkeyevent.bind(this));
+		// bind handlers once and store them
+		this._onmousemove = this.onmousemove.bind(this);
+		this._onmousedown = this.onmousedown.bind(this);
+		this._onmousereset = this.onmousereset.bind(this);
+		this._onclick = this.onclick.bind(this);
+		this._ondblclick = this.ondblclick.bind(this);
+		this._onkeyevent = this.onkeyevent.bind(this);
+
+		// attach using the stored references
+		canvas.addEventListener('mousemove', this._onmousemove);
+		canvas.addEventListener('mousedown', this._onmousedown);
+		canvas.addEventListener('mouseout', this._onmousereset);
+		canvas.addEventListener('mouseup', this._onmousereset);
+		canvas.addEventListener('click', this._onclick);
+		canvas.addEventListener('dblclick', this._ondblclick);
+		document.addEventListener('keydown', this._onkeyevent);
+		document.addEventListener('keyup', this._onkeyevent);
 		
 		this.anchorRadius = opts.anchorRadius || Canvas.anchorRadius;
 		this.strokeStyle = opts.strokeStyle || Canvas.strokeStyle;
@@ -420,6 +429,42 @@ class Canvas{
 		this.deSelectLayer();
 		this.layers = [];
 		this.draw();
+	}
+
+	/**
+	 * Destroy the whole thing
+	 */
+	destroy() {
+		// remove event listeners
+		if (this.canvas) {
+			this.canvas.removeEventListener('mousemove', this._onmousemove);
+			this.canvas.removeEventListener('mousedown', this._onmousedown);
+			this.canvas.removeEventListener('mouseout', this._onmousereset);
+			this.canvas.removeEventListener('mouseup', this._onmousereset);
+			this.canvas.removeEventListener('click', this._onclick);
+			this.canvas.removeEventListener('dblclick', this._ondblclick);
+		}
+
+		document.removeEventListener('keydown', this._onkeyevent);
+		document.removeEventListener('keyup', this._onkeyevent);
+
+		// clear canvas contents
+		if (this.ctx && this.canvas) {
+			this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		}
+
+		// break references to help GC
+		this.removeAllLayers();
+		this.layers = [];
+		this.layer_states = [];
+		this.activeLayer = null;
+		this.ctrlGroupLayer = null;
+
+		this.canvas = null;
+		this.ctx = null;
+
+		// optional: flip a flag so methods early-return
+		this.ready = false;
 	}
 	
 	/**
@@ -1115,7 +1160,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '2.0.0';
+Canvas.version = '2.1.1';
 
 /**
  * The default anchorRadius value for all Canvas instances.
