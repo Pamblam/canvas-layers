@@ -410,6 +410,7 @@ class Canvas{
 			}
 			
 			while(this.drawPromises.length) this.drawPromises.shift()();
+			this.canvas.dispatchEvent(new CustomEvent('canvas-drawn'));
 		});
 	}	
 	

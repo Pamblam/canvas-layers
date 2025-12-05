@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v2.1.1
+ * canvas-layers - v2.1.2
  * A toolbox that makes it easier to allow users to manipulate items on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 2.1.1
+ * @version 2.1.2
  */
 class Canvas{
 	
@@ -418,6 +418,7 @@ class Canvas{
 			}
 			
 			while(this.drawPromises.length) this.drawPromises.shift()();
+			this.canvas.dispatchEvent(new CustomEvent('canvas-drawn'));
 		});
 	}	
 	
@@ -1160,7 +1161,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '2.1.1';
+Canvas.version = '2.1.2';
 
 /**
  * The default anchorRadius value for all Canvas instances.

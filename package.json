@@ -1,6 +1,6 @@
 {
   "name": "canvas-layers",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "A toolbox that makes it easier to allow users to manipulate items on a canvas.",
   "main": "canvas-layers.js",
   "scripts": {
