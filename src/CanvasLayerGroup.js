@@ -148,8 +148,8 @@ class CanvasLayerGroup extends CanvasLayer{
 		ele.height = pos.bottom+2;
 		var canvas = new Canvas(ele);
 		this.layers.forEach(layer=>canvas.addLayer(layer));
-		
 		pos.uri = await canvas.extractPortion(pos.x, pos.y, pos.width, pos.height, 0, false);
+		canvas.destroy(); 
 		
 		pos.forceBoundary = this.layers.reduce((acc, itm)=>itm.forceBoundary||acc,false);
 		pos.draggable = this.layers.reduce((acc, itm)=>acc===false?false:itm.draggable,true);

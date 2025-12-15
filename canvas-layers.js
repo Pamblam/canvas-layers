@@ -1,5 +1,5 @@
 /**
- * canvas-layers - v2.1.2
+ * canvas-layers - v2.1.4
  * A toolbox that makes it easier to allow users to manipulate items on a canvas.
  * @author Pamblam
  * @website 
@@ -10,7 +10,7 @@
 /**
  * Interface for handling all canvas functionality
  * @see https://pamblam.github.io/canvas-layers/examples/
- * @version 2.1.2
+ * @version 2.1.4
  */
 class Canvas{
 	
@@ -1161,7 +1161,7 @@ class Canvas{
  * The version of the library
  * @type {String}
  */
-Canvas.version = '2.1.2';
+Canvas.version = '2.1.4';
 
 /**
  * The default anchorRadius value for all Canvas instances.
@@ -1566,8 +1566,8 @@ class CanvasLayerGroup extends CanvasLayer{
 		ele.height = pos.bottom+2;
 		var canvas = new Canvas(ele);
 		this.layers.forEach(layer=>canvas.addLayer(layer));
-		
 		pos.uri = await canvas.extractPortion(pos.x, pos.y, pos.width, pos.height, 0, false);
+		canvas.destroy(); 
 		
 		pos.forceBoundary = this.layers.reduce((acc, itm)=>itm.forceBoundary||acc,false);
 		pos.draggable = this.layers.reduce((acc, itm)=>acc===false?false:itm.draggable,true);
